@@ -1,11 +1,9 @@
 package client
 
-//
-// Install prereqs:  dcap, curl, ...
-// Build or get amber client libraries (can this be apt-get?)
-// helm install taas-ra --version v0.1.0-f65840c cassini-harbor/taas-ra -n taas -f ../dev-aio-values.yaml
-//
 import (
+	"crypto/tls"
+	"net/url"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
@@ -13,7 +11,7 @@ import (
 type AmberClient interface {
 	GetAmberVersion() (*Version, error)
 	GetNonce() (*SignedNonce, error)
-	GetToken(nonce *SignedNonce, policyIds []uuid.UUID, evidence Evidence) (*jwt.Token, error)
+	GetToken(nonce *SignedNonce, policyIds []uuid.UUID, evidence *Evidence) (*jwt.Token, error)
 	CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) (*jwt.Token, error)
 }
 
@@ -22,11 +20,16 @@ type EvidenceAdapter interface {
 }
 
 type Evidence struct {
-	Type                  uint32
-	EvidenceLength        uint32
-	Evidence              []byte
-	EnclaveHeldDataLength uint32
-	EnclaveHeldData       []byte
+	Type     uint32
+	Evidence []byte
+	UserData []byte
+}
+
+type Config struct {
+	Url    string
+	TlsCfg *tls.Config
+	ApiKey string
+	url    *url.URL
 }
 
 type SignedNonce struct {
@@ -39,4 +42,20 @@ type Version struct {
 	SemVer    string `json:"version"`
 	Commit    string `json:"commit"`
 	BuildDate string `json:"buildDate"`
+}
+
+func New(cfg *Config) (AmberClient, error) {
+	var err error
+	cfg.url, err = url.ParseRequestURI(cfg.Url)
+	if err != nil {
+		return nil, err
+	}
+
+	return &amberClient{
+		cfg: cfg,
+	}, nil
+}
+
+type amberClient struct {
+	cfg *Config
 }

@@ -1,0 +1,3 @@
+go-sgx-example/*.so
+go-sgx-example/sgxexample
+go-sgx-example/Enclave_u.*

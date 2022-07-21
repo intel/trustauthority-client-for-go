@@ -26,21 +26,24 @@ package sgx
 // }
 import "C"
 import (
+	"encoding/hex"
+	"fmt"
+	"unsafe"
+
 	"github.com/intel/amber/v1/client"
 	"github.com/pkg/errors"
 )
 
 func (adapter *SgxAdapter) CollectEvidence(nonce *client.SignedNonce) (*client.Evidence, error) {
-	// Call report callback
-	// Generate a quote
-	// Create/return evidence structure
 
-	//qe3_ret := C.quote3_error_t(0)
 	retVal := C.uint32_t(0)
 	qe3_target := C.sgx_target_info_t{}
 	p_report := C.sgx_report_t{}
 
-	//qe3_ret = sgx_qe_get_target_info(&qe3_target)
+	qe3_ret := C.sgx_qe_get_target_info(&qe3_target)
+	if qe3_ret != 0 {
+		return nil, errors.Errorf("sgx_qe_get_target_info return error code %x", qe3_ret)
+	}
 
 	status := C.get_report((C.report_fx)(adapter.ReportFunction),
 		C.sgx_enclave_id_t(adapter.EID),
@@ -52,8 +55,27 @@ func (adapter *SgxAdapter) CollectEvidence(nonce *client.SignedNonce) (*client.E
 		return nil, errors.Errorf("Report callback returned error code %x", status)
 	}
 
-	// sgx_qe_get_quote_size
-	// sgx_qe_get_quote ==> Evidence structure
+	if retVal != 0 {
+		return nil, errors.Errorf("Report retval returned %x", status)
+	}
 
-	return nil, nil
+	var quote_size C.uint32_t
+	qe3_ret = C.sgx_qe_get_quote_size(&quote_size)
+	if qe3_ret != 0 {
+		return nil, errors.Errorf("sgx_qe_get_quote_size return error code %x", qe3_ret)
+	}
+
+	quote_buffer := make([]byte, quote_size)
+
+	qe3_ret = C.sgx_qe_get_quote(&p_report, quote_size, (*C.uint8_t)(unsafe.Pointer(&quote_buffer[0])))
+	if qe3_ret != 0 {
+		return nil, errors.Errorf("sgx_qe_get_quote return error code %x", qe3_ret)
+	}
+
+	fmt.Printf("Q: %s\n", hex.EncodeToString(quote_buffer))
+
+	return &client.Evidence{
+		Type:     0,
+		Evidence: quote_buffer,
+	}, nil
 }
