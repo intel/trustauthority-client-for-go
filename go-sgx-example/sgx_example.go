@@ -66,7 +66,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(token)
+	fmt.Printf("TOKEN: %+v\n", token.Claims)
 }
 
 // Consider adding this as a utility function in go-sgx

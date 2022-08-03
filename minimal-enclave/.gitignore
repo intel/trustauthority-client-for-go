@@ -1,0 +1,4 @@
+Enclave_t.*
+Enclave_u.*
+*.so
+*.o

@@ -12,17 +12,21 @@ package sgx
 // #include "sgx_edger8r.h"
 // #include "sgx_report.h"
 // typedef sgx_status_t (*report_fx) (sgx_enclave_id_t eid,
-// 											uint32_t* retval,
-//											const sgx_target_info_t* p_qe3_target,
-//											sgx_report_t* p_report);
+//										uint32_t* retval,
+//										const sgx_target_info_t* p_qe3_target,
+//										uint8_t* nonce,
+//										uint32_t nonce_size,
+//										sgx_report_t* p_report);
 //
 // int get_report(report_fx fx,
 //					sgx_enclave_id_t eid,
 //					uint32_t* retval,
 //					const sgx_target_info_t* p_qe3_target,
+//					uint8_t* nonce,
+//					uint32_t nonce_size,
 //					sgx_report_t* p_report)
 // {
-//		return fx(eid, retval, p_qe3_target, p_report);
+//		return fx(eid, retval, p_qe3_target, nonce, nonce_size, p_report);
 // }
 import "C"
 import (
@@ -49,6 +53,8 @@ func (adapter *SgxAdapter) CollectEvidence(nonce *client.SignedNonce) (*client.E
 		C.sgx_enclave_id_t(adapter.EID),
 		&retVal,
 		&qe3_target,
+		(*C.uint8_t)(unsafe.Pointer(&nonce.Nonce[0])),
+		C.uint32_t(len(nonce.Nonce)),
 		&p_report)
 
 	if status != 0 {

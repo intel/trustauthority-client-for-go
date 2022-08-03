@@ -4,13 +4,13 @@ Install SGX dependencies
 - git clone https://github.com/intel/SGXDataCenterAttestationPrimitives.git
 - cd SGXDataCenterAttestationPrimitives/SampleCode/QuoteGenerationSample/
 - make
-- Copy 'enclave.signed.so' to to go-sgx-example dir.
 - Copy App/Enclave_u.c and App/Enclave_u.h to go-sgx-example dir.
 
 ### Build sgxexample
+- cd go-sgx-example
 - env CGO_CFLAGS_ALLOW="-f.*" go build
 
-sgxexample and enclave.signed.so are in the go-sgx-example dir.
+sgxexample is in the go-sgx-example dir.
 
 # Run on SGX Host
 - scp sgxexample enclave.signed.so root@{{SGX Host}}:/tmp
