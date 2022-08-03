@@ -1,19 +1,14 @@
-# Build
-Install SGX dependencies
-### Build enclave (libenclave.so)...
-- git clone https://github.com/intel/SGXDataCenterAttestationPrimitives.git
-- cd SGXDataCenterAttestationPrimitives/SampleCode/QuoteGenerationSample/
-- make
-- Copy App/Enclave_u.c and App/Enclave_u.h to go-sgx-example dir.
-
-### Build sgxexample
+## Build sgxexample
+- Install C development tools, go compiler, etc. (TBD)
+- Install SGX SDK and dcap libraries (TBD)
+- cd minimal-enclave --> make --> produces "enclave.signed.so"
+- cp minimal-enclave/Enclave_u.* go-sgx-example/
 - cd go-sgx-example
-- env CGO_CFLAGS_ALLOW="-f.*" go build
+- env CGO_CFLAGS_ALLOW="-f.*" go build --> produces "sgxexample"
 
-sgxexample is in the go-sgx-example dir.
-
-# Run on SGX Host
-- scp sgxexample enclave.signed.so root@{{SGX Host}}:/tmp
+## Run on SGX Host
+- scp go-sgx-example/sgxexample root@{{SGX Host}}:/tmp
+- scp minimal-enclave/enclave.signed.so root@{{SGX Host}}:/tmp
 
 - Install dcap dependencies...
     ```
