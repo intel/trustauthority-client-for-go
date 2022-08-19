@@ -1,0 +1,54 @@
+# Copyright (C) 2022 Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+
+FROM ubuntu:20.04 as sgxbase
+RUN apt-get update; \
+        apt-get upgrade -y; \
+        apt-get autoremove -y; \
+        apt-get install -y gnupg wget
+RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' > /etc/apt/sources.list.d/intel-sgx.list
+RUN wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -
+RUN apt-get update
+
+FROM sgxbase as buildbase
+RUN apt-get update && apt-get install -y build-essential
+WORKDIR /opt/intel
+RUN wget -q https://download.01.org/intel-sgx/sgx-linux/2.13.3/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.13.103.1.bin; \
+         chmod +x sgx_linux_x64_sdk_2.13.103.1.bin; \
+         echo 'yes' | ./sgx_linux_x64_sdk_2.13.103.1.bin;
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libsgx-urts \
+        libsgx-dcap-ql-dev \
+        git
+RUN wget -q https://go.dev/dl/go1.17.6.linux-amd64.tar.gz; \
+        rm -rf /usr/local/go && tar -C /usr/local -xzf go1.17.6.linux-amd64.tar.gz
+
+FROM buildbase as libenclave
+WORKDIR /app
+COPY . .
+RUN cd minimal-enclave  && make clean all
+RUN cp /app/minimal-enclave/Enclave_u.* go-sgx-example/ 
+
+FROM libenclave as app
+#WORKDIR /app
+RUN cd /app/go-sgx-example/ 
+RUN GITTAG=$(git describe --tags --abbrev=0 2>/dev/null); \
+           GITCOMMIT=$(git describe --always); \
+           VERSION=${GITTAG:-v0.0.0}; \
+           BUILDDATE=$(TZ=UTC date +%Y-%m-%dT%H:%M:%S%z); \
+           CGO_CFLAGS_ALLOW="-f.*" \
+           GOOS=linux GOSUMDB=off \
+           /usr/local/go/bin/go build
+
+FROM sgxbase AS final
+WORKDIR /
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libsgx-urts \
+        libsgx-dcap-ql \
+        libsgx-dcap-default-qpl
+COPY --from=libenclave /app/cmd/sgx/sgx_attest/libapp.so /usr/lib/x86_64-linux-gnu/
+COPY --from=libenclave /app/cmd/sgx/sgx_attest/enclave.signed.so ./
+COPY --from=app /app/cmd/sgx/taa ./
+COPY run.sh ./
+ENTRYPOINT ["/run.sh"]
+CMD ["/taa"]

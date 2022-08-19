@@ -1,0 +1,55 @@
+# Copyright (C) 2022 Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+
+FROM ubuntu:20.04 as sgxbase
+RUN apt-get update; \
+        apt-get upgrade -y; \
+        apt-get autoremove -y; \
+        apt-get install -y gnupg wget
+RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' > /etc/apt/sources.list.d/intel-sgx.list
+RUN wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -
+RUN apt-get update
+
+FROM sgxbase as buildbase
+RUN apt-get update && apt-get install -y build-essential
+WORKDIR /opt/intel
+RUN wget -q https://download.01.org/intel-sgx/sgx-linux/2.13.3/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.13.103.1.bin; \
+         chmod +x sgx_linux_x64_sdk_2.13.103.1.bin; \
+         echo 'yes' | ./sgx_linux_x64_sdk_2.13.103.1.bin;
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libsgx-urts \
+        libsgx-dcap-ql-dev \
+        git
+RUN wget -q https://go.dev/dl/go1.17.6.linux-amd64.tar.gz; \
+        rm -rf /usr/local/go && tar -C /usr/local -xzf go1.17.6.linux-amd64.tar.gz
+
+FROM buildbase as libenclave
+WORKDIR /app
+COPY . .
+RUN cd cmd/sgx/sgx_attest && make clean all
+RUN cp /app/cmd/sgx/sgx_attest/libapp.so /usr/lib/x86_64-linux-gnu/ 
+
+FROM libenclave as app
+WORKDIR /app
+RUN GITTAG=$(git describe --tags --abbrev=0 2>/dev/null); \
+           GITCOMMIT=$(git describe --always); \
+           VERSION=${GITTAG:-v0.0.0}; \
+           BUILDDATE=$(TZ=UTC date +%Y-%m-%dT%H:%M:%S%z); \
+           cd cmd/sgx && CGO_CFLAGS_ALLOW="-f.*" \
+           GOOS=linux GOSUMDB=off \
+           /usr/local/go/bin/go build -gcflags=all="-N -l" -ldflags "-X intel/amber/aal/v1/cmd/version.BuildDate=${BUILDDATE} -X intel/amber/aal/v1/cmd/version.Version=${VERSION} -X intel/amber/aal/v1/cmd/version.GitHash=${GITCOMMIT}" -o taa
+
+FROM sgxbase AS final
+WORKDIR /
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libsgx-urts \
+        libsgx-dcap-ql
+RUN wget https://packages.microsoft.com/ubuntu/20.04/prod/pool/main/a/az-dcap-client/az-dcap-client_1.10_amd64.deb; \
+        apt-get install -y --fix-broken --no-install-recommends ./az-dcap-client_1.10_amd64.deb
+RUN ln -sfT /usr/lib/libdcap_quoteprov.so /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1
+COPY --from=libenclave /app/cmd/sgx/sgx_attest/libapp.so /usr/lib/x86_64-linux-gnu/
+COPY --from=libenclave /app/cmd/sgx/sgx_attest/enclave.signed.so ./
+COPY --from=app /app/cmd/sgx/taa ./
+COPY run.sh ./
+ENTRYPOINT ["/run.sh"]
+CMD ["/taa"]

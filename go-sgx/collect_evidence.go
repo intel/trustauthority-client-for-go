@@ -1,6 +1,6 @@
 package sgx
 
-// #cgo CFLAGS: -I/opt/intel/sgxsdk/include -fno-strict-overflow -fno-delete-null-pointer-checks -fwrapv -fstack-protector-strong
+// #cgo CFLAGS: -I/opt/intel/sgxsdk/include -fstack-protector-strong
 // #cgo LDFLAGS: -lsgx_dcap_ql -lsgx_urts -ldl -lpthread -L/usr/lib/x86_64-linux-gnu/
 //
 // #include "sgx_urts.h"

@@ -29,16 +29,14 @@
  *
  */
 
-
-
 enclave {
     include "sgx_report.h"
+    include "sgx_tcrypto.h"
 
     trusted {
-        /* 
-        public uint32_t enclave_create_report([in]const sgx_target_info_t* p_qe3_target,
-                                              [out]sgx_report_t* p_report);
-        */
+
+	public uint32_t enclave_create_pubkey([out]rsa_params_t* key);
+
         public uint32_t enclave_create_report([in]const sgx_target_info_t* p_qe3_target,
                                                 [in, count=nonce_size]uint8_t* nonce, uint32_t nonce_size,
                                                 [out]sgx_report_t* p_report);

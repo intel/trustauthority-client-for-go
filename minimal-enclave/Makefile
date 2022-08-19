@@ -38,7 +38,6 @@ SGX_MODE ?= HW
 SGX_ARCH ?= x64
 OUT_OF_PROC ?= 0
 
-
 SGX_COMMON_CFLAGS := -m64
 SGX_LIBRARY_PATH := $(SGX_SDK)/lib64
 SGX_ENCLAVE_SIGNER := $(SGX_SDK)/bin/x64/sgx_sign
@@ -69,7 +68,6 @@ Quote_ex_Library_Name := sgx_quote_ex
 # else
 #         App_C_Flags += -DNDEBUG -UEDEBUG -UDEBUG
 # endif
-
 
 # App_Cpp_Flags := $(App_C_Flags) -std=c++11
 # App_Link_Flags := $(SGX_COMMON_CFLAGS) -l$(DCAP_Library_Name) -l$(Urts_Library_Name) -ldl -lpthread
@@ -118,7 +116,6 @@ Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefau
 Enclave_Cpp_Objects := $(Enclave_Cpp_Files:.cpp=.o)
 ENCLAVE_LIBRARY_PATH := ./
 
-
 Enclave_Name := enclave.so
 Signed_Enclave_Name := enclave.signed.so
 Enclave_Config_File := Enclave.config.xml
@@ -128,7 +125,6 @@ ifeq ($(SGX_DEBUG), 1)
 else
         Build_Mode = HW_RELEASE
 endif
-
 
 .PHONY: all target run
 
@@ -147,7 +143,6 @@ ifneq ($(Build_Mode), HW_RELEASE)
 	@$(CURDIR)/$(App_Name)
 	@echo "RUN  =>  $(App_Name) [$(SGX_MODE)|$(SGX_ARCH), OK]"
 endif
-
 
 .config_$(Build_Mode)_$(SGX_ARCH):
 	@rm -f .config_* $(App_Name) $(Enclave_Name) $(Signed_Enclave_Name) $(App_Cpp_Objects) App/Enclave_u.* $(Enclave_Cpp_Objects) Enclave_t.*
@@ -170,8 +165,6 @@ endif
 # $(App_Name): App/Enclave_u.o $(App_Cpp_Objects)
 # 	$(CXX) $^ -o $@ $(App_Link_Flags)
 # 	@echo "LINK =>  $@"
-
-
 
 ######## Enclave Objects ########
 Enclave_t.c:
@@ -200,10 +193,7 @@ $(Signed_Enclave_Name): $(Enclave_Name)
 	@rm -f $(Enclave_Name)
 	@echo "SIGN =>  $@"
 
-
-
 .PHONY: clean
 clean:
 	@rm -f  $(App_Name)  App/*.o App/Enclave_u.* .config_*
 	@rm -f  $(Enclave_Name) $(Signed_Enclave_Name) $(Enclave_Cpp_Objects) Enclave/Enclave_t.*
-

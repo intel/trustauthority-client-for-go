@@ -15,7 +15,7 @@ import (
 	"github.com/intel/amber/v1/client/sgx"
 )
 
-// #cgo CFLAGS: -I/opt/intel/sgxsdk/include -fno-strict-overflow -fno-delete-null-pointer-checks -fwrapv -fstack-protector-strong
+// #cgo CFLAGS: -I/opt/intel/sgxsdk/include -fstack-protector-strong
 // #cgo LDFLAGS: -L/usr/lib/x86_64-linux-gnu/ -lsgx_urts
 // #include "sgx_urts.h"
 // #include "Enclave_u.h"
