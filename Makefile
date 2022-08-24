@@ -26,13 +26,13 @@ TMPDIR := $(addprefix $(makefile_dir),tmp)
 
 all: docker
 
-docker: docker.sgx.timestamp
+docker: docker.timestamp
 
-docker.sgx.timestamp: docker.intel.timestamp docker.azure.timestamp
+docker.timestamp: docker.intel.timestamp docker.azure.timestamp
 
-docker.intel.timestamp: Dockerfile.intel $(shell find $(makefile_dir) -type f -name '*.go' -or -name '*.h')
+docker.%.timestamp: Dockerfile.% $(shell find $(makefile_dir) -type f -name '*.go' -or -name '*.h')
 	pushd "$(makefile_dir)"
-	docker build ${DOCKER_PROXY_FLAGS} -f $< --target final -t $(ORGNAME)/sgx-$(APPNAME)_intel:$(VERSION) .
+	docker build ${DOCKER_PROXY_FLAGS} -f $< --target final -t $(ORGNAME)/sgx-$(APPNAME)_$*:$(VERSION) .
 	touch $@
 
 test-image:
@@ -51,13 +51,13 @@ push: push-intel push-azure
 
 push-commit: push-commit-intel push-commit-azure
 
-push-commit-intel: push-intel
-	docker tag $(ORGNAME)/sgx-$(APPNAME)_intel:$(VERSION) $(REPO)/$(ORGNAME)/sgx-$(APPNAME)_intel:$(VERSION)-$(GITCOMMIT)
-	docker push $(REPO)/$(ORGNAME)/sgx-$(APPNAME)_intel:$(VERSION)-$(GITCOMMIT)
+push-commit-%: push-%
+	docker tag $(ORGNAME)/sgx-$(APPNAME)_$*:$(VERSION) $(REPO)/$(ORGNAME)/sgx-$(APPNAME)_$*:$(VERSION)-$(GITCOMMIT)
+	docker push $(REPO)/$(ORGNAME)/sgx-$(APPNAME)_$*:$(VERSION)-$(GITCOMMIT)
 
-push-intel: docker.%.timestamp
-	docker tag $(ORGNAME)/sgx-$(APPNAME)_intel:$(VERSION) $(REPO)/$(ORGNAME)/sgx-$(APPNAME)_intel:$(VERSION)
-	docker push $(REPO)/$(ORGNAME)/sgx-$(APPNAME)_intel:$(VERSION)
+push-%: docker.%.timestamp
+	docker tag $(ORGNAME)/sgx-$(APPNAME)_$*:$(VERSION) $(REPO)/$(ORGNAME)/sgx-$(APPNAME)_$*:$(VERSION)
+	docker push $(REPO)/$(ORGNAME)/sgx-$(APPNAME)_$*:$(VERSION)
 
 clean:
 	if pushd $(makefile_dir); then \
