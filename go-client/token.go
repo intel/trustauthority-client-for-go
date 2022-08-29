@@ -2,21 +2,52 @@ package client
 
 import (
 	"bytes"
+	"crypto"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
+type verifierKey struct {
+	pubKey  crypto.PublicKey
+	expTime time.Time
+}
+
+var pubKeyMap map[string]verifierKey
+
+type MatchingCertNotFoundError struct {
+	KeyId string
+}
+
+func (e MatchingCertNotFoundError) Error() string {
+	return fmt.Sprintf("certificate with matching public key not found. kid (key id) : %s", e.KeyId)
+}
+
+type MatchingCertJustExpired struct {
+	KeyId string
+}
+
+func (e MatchingCertJustExpired) Error() string {
+	return fmt.Sprintf("certificate with matching public key just expired. kid (key id) : %s", e.KeyId)
+}
+
+type Token struct {
+	jwtToken       *jwt.Token
+	standardClaims *jwt.StandardClaims
+}
+
 type tokenRequest struct {
 	Quote       []byte      `json:"quote"`
 	SignedNonce SignedNonce `json:"signed_nonce"`
-	//UserData    []byte      `json:"user_data"`
-	PolicyIds []uuid.UUID `json:"policy_ids,omitempty"`
+	UserData    []byte      `json:"user_data"`
+	PolicyIds   []uuid.UUID `json:"policy_ids,omitempty"`
 	//TenantId    uuid.UUID   `json:"tenant_id"`
 	//PolicyNames []string    `json:"policy_names,omitempty"`
 	//EventLog    []byte      `json:"event_log,omitempty"`
@@ -73,4 +104,57 @@ func (client *amberClient) GetToken(nonce *SignedNonce, policyIds []uuid.UUID, e
 	}
 
 	return token, nil
+}
+
+func (client *amberClient) VerifyToken(token *jwt.Token) error {
+	err := validateToken(strings.TrimSpace(token.Raw))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateToken(tokenString string) error {
+	token := Token{}
+	token.standardClaims = &jwt.StandardClaims{}
+	_, err := jwt.ParseWithClaims(tokenString, token.standardClaims, func(token *jwt.Token) (interface{}, error) {
+
+		pubKeyMap = make(map[string]verifierKey)
+		if keyIDValue, keyIDExists := token.Header["kid"]; keyIDExists {
+
+			keyIDString, ok := keyIDValue.(string)
+			if !ok {
+				return nil, fmt.Errorf("kid (key id) in jwt header is not a string : %v", keyIDValue)
+			}
+
+			if matchPubKey, found := pubKeyMap[keyIDString]; !found {
+				return nil, &MatchingCertNotFoundError{keyIDString}
+			} else {
+				// if the certificate just expired.. we need to return appropriate error
+				// so that the caller can deal with it appropriately
+				now := time.Now()
+				if now.After(matchPubKey.expTime) {
+					return nil, &MatchingCertJustExpired{keyIDString}
+				}
+				return matchPubKey.pubKey, nil
+			}
+
+		} else {
+			return nil, fmt.Errorf("kid (key id) field missing in token. field is mandatory")
+		}
+	})
+
+	if err != nil {
+		if jwtErr, ok := err.(*jwt.ValidationError); ok {
+			switch e := jwtErr.Inner.(type) {
+			case *MatchingCertNotFoundError, *MatchingCertJustExpired:
+				return e
+			}
+			return jwtErr
+		}
+		return err
+	}
+
+	return nil
 }

@@ -49,43 +49,12 @@ else
         SGX_COMMON_CFLAGS += -O2
 endif
 
-######## App Settings ########
-
-DCAP_Library_Name := sgx_dcap_ql
-Urts_Library_Name := sgx_urts
-Quote_ex_Library_Name := sgx_quote_ex
-
-# App_Cpp_Files :=  App/App.cpp
-# App_Include_Paths := -I$(SGX_SDK)/include -I../../QuoteGeneration/quote_wrapper/common/inc
-
-# App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths)
-
-# Two configuration modes - Debug, Release
-#   Debug - Macro SGX_DEBUG enabled.
-#   Release - Macro SGX_DEBUG disabled.
-# ifeq ($(SGX_DEBUG), 1)
-#         App_C_Flags += -DDEBUG -UNDEBUG -UEDEBUG
-# else
-#         App_C_Flags += -DNDEBUG -UEDEBUG -UDEBUG
-# endif
-
-# App_Cpp_Flags := $(App_C_Flags) -std=c++11
-# App_Link_Flags := $(SGX_COMMON_CFLAGS) -l$(DCAP_Library_Name) -l$(Urts_Library_Name) -ldl -lpthread
-# ifeq ($(OUT_OF_PROC),1)
-# 	App_Link_Flags += -l$(Quote_ex_Library_Name)
-# endif
-
-
-# App_Cpp_Objects := $(App_Cpp_Files:.cpp=.o)
-
-# App_Name := app
-
 ######## Enclave Settings ########
 Trts_Library_Name := sgx_trts
 Service_Library_Name := sgx_tservice
 Crypto_Library_Name := sgx_tcrypto
 
-Enclave_Cpp_Files := Enclave.cpp
+Enclave_Cpp_Files := Enclave.cpp utils.cpp
 Enclave_Include_Paths := -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/libcxx
 
 CC_BELOW_4_9 := $(shell expr "`$(CC) -dumpversion`" \< "4.9")
@@ -148,24 +117,6 @@ endif
 	@rm -f .config_* $(App_Name) $(Enclave_Name) $(Signed_Enclave_Name) $(App_Cpp_Objects) App/Enclave_u.* $(Enclave_Cpp_Objects) Enclave_t.*
 	@touch .config_$(Build_Mode)_$(SGX_ARCH)
 
-######## App Objects ########
-# App/Enclave_u.c:
-# 	cd App && $(SGX_EDGER8R) --untrusted ../Enclave/Enclave.edl
-# 	@echo "GEN  =>  $@"
-
-# App/Enclave_u.o: App/Enclave_u.c
-# 	@$(CC) $(App_C_Flags) -c $< -o $@
-# 	@echo "CC   <=  $<"
-
-# $(App_Cpp_Objects): App/Enclave_u.c
-# App/%.o: App/%.cpp
-# 	@$(CXX) $(App_Cpp_Flags) -c $< -o $@
-# 	@echo "CXX  <=  $<"
-
-# $(App_Name): App/Enclave_u.o $(App_Cpp_Objects)
-# 	$(CXX) $^ -o $@ $(App_Link_Flags)
-# 	@echo "LINK =>  $@"
-
 ######## Enclave Objects ########
 Enclave_t.c:
 	@$(SGX_EDGER8R) --trusted Enclave.edl
@@ -190,10 +141,10 @@ $(Enclave_Name): Enclave_t.o $(Enclave_Cpp_Objects)
 
 $(Signed_Enclave_Name): $(Enclave_Name)
 	@$(SGX_ENCLAVE_SIGNER) sign -key Enclave_private_sample.pem -enclave $(Enclave_Name) -out $@ -config $(Enclave_Config_File)
-	@rm -f $(Enclave_Name)
+#	@rm -f $(Enclave_Name)
 	@echo "SIGN =>  $@"
 
 .PHONY: clean
 clean:
-	@rm -f  $(App_Name)  App/*.o App/Enclave_u.* .config_*
-	@rm -f  $(Enclave_Name) $(Signed_Enclave_Name) $(Enclave_Cpp_Objects) Enclave/Enclave_t.*
+	@rm -f *.o
+	@rm -f $(Enclave_Name) $(Signed_Enclave_Name) $(Enclave_Cpp_Objects) Enclave_t.* Enclave_u.*

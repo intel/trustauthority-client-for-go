@@ -13,7 +13,7 @@ type AmberClient interface {
 	GetNonce() (*SignedNonce, error)
 	GetToken(nonce *SignedNonce, policyIds []uuid.UUID, evidence *Evidence) (*jwt.Token, error)
 	CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) (*jwt.Token, error)
-//	VerifyToken(*jwt.Token) (error)
+	VerifyToken(*jwt.Token) error
 }
 
 type EvidenceAdapter interface {
@@ -35,6 +35,7 @@ type Config struct {
 
 type SignedNonce struct {
 	Nonce     []byte `json:"nonce"`
+	Exp       []byte `json:"iat"`
 	Signature []byte `json:"signature"`
 }
 

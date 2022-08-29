@@ -44,7 +44,7 @@ static rsa_params_t g_rsa_key;
 /* Have we generated RSA key pair already? */
 static bool key_pair_created = false;
 
-uint32_t enclave_create_pubkey(
+sgx_status_t enclave_create_pubkey(
     rsa_params_t* key)
 {
     sgx_status_t status;
@@ -141,4 +141,3 @@ CLEANUP:
     free(pdata);
     return status;
 }
-
