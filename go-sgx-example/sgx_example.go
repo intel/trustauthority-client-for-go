@@ -72,28 +72,32 @@ func main() {
 		panic(err)
 	}
 
-	_ = client.VerifyToken(token)
-	//	fmt.Printf("TOKEN: %+v\n", token.Claims)
+	fmt.Printf("TOKEN: %+v\n", token.Claims)
+
+	err = client.VerifyToken(string(token))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func loadPublicKey(eid uint64) ([]byte, error) {
 
-/*	// keySize holds the length of the key byte array returned from enclave
-	var keySize C.uint32_t
+	/*	// keySize holds the length of the key byte array returned from enclave
+		var keySize C.uint32_t
 
-	// keyBuf holds the bytes array of the key returned from enclave
-	var keyBuf *C.uint8_t
+		// keyBuf holds the bytes array of the key returned from enclave
+		var keyBuf *C.uint8_t
 
-	ret := C.get_public_key(C.ulong(eid), &keyBuf, &keySize)
-	if ret == 0 {
-		//log.Info("sgx/agent:loadPublicKey() get_public_key successfully returned.")
-	} else {
-		return nil, errors.New("failed to retrieve key from sgx enclave")
-	}
+		ret := C.get_public_key(C.ulong(eid), &keyBuf, &keySize)
+		if ret == 0 {
+			//log.Info("sgx/agent:loadPublicKey() get_public_key successfully returned.")
+		} else {
+			return nil, errors.New("failed to retrieve key from sgx enclave")
+		}
 
-	key := C.GoBytes(unsafe.Pointer(keyBuf), C.int(keySize))
-	C.free_public_key(keyBuf)
-*/
+		key := C.GoBytes(unsafe.Pointer(keyBuf), C.int(keySize))
+		C.free_public_key(keyBuf)
+	*/
 	key := make([]byte, 20)
 	return key, nil
 }

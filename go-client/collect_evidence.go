@@ -1,12 +1,11 @@
 package client
 
 import (
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
-func (client *amberClient) CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) (*jwt.Token, error) {
+func (client *amberClient) CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) ([]byte, error) {
 
 	nonce, err := client.GetNonce()
 	if err != nil {

@@ -3,11 +3,13 @@ package client
 import (
 	"bytes"
 	"crypto"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -53,7 +55,7 @@ type tokenRequest struct {
 	//EventLog    []byte      `json:"event_log,omitempty"`
 }
 
-func (client *amberClient) GetToken(nonce *SignedNonce, policyIds []uuid.UUID, evidence *Evidence) (*jwt.Token, error) {
+func (client *amberClient) GetToken(nonce *SignedNonce, policyIds []uuid.UUID, evidence *Evidence) ([]byte, error) {
 
 	url := fmt.Sprintf("%s/appraisal/v1/appraise", client.cfg.Url)
 
@@ -78,24 +80,14 @@ func (client *amberClient) GetToken(nonce *SignedNonce, policyIds []uuid.UUID, e
 		"Content-Type": "application/json",
 	}
 
-	var token *jwt.Token
+	var attestationToken []byte
+
 	processResponse := func(resp *http.Response) error {
-		body, err := ioutil.ReadAll(resp.Body)
+		var err error
+		attestationToken, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf("Failed to read body from %s: %s", url, err)
 		}
-
-		token, err = jwt.Parse(string(body), func(token *jwt.Token) (interface{}, error) {
-			// // Don't forget to validate the alg is what you expect:
-			// if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			// 	return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-			// }
-
-			// // hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-			// return hmacSampleSecret, nil
-			return nil, nil
-		})
-
 		return nil
 	}
 
@@ -103,58 +95,72 @@ func (client *amberClient) GetToken(nonce *SignedNonce, policyIds []uuid.UUID, e
 		return nil, err
 	}
 
-	return token, nil
+	return attestationToken, nil
 }
 
-func (client *amberClient) VerifyToken(token *jwt.Token) error {
-	err := validateToken(strings.TrimSpace(token.Raw))
-	if err != nil {
-		return err
+func (client *amberClient) VerifyToken(token string) error {
+	var tokenSignCertUrl string
+	var tokenSignCert []byte
+	var key crypto.PublicKey
+
+	var parsedToken *jwt.Token
+	var err error
+
+	var headers = map[string]string{
+		"Accept":       "application/jwt",
+		"Content-Type": "application/json",
 	}
 
-	return nil
-}
+	parsedToken, err = jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		if err != nil {
+			return nil, errors.Errorf("Failed to parse jwt token")
+		}
 
-func validateToken(tokenString string) error {
-	token := Token{}
-	token.standardClaims = &jwt.StandardClaims{}
-	_, err := jwt.ParseWithClaims(tokenString, token.standardClaims, func(token *jwt.Token) (interface{}, error) {
+		if keyIDValue, keyIDExists := parsedToken.Header["jku"]; keyIDExists {
 
-		pubKeyMap = make(map[string]verifierKey)
-		if keyIDValue, keyIDExists := token.Header["kid"]; keyIDExists {
-
-			keyIDString, ok := keyIDValue.(string)
+			tokenSignCertUrl, ok := keyIDValue.(string)
 			if !ok {
-				return nil, fmt.Errorf("kid (key id) in jwt header is not a string : %v", keyIDValue)
-			}
-
-			if matchPubKey, found := pubKeyMap[keyIDString]; !found {
-				return nil, &MatchingCertNotFoundError{keyIDString}
-			} else {
-				// if the certificate just expired.. we need to return appropriate error
-				// so that the caller can deal with it appropriately
-				now := time.Now()
-				if now.After(matchPubKey.expTime) {
-					return nil, &MatchingCertJustExpired{keyIDString}
-				}
-				return matchPubKey.pubKey, nil
+				return nil, errors.Errorf("jku in jwt header is not valid : %v", tokenSignCertUrl)
 			}
 
 		} else {
-			return nil, fmt.Errorf("kid (key id) field missing in token. field is mandatory")
+			return nil, fmt.Errorf("jku field missing in token. field is mandatory")
 		}
-	})
 
-	if err != nil {
-		if jwtErr, ok := err.(*jwt.ValidationError); ok {
-			switch e := jwtErr.Inner.(type) {
-			case *MatchingCertNotFoundError, *MatchingCertJustExpired:
-				return e
-			}
-			return jwtErr
+		newRequest := func() (*http.Request, error) {
+			return http.NewRequest(http.MethodGet, tokenSignCertUrl, nil)
 		}
-		return err
-	}
+
+		processResponse := func(resp *http.Response) error {
+			tokenSignCert, err = ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return errors.Errorf("Failed to read body from %s: %s", tokenSignCertUrl, err)
+			}
+
+			block, _ := pem.Decode(tokenSignCert)
+
+			if block == nil {
+				return errors.Errorf("Unable to decode pem bytes")
+			}
+
+			cert, err := x509.ParseCertificate(block.Bytes)
+			if err != nil {
+				//log.WithError(err).Warn("Failed to parse certificate")
+			} else {
+				var ok bool
+				if key, ok = cert.PublicKey.(*rsa.PublicKey); ok {
+					return nil
+				}
+			}
+
+			return nil
+		}
+		if err := doRequest(client.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
+			return nil, err
+		}
+
+		return key, nil
+	})
 
 	return nil
 }

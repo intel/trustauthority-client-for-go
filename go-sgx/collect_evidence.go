@@ -54,7 +54,7 @@ func (adapter *SgxAdapter) CollectEvidence(nonce *client.SignedNonce) (*client.E
 		&retVal,
 		&qe3_target,
 		(*C.uint8_t)(unsafe.Pointer(&nonce.Nonce[0])),
-		C.uint32_t(len(nonce.Nonce)),
+		C.uint32_t(len(nonce.Nonce)+len(nonce.Iat)),
 		&p_report)
 
 	if status != 0 {
