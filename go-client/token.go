@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
@@ -78,8 +79,7 @@ func (client *amberClient) VerifyToken(token string) error {
 	var err error
 
 	var headers = map[string]string{
-		"Accept":       "application/jwt",
-		"Content-Type": "application/json",
+		"Accept": "application/x-pem-file",
 	}
 
 	parsedToken, err = jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
@@ -96,6 +96,11 @@ func (client *amberClient) VerifyToken(token string) error {
 
 		} else {
 			return nil, fmt.Errorf("jku field missing in token. field is mandatory")
+		}
+
+		_, err = url.Parse(tokenSignCertUrl)
+		if err != nil {
+			return nil, errors.Wrap(err, "Invalid URL provided to download Token Sign Cert")
 		}
 
 		newRequest := func() (*http.Request, error) {

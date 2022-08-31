@@ -16,6 +16,7 @@
         libsgx-dcap-quote-verify-dev
     ```
 - cp minimal-enclave/Enclave_u.* go-sgx-example/
+- cp minimal-enclave/libutils.so /usr/lib/x86_64-linux-gnu/
 - cd go-sgx-example
 - env CGO_CFLAGS_ALLOW="-f.*" go build --> produces "sgxexample"
 
