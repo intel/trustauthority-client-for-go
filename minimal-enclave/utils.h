@@ -6,13 +6,6 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
-#include <stdint.h>
-
-#include "sgx_defs.h"
-#include "sgx_eid.h"     /* sgx_enclave_id_t */
-#include "sgx_utils.h"
-#include "sgx_report.h"
-
 #if defined(__cplusplus)
 extern "C" {
 #endif

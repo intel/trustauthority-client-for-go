@@ -28,7 +28,7 @@ WORKDIR /app
 COPY . .
 RUN cd minimal-enclave  && make clean all
 RUN cp /app/minimal-enclave/Enclave_u.* go-sgx-example/ 
-RUN cp /app/minimal-enclave/enclave.so go-sgx-example/
+RUN cp /app/minimal-enclave/libutils.so /usr/lib/x86_64-linux-gnu/
 
 FROM libenclave as app
 WORKDIR /app

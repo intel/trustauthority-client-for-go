@@ -16,7 +16,7 @@ import (
 )
 
 // #cgo CFLAGS: -I/opt/intel/sgxsdk/include -I../minimal-enclave/ -fstack-protector-strong
-// #cgo LDFLAGS: -L/usr/lib/x86_64-linux-gnu/ -lsgx_urts
+// #cgo LDFLAGS: -lutils
 // #include "sgx_urts.h"
 // #include "Enclave_u.h"
 // #include "utils.h"
@@ -72,33 +72,31 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("TOKEN: %+v\n", token.Claims)
+	fmt.Printf("Collected Attestation Token from Amber")
 
 	err = client.VerifyToken(string(token))
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Printf("Verified Attestation Token received from Amber")
 }
 
 func loadPublicKey(eid uint64) ([]byte, error) {
+	// keySize holds the length of the key byte array returned from enclave
+	var keySize C.uint32_t
 
-	/*	// keySize holds the length of the key byte array returned from enclave
-		var keySize C.uint32_t
+	// keyBuf holds the bytes array of the key returned from enclave
+	var keyBuf *C.uint8_t
 
-		// keyBuf holds the bytes array of the key returned from enclave
-		var keyBuf *C.uint8_t
+	ret := C.get_public_key(C.ulong(eid), &keyBuf, &keySize)
+	if ret != 0 {
+		return nil, errors.New("failed to retrieve key from sgx enclave")
+	}
 
-		ret := C.get_public_key(C.ulong(eid), &keyBuf, &keySize)
-		if ret == 0 {
-			//log.Info("sgx/agent:loadPublicKey() get_public_key successfully returned.")
-		} else {
-			return nil, errors.New("failed to retrieve key from sgx enclave")
-		}
+	key := C.GoBytes(unsafe.Pointer(keyBuf), C.int(keySize))
+	C.free_public_key(keyBuf)
 
-		key := C.GoBytes(unsafe.Pointer(keyBuf), C.int(keySize))
-		C.free_public_key(keyBuf)
-	*/
-	key := make([]byte, 20)
 	return key, nil
 }
 

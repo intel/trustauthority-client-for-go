@@ -49,12 +49,20 @@ func (adapter *SgxAdapter) CollectEvidence(nonce *client.SignedNonce) (*client.E
 		return nil, errors.Errorf("sgx_qe_get_target_info return error code %x", qe3_ret)
 	}
 
+	var nonceValue []byte
+	if nonce != nil {
+		nonceValue = nonce.Nonce
+		if nonce.Iat != nil && len(nonce.Iat) > 0 {
+			nonceValue = append(nonceValue, nonce.Iat[:]...)
+		}
+	}
+
 	status := C.get_report((C.report_fx)(adapter.ReportFunction),
 		C.sgx_enclave_id_t(adapter.EID),
 		&retVal,
 		&qe3_target,
-		(*C.uint8_t)(unsafe.Pointer(&nonce.Nonce[0])),
-		C.uint32_t(len(nonce.Nonce)+len(nonce.Iat)),
+		(*C.uint8_t)(unsafe.Pointer(&nonceValue[0])),
+		C.uint32_t(len(nonceValue)),
 		&p_report)
 
 	if status != 0 {
@@ -83,5 +91,6 @@ func (adapter *SgxAdapter) CollectEvidence(nonce *client.SignedNonce) (*client.E
 	return &client.Evidence{
 		Type:     0,
 		Evidence: quote_buffer,
+		UserData: adapter.uData,
 	}, nil
 }

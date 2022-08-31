@@ -10,40 +10,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
-
-type verifierKey struct {
-	pubKey  crypto.PublicKey
-	expTime time.Time
-}
-
-var pubKeyMap map[string]verifierKey
-
-type MatchingCertNotFoundError struct {
-	KeyId string
-}
-
-func (e MatchingCertNotFoundError) Error() string {
-	return fmt.Sprintf("certificate with matching public key not found. kid (key id) : %s", e.KeyId)
-}
-
-type MatchingCertJustExpired struct {
-	KeyId string
-}
-
-func (e MatchingCertJustExpired) Error() string {
-	return fmt.Sprintf("certificate with matching public key just expired. kid (key id) : %s", e.KeyId)
-}
-
-type Token struct {
-	jwtToken       *jwt.Token
-	standardClaims *jwt.StandardClaims
-}
 
 type tokenRequest struct {
 	Quote       []byte      `json:"quote"`
@@ -145,7 +116,7 @@ func (client *amberClient) VerifyToken(token string) error {
 
 			cert, err := x509.ParseCertificate(block.Bytes)
 			if err != nil {
-				//log.WithError(err).Warn("Failed to parse certificate")
+				errors.Errorf("Failed to parse certificate")
 			} else {
 				var ok bool
 				if key, ok = cert.PublicKey.(*rsa.PublicKey); ok {
