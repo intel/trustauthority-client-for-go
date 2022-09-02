@@ -69,7 +69,7 @@ func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidenc
 	return attestationToken, nil
 }
 
-func (client *amberClient) VerifyToken(token string) error {
+func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 	var tokenSignCertUrl string
 	var tokenSignCert []byte
 	var key crypto.PublicKey
@@ -86,7 +86,7 @@ func (client *amberClient) VerifyToken(token string) error {
 			return nil, errors.Errorf("Failed to parse jwt token")
 		}
 
-		if keyIDValue, keyIDExists := parsedToken.Header["jku"]; keyIDExists {
+		if keyIDValue, keyIDExists := token.Header["jku"]; keyIDExists {
 
 			tokenSignCertUrl, ok := keyIDValue.(string)
 			if !ok {
@@ -137,5 +137,5 @@ func (client *amberClient) VerifyToken(token string) error {
 		return key, nil
 	})
 
-	return nil
+	return parsedToken, nil
 }

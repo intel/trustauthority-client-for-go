@@ -3,14 +3,11 @@ package sgx
 // #cgo CFLAGS: -I/opt/intel/sgxsdk/include -fstack-protector-strong
 // #cgo LDFLAGS: -lsgx_dcap_ql -lsgx_urts -ldl -lpthread -L/usr/lib/x86_64-linux-gnu/
 //
+// #include <stdlib.h>
 // #include "sgx_urts.h"
-// #include "sgx_tcrypto.h"
 // #include "sgx_dcap_ql_wrapper.h"
-// #include "sgx_quote_3.h"
-//
-// #include <stdint.h>
-// #include "sgx_edger8r.h"
 // #include "sgx_report.h"
+//
 // typedef sgx_status_t (*report_fx) (sgx_enclave_id_t eid,
 //										uint32_t* retval,
 //										const sgx_target_info_t* p_qe3_target,
@@ -30,15 +27,13 @@ package sgx
 // }
 import "C"
 import (
-	"encoding/hex"
-	"fmt"
 	"unsafe"
 
 	"github.com/intel/amber/v1/client"
 	"github.com/pkg/errors"
 )
 
-func (adapter *SgxAdapter) CollectEvidence(nonce *client.Nonce) (*client.Evidence, error) {
+func (adapter *SgxAdapter) CollectEvidence(nonce []byte) (*client.Evidence, error) {
 
 	retVal := C.uint32_t(0)
 	qe3_target := C.sgx_target_info_t{}
@@ -49,17 +44,15 @@ func (adapter *SgxAdapter) CollectEvidence(nonce *client.Nonce) (*client.Evidenc
 		return nil, errors.Errorf("sgx_qe_get_target_info return error code %x", qe3_ret)
 	}
 
-	var nonceValue []byte
-	if nonce != nil {
-		nonceValue = append(nonce.Val, nonce.Iat[:]...)
-	}
+	noncePtr := (*C.uint8_t)(C.CBytes(nonce))
+	defer C.free(unsafe.Pointer(noncePtr))
 
 	status := C.get_report((C.report_fx)(adapter.ReportFunction),
 		C.sgx_enclave_id_t(adapter.EID),
 		&retVal,
 		&qe3_target,
-		(*C.uint8_t)(unsafe.Pointer(&nonceValue[0])),
-		C.uint32_t(len(nonceValue)),
+		noncePtr,
+		C.uint32_t(len(nonce)),
 		&p_report)
 
 	if status != 0 {
@@ -82,8 +75,6 @@ func (adapter *SgxAdapter) CollectEvidence(nonce *client.Nonce) (*client.Evidenc
 	if qe3_ret != 0 {
 		return nil, errors.Errorf("sgx_qe_get_quote return error code %x", qe3_ret)
 	}
-
-	fmt.Printf("Quote: %s\n", hex.EncodeToString(quote_buffer))
 
 	return &client.Evidence{
 		Type:     0,

@@ -72,14 +72,14 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("Collected Attestation Token from Amber")
+	fmt.Printf("TOKEN: %s\n", string(token))
 
-	err = client.VerifyToken(string(token))
+	parsedToken, err := client.VerifyToken(string(token))
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("Verified Attestation Token received from Amber")
+	fmt.Printf("CLAIMS: %+v\n", parsedToken.Claims)
 }
 
 func loadPublicKey(eid uint64) ([]byte, error) {

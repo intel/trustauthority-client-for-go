@@ -12,7 +12,7 @@ func (client *amberClient) CollectToken(adapter EvidenceAdapter, policyIds []uui
 		return nil, errors.Errorf("Failed to collect nonce from Amber: %s", err)
 	}
 
-	evidence, err := adapter.CollectEvidence(nonce)
+	evidence, err := adapter.CollectEvidence(append(nonce.Val, nonce.Iat[:]...))
 	if err != nil {
 		return nil, errors.Errorf("Failed to collect evidence from adapter: %s", err)
 	}

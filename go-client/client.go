@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"net/url"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
 
@@ -12,11 +13,11 @@ type AmberClient interface {
 	GetNonce() (*Nonce, error)
 	GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) ([]byte, error)
 	CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) ([]byte, error)
-	VerifyToken(string) error
+	VerifyToken(string) (*jwt.Token, error)
 }
 
 type EvidenceAdapter interface {
-	CollectEvidence(nonce *Nonce) (*Evidence, error)
+	CollectEvidence(nonce []byte) (*Evidence, error)
 }
 
 type Evidence struct {
