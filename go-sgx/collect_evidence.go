@@ -38,7 +38,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (adapter *SgxAdapter) CollectEvidence(nonce *client.SignedNonce) (*client.Evidence, error) {
+func (adapter *SgxAdapter) CollectEvidence(nonce *client.Nonce) (*client.Evidence, error) {
 
 	retVal := C.uint32_t(0)
 	qe3_target := C.sgx_target_info_t{}
@@ -51,10 +51,7 @@ func (adapter *SgxAdapter) CollectEvidence(nonce *client.SignedNonce) (*client.E
 
 	var nonceValue []byte
 	if nonce != nil {
-		nonceValue = nonce.Nonce
-		if nonce.Iat != nil && len(nonce.Iat) > 0 {
-			nonceValue = append(nonceValue, nonce.Iat[:]...)
-		}
+		nonceValue = append(nonce.Val, nonce.Iat[:]...)
 	}
 
 	status := C.get_report((C.report_fx)(adapter.ReportFunction),
@@ -86,7 +83,7 @@ func (adapter *SgxAdapter) CollectEvidence(nonce *client.SignedNonce) (*client.E
 		return nil, errors.Errorf("sgx_qe_get_quote return error code %x", qe3_ret)
 	}
 
-	fmt.Printf("Q: %s\n", hex.EncodeToString(quote_buffer))
+	fmt.Printf("Quote: %s\n", hex.EncodeToString(quote_buffer))
 
 	return &client.Evidence{
 		Type:     0,

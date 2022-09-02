@@ -18,24 +18,23 @@ import (
 )
 
 type tokenRequest struct {
-	Quote       []byte      `json:"quote"`
-	SignedNonce SignedNonce `json:"signed_nonce"`
-	UserData    []byte      `json:"user_data"`
-	PolicyIds   []uuid.UUID `json:"policy_ids,omitempty"`
-	//TenantId    uuid.UUID   `json:"tenant_id"`
-	//PolicyNames []string    `json:"policy_names,omitempty"`
-	//EventLog    []byte      `json:"event_log,omitempty"`
+	Quote     []byte      `json:"quote"`
+	Nonce     *Nonce      `json:"nonce,omitempty"`
+	UserData  []byte      `json:"user_data,omitempty"`
+	PolicyIds []uuid.UUID `json:"policy_ids,omitempty"`
+	EventLog  []byte      `json:"event_log,omitempty"`
 }
 
-func (client *amberClient) GetToken(nonce *SignedNonce, policyIds []uuid.UUID, evidence *Evidence) ([]byte, error) {
+func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) ([]byte, error) {
 
 	url := fmt.Sprintf("%s/appraisal/v1/appraise", client.cfg.Url)
 
 	newRequest := func() (*http.Request, error) {
 		tr := tokenRequest{
-			Quote:       evidence.Evidence,
-			SignedNonce: *nonce,
-			PolicyIds:   policyIds,
+			Quote:     evidence.Evidence,
+			Nonce:     nonce,
+			UserData:  evidence.UserData,
+			PolicyIds: policyIds,
 		}
 
 		body, err := json.Marshal(tr)

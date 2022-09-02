@@ -9,14 +9,14 @@ import (
 
 type AmberClient interface {
 	GetAmberVersion() (*Version, error)
-	GetNonce() (*SignedNonce, error)
-	GetToken(nonce *SignedNonce, policyIds []uuid.UUID, evidence *Evidence) ([]byte, error)
+	GetNonce() (*Nonce, error)
+	GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) ([]byte, error)
 	CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) ([]byte, error)
 	VerifyToken(string) error
 }
 
 type EvidenceAdapter interface {
-	CollectEvidence(nonce *SignedNonce) (*Evidence, error)
+	CollectEvidence(nonce *Nonce) (*Evidence, error)
 }
 
 type Evidence struct {
@@ -32,8 +32,8 @@ type Config struct {
 	url    *url.URL
 }
 
-type SignedNonce struct {
-	Nonce     []byte `json:"nonce"`
+type Nonce struct {
+	Val       []byte `json:"val"`
 	Iat       []byte `json:"iat"`
 	Signature []byte `json:"signature"`
 }

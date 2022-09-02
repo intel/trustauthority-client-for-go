@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (client *amberClient) GetNonce() (*SignedNonce, error) {
+func (client *amberClient) GetNonce() (*Nonce, error) {
 	url := fmt.Sprintf("%s/appraisal/v1/nonce", client.cfg.Url)
 
 	newRequest := func() (*http.Request, error) {
@@ -20,7 +20,7 @@ func (client *amberClient) GetNonce() (*SignedNonce, error) {
 		headerXApiKey: client.cfg.ApiKey,
 	}
 
-	var nonce SignedNonce
+	var nonce Nonce
 	processResponse := func(resp *http.Response) error {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
