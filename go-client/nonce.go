@@ -18,6 +18,7 @@ func (client *amberClient) GetNonce() (*Nonce, error) {
 
 	var headers = map[string]string{
 		headerXApiKey: client.cfg.ApiKey,
+		headerAccept:  mimeApplicationJson,
 	}
 
 	var nonce Nonce

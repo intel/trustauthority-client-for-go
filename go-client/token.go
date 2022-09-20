@@ -46,13 +46,12 @@ func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidenc
 	}
 
 	var headers = map[string]string{
-		headerXApiKey:  client.cfg.ApiKey,
-		"Accept":       "application/jwt",
-		"Content-Type": "application/json",
+		headerXApiKey:     client.cfg.ApiKey,
+		headerAccept:      mimeApplicationJwt,
+		headerContentType: mimeApplicationJson,
 	}
 
 	var attestationToken []byte
-
 	processResponse := func(resp *http.Response) error {
 		var err error
 		attestationToken, err = ioutil.ReadAll(resp.Body)
@@ -78,7 +77,7 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 	var err error
 
 	var headers = map[string]string{
-		"Accept": "application/x-pem-file",
+		headerAccept: "application/x-pem-file",
 	}
 
 	parsedToken, err = jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
