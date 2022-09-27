@@ -6,6 +6,7 @@
 #include "Enclave_u.h"
 #include "sgx_tcrypto.h"
 #include "utils.h"
+#include "mbusafecrt.h" /* memcpy_s */
 
 int get_public_key(sgx_enclave_id_t eid, uint8_t **pp_key, uint32_t *p_key_size)
 {
@@ -23,8 +24,8 @@ int get_public_key(sgx_enclave_id_t eid, uint8_t **pp_key, uint32_t *p_key_size)
     if (NULL == *pp_key) {
         return -1;
     }
-    memcpy(*pp_key, ((const char *)rsa_key.e), E_SIZE_IN_BYTES);
-    memcpy(*pp_key + E_SIZE_IN_BYTES, ((const char *)rsa_key.n), N_SIZE_IN_BYTES);
+    memcpy_s(*pp_key, E_SIZE_IN_BYTES, ((const char *)rsa_key.e), E_SIZE_IN_BYTES);
+    memcpy_s(*pp_key + E_SIZE_IN_BYTES, E_SIZE_IN_BYTES, ((const char *)rsa_key.n), N_SIZE_IN_BYTES);
 
     *p_key_size = E_SIZE_IN_BYTES + N_SIZE_IN_BYTES;
 
