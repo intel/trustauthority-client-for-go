@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 func doRequest(tlsCfg *tls.Config,
@@ -50,7 +49,7 @@ func doRequest(tlsCfg *tls.Config,
 		defer func() {
 			err := resp.Body.Close()
 			if err != nil {
-				log.WithError(err).Errorf("Failed to close response body")
+				errors.Errorf("Failed to close response body")
 			}
 		}()
 	}

@@ -38,7 +38,6 @@ SGX_MODE ?= HW
 SGX_ARCH ?= x64
 OUT_OF_PROC ?= 0
 
-
 SGX_COMMON_CFLAGS := -m64
 SGX_LIBRARY_PATH := $(SGX_SDK)/lib64
 SGX_ENCLAVE_SIGNER := $(SGX_SDK)/bin/x64/sgx_sign
@@ -49,38 +48,6 @@ ifeq ($(SGX_DEBUG), 1)
 else
         SGX_COMMON_CFLAGS += -O2
 endif
-
-######## App Settings ########
-
-DCAP_Library_Name := sgx_dcap_ql
-Urts_Library_Name := sgx_urts
-Quote_ex_Library_Name := sgx_quote_ex
-
-# App_Cpp_Files :=  App/App.cpp
-# App_Include_Paths := -I$(SGX_SDK)/include -I../../QuoteGeneration/quote_wrapper/common/inc
-
-# App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths)
-
-# Two configuration modes - Debug, Release
-#   Debug - Macro SGX_DEBUG enabled.
-#   Release - Macro SGX_DEBUG disabled.
-# ifeq ($(SGX_DEBUG), 1)
-#         App_C_Flags += -DDEBUG -UNDEBUG -UEDEBUG
-# else
-#         App_C_Flags += -DNDEBUG -UEDEBUG -UDEBUG
-# endif
-
-
-# App_Cpp_Flags := $(App_C_Flags) -std=c++11
-# App_Link_Flags := $(SGX_COMMON_CFLAGS) -l$(DCAP_Library_Name) -l$(Urts_Library_Name) -ldl -lpthread
-# ifeq ($(OUT_OF_PROC),1)
-# 	App_Link_Flags += -l$(Quote_ex_Library_Name)
-# endif
-
-
-# App_Cpp_Objects := $(App_Cpp_Files:.cpp=.o)
-
-# App_Name := app
 
 ######## Enclave Settings ########
 Trts_Library_Name := sgx_trts
@@ -99,6 +66,15 @@ endif
 Enclave_C_Flags += $(Enclave_Include_Paths)
 Enclave_Cpp_Flags := $(Enclave_C_Flags) -std=c++11 -nostdinc++
 
+App_Library := libutils.so
+
+App_C_Flags := $(SGX_COMMON_CFLAGS) $(Enclave_Include_Paths) -fPIC -Wno-attributes $(App_Include_Paths)
+App_Cpp_Flags := $(App_C_Flags) -std=c++11
+App_Library_Link_Flags := $(SGX_COMMON_CFLAGS) -lsgx_dcap_ql -lsgx_urts -L${SGXSSL_LIB_PATH} -lsgx_usgxssl -shared
+
+App_Cpp_Objects := $(App_Cpp_Files:.cpp=.o)
+App_Library_Link_Flags := $(SGX_COMMON_CFLAGS) -lsgx_dcap_ql -lsgx_urts -L${SGXSSL_LIB_PATH} -lsgx_usgxssl -shared
+
 # To generate a proper enclave, it is recommended to follow below guideline to link the trusted libraries:
 #    1. Link sgx_trts with the `--whole-archive' and `--no-whole-archive' options,
 #       so that the whole content of trts is included in the enclave.
@@ -115,9 +91,8 @@ Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefau
         -Wl,-z,relro,-z,now,-z,noexecstack             \
         -Wl,--version-script=Enclave.lds
 
-Enclave_Cpp_Objects := $(Enclave_Cpp_Files:.cpp=.o)
+Enclave_Cpp_Objects := $(Enclave_Cpp_Files:.cpp=.o)# utils.o
 ENCLAVE_LIBRARY_PATH := ./
-
 
 Enclave_Name := enclave.so
 Signed_Enclave_Name := enclave.signed.so
@@ -129,13 +104,12 @@ else
         Build_Mode = HW_RELEASE
 endif
 
-
 .PHONY: all target run
 
 all: .config_$(Build_Mode)_$(SGX_ARCH)
 	$(MAKE) target
 
-target: $(Signed_Enclave_Name)
+target: $(App_Library) $(Signed_Enclave_Name)
 ifeq ($(Build_Mode), HW_RELEASE)
 	@echo "The project has been built in release hardware mode."
 else
@@ -148,30 +122,19 @@ ifneq ($(Build_Mode), HW_RELEASE)
 	@echo "RUN  =>  $(App_Name) [$(SGX_MODE)|$(SGX_ARCH), OK]"
 endif
 
-
 .config_$(Build_Mode)_$(SGX_ARCH):
 	@rm -f .config_* $(App_Name) $(Enclave_Name) $(Signed_Enclave_Name) $(App_Cpp_Objects) App/Enclave_u.* $(Enclave_Cpp_Objects) Enclave_t.*
 	@touch .config_$(Build_Mode)_$(SGX_ARCH)
 
 ######## App Objects ########
-# App/Enclave_u.c:
-# 	cd App && $(SGX_EDGER8R) --untrusted ../Enclave/Enclave.edl
-# 	@echo "GEN  =>  $@"
 
-# App/Enclave_u.o: App/Enclave_u.c
-# 	@$(CC) $(App_C_Flags) -c $< -o $@
-# 	@echo "CC   <=  $<"
+utils.o: utils.cpp Enclave_u.c
+	@$(CXX) $(App_Cpp_Flags) -c $< -o $@
+	@echo "CXX  <=  $<"
 
-# $(App_Cpp_Objects): App/Enclave_u.c
-# App/%.o: App/%.cpp
-# 	@$(CXX) $(App_Cpp_Flags) -c $< -o $@
-# 	@echo "CXX  <=  $<"
-
-# $(App_Name): App/Enclave_u.o $(App_Cpp_Objects)
-# 	$(CXX) $^ -o $@ $(App_Link_Flags)
-# 	@echo "LINK =>  $@"
-
-
+$(App_Library): utils.o
+	@$(CXX) $(App_Cpp_Flags) $^ -o $@ $(App_Library_Link_Flags)
+	@echo "LINK =>  $@"
 
 ######## Enclave Objects ########
 Enclave_t.c:
@@ -200,10 +163,7 @@ $(Signed_Enclave_Name): $(Enclave_Name)
 	@rm -f $(Enclave_Name)
 	@echo "SIGN =>  $@"
 
-
-
 .PHONY: clean
 clean:
-	@rm -f  $(App_Name)  App/*.o App/Enclave_u.* .config_*
-	@rm -f  $(Enclave_Name) $(Signed_Enclave_Name) $(Enclave_Cpp_Objects) Enclave/Enclave_t.*
-
+	@rm -f $(App_Library) *.o
+	@rm -f $(Enclave_Name) $(Signed_Enclave_Name) $(Enclave_Cpp_Objects) Enclave_t.* Enclave_u.*
