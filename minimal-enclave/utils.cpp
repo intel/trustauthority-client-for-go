@@ -6,7 +6,6 @@
 #include "Enclave_u.h"
 #include "sgx_tcrypto.h"
 #include "utils.h"
-#include "mbusafecrt.h" /* memcpy_s */
 
 int get_public_key(sgx_enclave_id_t eid, uint8_t **pp_key, uint32_t *p_key_size)
 {

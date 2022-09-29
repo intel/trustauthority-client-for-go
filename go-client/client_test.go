@@ -1,21 +1,19 @@
 package client
 
 import (
+	"crypto/tls"
 	"testing"
 )
 
 func Test1(t *testing.T) {
-	aac, err := NewAmberClient("https://10.80.213.35", "xyz")
-	if err != nil {
-		t.Fatal(err)
+	cfg := Config{
+		TlsCfg: &tls.Config{
+			InsecureSkipVerify: true,
+		},
 	}
 
-	defer aac.Close()
-
-	ver, err := aac.GetAmberVersion()
-	if err != nil {
-		t.Fatal(err)
+	_, err := New(&cfg)
+	if err == nil {
+		t.Error(err)
 	}
-
-	t.Logf("%+v", ver)
 }

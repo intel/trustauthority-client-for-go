@@ -1,0 +1,48 @@
+/*
+ * Copyright (c) 2021 Intel Corporation
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+package client
+
+import (
+	"crypto/tls"
+	"testing"
+)
+
+func TestEmptyToken(t *testing.T) {
+	cfg := Config{
+		Url: "http://www.example.com",
+		TlsCfg: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+
+	aac, err := New(&cfg)
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = aac.VerifyToken("")
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValidToken(t *testing.T) {
+	cfg := Config{
+		Url: "http://www.example.com",
+		TlsCfg: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+
+	aac, err := New(&cfg)
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = aac.VerifyToken("eyJhbGciOiJQUzM4NCIsImprdSI6Imh0dHBzOi8vd3d3LmludGVsLmNvbS9hbWJlci9jZXJ0cyIsImtpZCI6IjNjMjQxOGI1ZTY5ZTI2NDRiOTE2NzJmZjYwNTY2NjRkOTI0MjM0ZjAiLCJ0eXAiOiJKV1QifQ.eyJhbWJlcl90cnVzdF9zY29yZSI6MTAsImFtYmVyX3JlcG9ydF9kYXRhIjoiZWZmNWEyYTExNDg2N2FhOTQ0NjIwYzQ4Y2Q4NjcwNDZkYmY2ZjdmY2JmODQ5YTliNjZhNzg3MjJmNGRjZDdjOTAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAiLCJhbWJlcl90ZWVfaGVsZF9kYXRhIjoiQVFBQkFLMkxyUDhSZ1ROMW5naFJZWTBKQnZZQ1M3K2JCcVhoRjIzY2JkVFVRR3F3MEl2Wm9NYkpySUNmQXJ1MjVWWWpKbkZaS0Vvb1hRWmhPZUlBeTZNV0RpWEpmdDc0VnVUR25YZnNLUDk4bWNvZXBiQ2M4U1BJRFBsdkhTQy9QQWtlRzJUdlZ3QkhBbjcvcURVNXJwUENIS05xWDYweUd2SW95QjhrLzBJTzR5M2V0ekdvQjF5YVRPQ3Iyd1NCYmdUUkV1M3ppY3JJODFPL1RsK0FaWitVekFCdUxSUEgxdlBrelBQYVhCT21IN2Q4SnZXZ0RwSjhFenBNRitzakt4dXI1dkEraDNjamxDUG4yZjFjODhqZGIyNDgyUUJ2STZoanB4R2k0dWRUVVdJekdKdElKeElUbnNscThwTFpUekhnR3V2UEdYK2xkYWFKdUVPSGJBeFhDRW4zTnNGNHZvVjFSQ2I1OXBBMEI2NnZBd1RHZmFONE9pR205aGhiTk1NTnZNeGlhZmdGanJWWHpjc1BvUE5vN2hPd0dMcVJFdGUrMWkzZzlGNDBCK2hEZVV6elZhTU8zVkxHTUtEcDlUSDJqMytYSnRnU3p4dThOWlg1WEZVeGpSMlJINzV5d25vbnRNQStnaDZid1d1UUlWWWI2K0k3eHEzdWxOaUZldzZ4eWc9PSIsImFtYmVyX3NneF9tcmVuY2xhdmUiOiI4M2Y0ZTgxOTg2MWFkZWY2ZmZiMmE0ODY1ZWZlYTkzMzdiOTFlZDMwZmEzMzQ5MWIxN2YwZDVkOWU4MjA0NDEwIiwiYW1iZXJfc2d4X2lzX2RlYnVnZ2FibGUiOmZhbHNlLCJhbWJlcl9zZ3hfbXJzaWduZXIiOiI4M2Q3MTllNzdkZWFjYTE0NzBmNmJhZjYyYTRkNzc0MzAzYzg5OWRiNjkwMjBmOWM3MGVlMWRmYzA4YzdjZTllIiwiYW1iZXJfc2d4X2lzdnByb2RpZCI6MCwiYW1iZXJfc2d4X2lzdnN2biI6MCwiYW1iZXJfbWF0Y2hlZF9wb2xpY3lfaWRzIjpbImY0MzZjMzBhLTY0NGUtNGJiMi1iMzJjLTFmNWJmZjc3NTJmMiJdLCJhbWJlci1mYWl0aGZ1bC1zZXJ2aWNlLWlkcyI6WyI2YmFhNjMwMS0zMWVlLTQ1NmMtOWEzOC1lMjc5YWM3ZjZkNmEiLCJkZTU3NDU5ZC1mYjU2LTRhODgtYmU1ZC02ZjJhMzcwMzkzOWMiXSwiYW1iZXJfdGNiX3N0YXR1cyI6Ik9LIiwiYW1iZXJfZXZpZGVuY2VfdHlwZSI6IlNHWCIsImFtYmVyX3NpZ25lZF9ub25jZSI6dHJ1ZSwiYW1iZXJfY3VzdG9tX3BvbGljeSI6e30sInZlciI6IjEuMCIsImV4cCI6MTY2NDQ0NzA5MywianRpIjoiMzc5ZjBiMDctNTUzNy00YzdhLWFlNTAtODk2YTU1ZjIzNzY2IiwiaWF0IjoxNjY0NDQ2NzYzLCJpc3MiOiJBUyBBdHRlc3RhdGlvbiBUb2tlbiBJc3N1ZXIifQ.X2UDvraRVzAJpC1G1WAK2Qbx64d9WI5T_AKAq1lK5VAjEf409y5fZPxkBdZ-fGYt653nQ5Ah0-jkFRt0Yo7B2cxNmDWn61mMW9yYtt_55qHcbuDX5x4a-7MVawWjS1gLzY7qddmpzoIhwrx575c5JoQjG4qybDejRufUxhvu_XOOxSfhyh4JGRxBYNX19ZGeIbHtE3mfAXqg6qphZFfClIQLdlU-wGbefyN5mwpTK0T3eQ9Tlt0zZFrcv7lNIAPHHB52Ke9R7qdFEoVNNX-8YFMzk4gQyZdzYJS7Q3ElhQYXhBWnY5iwquftQztQcfydJL8o1OC-Ru0s-keF7OBaxABHcv5OhUKlVc44zaBnekP9lTzRCINYnVK67KxyAHsgXkK19UiX6v1FYxdcmdwZgNn5OkCwxiAMLgB8_CQku6q4aeyhCMo4acD1xKd6kkfgYQDxehLbGV6weT4E60omx6UFE13L9yANNNoWtzy0A4PJsiw0tbRPYYO8ehZ8Vgrb9sc00cdqG7_7ok-iivuxklaaSuzrY8VtkGw9T8g0w__fJ0X2KCMPcl3XfNidhOGxJ9402ff93X-QY3dHyaLOqmtJK0vlQ0vuoThseBSOezETalhFCuh-JUYZskokQ21fDPs2xDiytKubxqzrJVF1G1n1AVNWlIZXPXLyoXANS4s")
+	if err != nil {
+		t.Error(err)
+	}
+}
