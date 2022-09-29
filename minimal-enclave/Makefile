@@ -70,10 +70,9 @@ App_Library := libutils.so
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) $(Enclave_Include_Paths) -fPIC -Wno-attributes $(App_Include_Paths)
 App_Cpp_Flags := $(App_C_Flags) -std=c++11
-App_Library_Link_Flags := $(SGX_COMMON_CFLAGS) -lsgx_dcap_ql -lsgx_urts -L${SGXSSL_LIB_PATH} -lsgx_usgxssl -shared
 
 App_Cpp_Objects := $(App_Cpp_Files:.cpp=.o)
-App_Library_Link_Flags := $(SGX_COMMON_CFLAGS) -lsgx_dcap_ql -lsgx_urts -L${SGXSSL_LIB_PATH} -lsgx_usgxssl -shared
+App_Library_Link_Flags := $(SGX_COMMON_CFLAGS) -L ${SGX_LIBRARY_PATH} -lsgx_urts -shared
 
 # To generate a proper enclave, it is recommended to follow below guideline to link the trusted libraries:
 #    1. Link sgx_trts with the `--whole-archive' and `--no-whole-archive' options,

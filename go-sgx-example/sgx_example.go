@@ -16,7 +16,7 @@ import (
 )
 
 // #cgo CFLAGS: -I/opt/intel/sgxsdk/include -I../minimal-enclave/ -fstack-protector-strong
-// #cgo LDFLAGS: -lutils
+// #cgo LDFLAGS: -lsgx_urts -lutils
 // #include "sgx_urts.h"
 // #include "Enclave_u.h"
 // #include "utils.h"
