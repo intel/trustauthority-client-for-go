@@ -1,1 +1,0 @@
-Based from SGXDataPrimitives/SampleCode/QuoteGenerationSample
