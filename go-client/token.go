@@ -27,7 +27,7 @@ type tokenRequest struct {
 
 func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) ([]byte, error) {
 
-	url := fmt.Sprintf("%s/appraisal/v1/appraise", client.cfg.Url)
+	url := fmt.Sprintf("%s/appraisal/v1/attest", client.cfg.Url)
 
 	newRequest := func() (*http.Request, error) {
 		tr := tokenRequest{

@@ -29,7 +29,7 @@ import "C"
 import (
 	"unsafe"
 
-	"github.com/intel/amber/v1/client"
+	"github.com/intel/amber-client/go-client"
 	"github.com/pkg/errors"
 )
 
