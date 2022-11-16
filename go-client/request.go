@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// doRequest creates an API request, sends the API request and returns the API response
 func doRequest(tlsCfg *tls.Config,
 	newRequest func() (*http.Request, error),
 	queryParams map[string]string,

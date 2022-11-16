@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// AmberClient is an interface which exposes methods for calling Amber REST APIs
 type AmberClient interface {
 	GetAmberVersion() (*Version, error)
 	GetNonce() (*Nonce, error)
@@ -21,16 +22,19 @@ type AmberClient interface {
 	VerifyToken(string) (*jwt.Token, error)
 }
 
+// EvidenceAdapter is an interface which exposes methods for collecting Quote using Adapter
 type EvidenceAdapter interface {
 	CollectEvidence(nonce []byte) (*Evidence, error)
 }
 
+// Evidence is used to store Quote to be sent for Attestation
 type Evidence struct {
 	Type     uint32
 	Evidence []byte
 	UserData []byte
 }
 
+// Config holds the Amber configuration for Client
 type Config struct {
 	Url    string
 	TlsCfg *tls.Config
@@ -38,12 +42,14 @@ type Config struct {
 	url    *url.URL
 }
 
+// Nonce holds the signed nonce issued from Amber
 type Nonce struct {
 	Val       []byte `json:"val"`
 	Iat       []byte `json:"iat"`
 	Signature []byte `json:"signature"`
 }
 
+// Version holds the Amber version details
 type Version struct {
 	Name      string `json:"name"`
 	SemVer    string `json:"version"`
@@ -51,6 +57,7 @@ type Version struct {
 	BuildDate string `json:"buildDate"`
 }
 
+// New returns a new Amber API client instance
 func New(cfg *Config) (AmberClient, error) {
 	var err error
 	cfg.url, err = url.ParseRequestURI(cfg.Url)
@@ -63,6 +70,7 @@ func New(cfg *Config) (AmberClient, error) {
 	}, nil
 }
 
+// amberClient manages communication with Amber V1 API
 type amberClient struct {
 	cfg *Config
 }

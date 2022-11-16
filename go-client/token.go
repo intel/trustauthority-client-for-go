@@ -22,6 +22,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// tokenRequest holds all the data required for attestation
 type tokenRequest struct {
 	Quote     []byte      `json:"quote"`
 	Nonce     *Nonce      `json:"nonce,omitempty"`
@@ -30,6 +31,7 @@ type tokenRequest struct {
 	EventLog  []byte      `json:"event_log,omitempty"`
 }
 
+// GetToken is used to get attestation token from Amber
 func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) ([]byte, error) {
 
 	url := fmt.Sprintf("%s/appraisal/v1/attest", client.cfg.Url)
@@ -73,6 +75,7 @@ func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidenc
 	return attestationToken, nil
 }
 
+// VerifyToken is used to do signature verification of attestation token recieved from Amber
 func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 	var tokenSignCertUrl string
 	var tokenSignCert []byte

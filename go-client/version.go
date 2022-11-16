@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// GetAmberVersion is used to get Amber version details
 func (client *amberClient) GetAmberVersion() (*Version, error) {
 	url := fmt.Sprintf("%s/appraisal/v1/version", client.cfg.Url)
 

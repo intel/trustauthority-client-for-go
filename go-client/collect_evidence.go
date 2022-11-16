@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// CollectToken is used to initiate remote attestation from Amber
 func (client *amberClient) CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) ([]byte, error) {
 
 	nonce, err := client.GetNonce()
