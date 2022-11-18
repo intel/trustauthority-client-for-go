@@ -34,10 +34,8 @@ func doRequest(tlsCfg *tls.Config,
 		req.URL.RawQuery = q.Encode()
 	}
 
-	if headers != nil {
-		for name, val := range headers {
-			req.Header.Add(name, val)
-		}
+	for name, val := range headers {
+		req.Header.Add(name, val)
 	}
 
 	client := &http.Client{

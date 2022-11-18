@@ -35,7 +35,7 @@ func (client *amberClient) GetNonce() (*Nonce, error) {
 		}
 
 		if err = json.Unmarshal(body, &nonce); err != nil {
-			return errors.Errorf("Failed to devode json from %s: %s", url, err)
+			return errors.Errorf("Failed to decode json from %s: %s", url, err)
 		}
 
 		return nil

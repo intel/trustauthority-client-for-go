@@ -77,72 +77,65 @@ func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidenc
 
 // VerifyToken is used to do signature verification of attestation token recieved from Amber
 func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
-	var tokenSignCertUrl string
-	var tokenSignCert []byte
-	var key crypto.PublicKey
 
-	var parsedToken *jwt.Token
-	var err error
-
-	var headers = map[string]string{
-		headerAccept: "application/x-pem-file",
-	}
-
-	parsedToken, err = jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
-		if err != nil {
-			return nil, errors.Errorf("Failed to parse jwt token")
+	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		jkuValue, jkuExists := token.Header["jku"]
+		if !jkuExists {
+			return nil, errors.New("jku field missing in token header")
 		}
 
-		if keyIDValue, keyIDExists := token.Header["jku"]; keyIDExists {
-
-			tokenSignCertUrl, ok := keyIDValue.(string)
-			if !ok {
-				return nil, errors.Errorf("jku in jwt header is not valid : %v", tokenSignCertUrl)
-			}
-
-		} else {
-			return nil, fmt.Errorf("jku field missing in token. field is mandatory")
+		tokenSignCertUrl, ok := jkuValue.(string)
+		if !ok {
+			return nil, errors.Errorf("jku in jwt header is not a valid string: %v", tokenSignCertUrl)
 		}
 
-		_, err = url.Parse(tokenSignCertUrl)
+		_, err := url.Parse(tokenSignCertUrl)
 		if err != nil {
-			return nil, errors.Wrap(err, "Invalid URL provided to download Token Sign Cert")
+			return nil, errors.Wrap(err, "malformed URL provided for Token Signing Cert download")
 		}
 
 		newRequest := func() (*http.Request, error) {
 			return http.NewRequest(http.MethodGet, tokenSignCertUrl, nil)
 		}
 
+		var headers = map[string]string{
+			headerAccept: "application/x-pem-file",
+		}
+
+		var key crypto.PublicKey
 		processResponse := func(resp *http.Response) error {
-			tokenSignCert, err = ioutil.ReadAll(resp.Body)
+			tokenSignCert, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				return errors.Errorf("Failed to read body from %s: %s", tokenSignCertUrl, err)
 			}
 
 			block, _ := pem.Decode(tokenSignCert)
-
 			if block == nil {
-				return errors.Errorf("Unable to decode pem bytes")
+				return errors.New("Unable to decode pem bytes")
 			}
 
 			cert, err := x509.ParseCertificate(block.Bytes)
 			if err != nil {
-				errors.Errorf("Failed to parse certificate")
-			} else {
-				var ok bool
-				if key, ok = cert.PublicKey.(*rsa.PublicKey); ok {
-					return nil
-				}
+				return errors.Wrap(err, "Failed to parse certificate")
+			}
+
+			var ok bool
+			if key, ok = cert.PublicKey.(*rsa.PublicKey); !ok {
+				return errors.New("Certificate has invalid public key")
 			}
 
 			return nil
 		}
+
 		if err := doRequest(client.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
 			return nil, err
 		}
 
 		return key, nil
 	})
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to parse jwt token")
+	}
 
 	return parsedToken, nil
 }
