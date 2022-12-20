@@ -31,8 +31,12 @@ type tokenRequest struct {
 	EventLog  []byte      `json:"event_log,omitempty"`
 }
 
+type AttestationTokenResponse struct {
+	Token string `json:"token"`
+}
+
 // GetToken is used to get attestation token from Amber
-func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) ([]byte, error) {
+func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) (string, error) {
 
 	url := fmt.Sprintf("%s/appraisal/v1/attest", client.cfg.Url)
 
@@ -54,25 +58,28 @@ func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidenc
 
 	var headers = map[string]string{
 		headerXApiKey:     client.cfg.ApiKey,
-		headerAccept:      mimeApplicationJwt,
+		headerAccept:      mimeApplicationJson,
 		headerContentType: mimeApplicationJson,
 	}
 
-	var attestationToken []byte
+	var tokenResponse AttestationTokenResponse
 	processResponse := func(resp *http.Response) error {
 		var err error
-		attestationToken, err = ioutil.ReadAll(resp.Body)
+		attestationToken, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf("Failed to read body from %s: %s", url, err)
+		}
+		err = json.Unmarshal(attestationToken, &tokenResponse)
+		if err != nil {
+			return errors.Wrap(err, "Error unmarshalling Token response from appraise")
 		}
 		return nil
 	}
 
 	if err := doRequest(client.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
-		return nil, err
+		return "", err
 	}
-
-	return attestationToken, nil
+	return tokenResponse.Token, nil
 }
 
 // VerifyToken is used to do signature verification of attestation token recieved from Amber

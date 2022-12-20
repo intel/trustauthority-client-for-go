@@ -23,7 +23,7 @@ func TestGetToken(t *testing.T) {
 
 	mux.HandleFunc("/appraisal/v1/attest", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(token))
+		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
 
 	nonce := &Nonce{}

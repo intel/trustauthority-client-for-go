@@ -17,8 +17,8 @@ import (
 type AmberClient interface {
 	GetAmberVersion() (*Version, error)
 	GetNonce() (*Nonce, error)
-	GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) ([]byte, error)
-	CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) ([]byte, error)
+	GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) (string, error)
+	CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) (string, error)
 	VerifyToken(string) (*jwt.Token, error)
 }
 
