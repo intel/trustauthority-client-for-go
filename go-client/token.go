@@ -7,11 +7,7 @@ package client
 
 import (
 	"bytes"
-	"crypto"
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -19,6 +15,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/pkg/errors"
 )
 
@@ -86,6 +83,20 @@ func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidenc
 func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 
 	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+
+		var kid string
+
+		keyIDValue, keyIDExists := token.Header["kid"]
+		if !keyIDExists {
+			return nil, errors.New("kid field missing in token header")
+		} else {
+			var ok bool
+			kid, ok = keyIDValue.(string)
+			if !ok {
+				return nil, errors.Errorf("kid field in jwt header is not valid : %v", kid)
+			}
+		}
+
 		jkuValue, jkuExists := token.Header["jku"]
 		if !jkuExists {
 			return nil, errors.New("jku field missing in token header")
@@ -106,31 +117,30 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 		}
 
 		var headers = map[string]string{
-			headerAccept: "application/x-pem-file",
+			headerAccept: "application/json",
 		}
 
-		var key crypto.PublicKey
+		var pubKey interface{}
 		processResponse := func(resp *http.Response) error {
-			tokenSignCert, err := ioutil.ReadAll(resp.Body)
+			jwks, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				return errors.Errorf("Failed to read body from %s: %s", tokenSignCertUrl, err)
 			}
 
-			block, _ := pem.Decode(tokenSignCert)
-			if block == nil {
-				return errors.New("Unable to decode pem bytes")
-			}
-
-			cert, err := x509.ParseCertificate(block.Bytes)
+			jwkSet, err := jwk.Parse(jwks)
 			if err != nil {
-				return errors.Wrap(err, "Failed to parse certificate")
+				return errors.New("Unable to unmarshal response into a JWT Key Set")
 			}
 
-			var ok bool
-			if key, ok = cert.PublicKey.(*rsa.PublicKey); !ok {
-				return errors.New("Certificate has invalid public key")
+			jwkKey, found := jwkSet.LookupKeyID(kid)
+			if !found {
+				return errors.New("Could not find Key matching the key id")
 			}
 
+			err = jwkKey.Raw(&pubKey)
+			if err != nil {
+				return errors.New("Failed to extract Public Key from Certificate")
+			}
 			return nil
 		}
 
@@ -138,7 +148,7 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 			return nil, err
 		}
 
-		return key, nil
+		return pubKey, nil
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to parse jwt token")
