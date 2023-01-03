@@ -43,6 +43,7 @@ func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidenc
 			Nonce:     nonce,
 			UserData:  evidence.UserData,
 			PolicyIds: policyIds,
+			EventLog:  evidence.EventLog,
 		}
 
 		body, err := json.Marshal(tr)

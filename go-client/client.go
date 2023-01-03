@@ -32,6 +32,7 @@ type Evidence struct {
 	Type     uint32
 	Evidence []byte
 	UserData []byte
+	EventLog []byte
 }
 
 // Config holds the Amber configuration for Client
