@@ -14,6 +14,7 @@ const (
 	PemBlockTypePubliceKey = "PUBLIC KEY"
 	PublicKeyFileName      = "public-key.pem"
 	RSAKeyBitLength        = 3072
+	CLIShortDescription    = "Amber Attestation Client for TDX"
 )
 
 // Command Names
@@ -23,6 +24,7 @@ const (
 	QuoteCmd         = "quote"
 	TokenCmd         = "token"
 	RootCmd          = "amber-cli"
+	VersionCmd       = "version"
 )
 
 // Options Names
