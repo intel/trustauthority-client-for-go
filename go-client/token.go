@@ -7,14 +7,17 @@ package client
 
 import (
 	"bytes"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/lestrrat-go/jwx/v2/cert"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/pkg/errors"
 )
@@ -123,11 +126,13 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 
 		var pubKey interface{}
 		processResponse := func(resp *http.Response) error {
+			// Read the JWKS payload from HTTP Response body
 			jwks, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				return errors.Errorf("Failed to read body from %s: %s", tokenSignCertUrl, err)
 			}
 
+			// Unmarshal the JWKS
 			jwkSet, err := jwk.Parse(jwks)
 			if err != nil {
 				return errors.New("Unable to unmarshal response into a JWT Key Set")
@@ -138,6 +143,44 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 				return errors.New("Could not find Key matching the key id")
 			}
 
+			// Verify the cert chain. x5c field in the JWKS would contain the cert chain
+			atsCerts := jwkKey.X509CertChain()
+
+			root := x509.NewCertPool()
+			intermediate := x509.NewCertPool()
+			var leafCert *x509.Certificate
+
+			for i := 0; i < atsCerts.Len(); i++ {
+				atsCert, ok := atsCerts.Get(i)
+				if !ok {
+					return errors.Errorf("Failed to fetch certificate at index %d", i)
+				}
+
+				cer, err := cert.Parse(atsCert)
+				if err != nil {
+					return errors.Errorf("Failed to parse x509 certificate[%d]: %v", i, err)
+				}
+
+				if cer.IsCA && cer.BasicConstraintsValid && strings.Contains(cer.Subject.CommonName, "Root CA") {
+					root.AddCert(cer)
+				} else if strings.Contains(cer.Subject.CommonName, "Signing CA") {
+					intermediate.AddCert(cer)
+				} else {
+					leafCert = cer
+				}
+			}
+
+			// Verify the Leaf certificate against the CA
+			opts := x509.VerifyOptions{
+				Roots:         root,
+				Intermediates: intermediate,
+			}
+
+			if _, err := leafCert.Verify(opts); err != nil {
+				return errors.Errorf("Failed to verify cert chain: %v", err.Error())
+			}
+
+			// Extract the public key from JWK using exponent and modulus
 			err = jwkKey.Raw(&pubKey)
 			if err != nil {
 				return errors.New("Failed to extract Public Key from Certificate")
