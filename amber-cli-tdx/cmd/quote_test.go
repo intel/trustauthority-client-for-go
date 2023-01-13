@@ -22,14 +22,13 @@ func TestQuoteCmd(t *testing.T) {
 		{
 			args:    []string{constants.QuoteCmd, "--" + constants.UserDataOption, "dGVzdHVzZXJkYXRh"},
 			wantErr: false,
-			description: "Test with valid inputs with providing value for " + constants.
+			description: "Test with all valid inputs with providing value for " + constants.
 				UserDataOption + " option",
 		},
 		{
-			args:    []string{constants.QuoteCmd},
-			wantErr: false,
-			description: "Test with valid inputs without providing value for " + constants.
-				UserDataOption + " option",
+			args:        []string{constants.QuoteCmd},
+			wantErr:     false,
+			description: "Test without inputs",
 		},
 		{
 			args: []string{constants.QuoteCmd, "--" + constants.UserDataOption, "dGVzdHVzZXJkYXRh",

@@ -54,11 +54,12 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
+				"--" + constants.UserDataOption, "dGVzdHVzZXJkYXRh",
 				"--" + constants.PolicyIdsOption,
 				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
 			},
 			wantErr:     false,
-			description: "Test with all valid inputs",
+			description: "Test with all valid inputs with providing value for " + constants.UserDataOption + " option",
 		},
 		{
 			args: []string{

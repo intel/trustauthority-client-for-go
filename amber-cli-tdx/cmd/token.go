@@ -43,8 +43,8 @@ var tokenCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(tokenCmd)
-	tokenCmd.Flags().StringP(constants.PolicyIdsOption, "p", "",
-		"Amber Policy Ids, comma separated")
+	tokenCmd.Flags().StringP(constants.UserDataOption, "u", "", "User Data in base64 encoded format")
+	tokenCmd.Flags().StringP(constants.PolicyIdsOption, "p", "", "Amber Policy Ids, comma separated")
 }
 
 func getToken(cmd *cobra.Command) error {
@@ -71,9 +71,30 @@ func getToken(cmd *cobra.Command) error {
 		}
 	}
 
+	userData, err := cmd.Flags().GetString(constants.UserDataOption)
+	if err != nil {
+		return err
+	}
+
 	policyIds, err := cmd.Flags().GetString(constants.PolicyIdsOption)
 	if err != nil {
 		return err
+	}
+
+	var userDataBytes []byte
+	if userData != "" {
+		userDataBytes, err = base64.URLEncoding.DecodeString(userData)
+		if err != nil {
+			return errors.Wrap(err, "Error while base64 decoding of userdata")
+		}
+	} else {
+		publicKey, err := ioutil.ReadFile(constants.PublicKeyFileName)
+		if err != nil {
+			return errors.Wrap(err, "Error reading public key from file")
+		}
+
+		publicKeyBlock, _ := pem.Decode(publicKey)
+		userDataBytes = publicKeyBlock.Bytes
 	}
 
 	var pIds []uuid.UUID
@@ -103,15 +124,8 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
-	publicKey, err := ioutil.ReadFile(constants.PublicKeyFileName)
-	if err != nil {
-		return errors.Wrap(err, "Error reading public key from file")
-	}
-
-	publicKeyBlock, _ := pem.Decode(publicKey)
-
 	evLogParser := tdx.NewEventLogParser()
-	adapter, err := tdx.NewAdapter(publicKeyBlock.Bytes, evLogParser)
+	adapter, err := tdx.NewAdapter(userDataBytes, evLogParser)
 	if err != nil {
 		return errors.Wrap(err, "Error while creating tdx adapter")
 	}
