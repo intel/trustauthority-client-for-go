@@ -8,12 +8,13 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+
 	"github.com/intel/amber/v1/client/tdx-cli/constants"
 	"github.com/intel/amber/v1/client/tdx-cli/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"io/ioutil"
-	"os"
 )
 
 // createKeyPairCmd represents the create-key-pair command

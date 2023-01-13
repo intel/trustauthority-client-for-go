@@ -9,12 +9,12 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/intel/amber/v1/client/tdx"
-	"github.com/intel/amber/v1/client/tdx-cli/constants"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 
+	"github.com/intel/amber/v1/client/tdx"
+	"github.com/intel/amber/v1/client/tdx-cli/constants"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +39,7 @@ func init() {
 		"Private key file path")
 	decryptCmd.Flags().StringP(constants.DecryptCmdInputOption, "i", "",
 		"Base64 encoded encrypted blob")
-	decryptCmd.Flags().StringP(constants.DecryptedDataFilePathOption, "o", "",
+	decryptCmd.Flags().StringP(constants.DecryptCmdOutputOption, "o", "",
 		"File path for saving decrypted data, if not specified decrypted data will be written to stdout")
 	decryptCmd.MarkFlagRequired(constants.DecryptCmdInputOption)
 	decryptCmd.MarkFlagRequired(constants.PrivateKeyPathOption)
@@ -71,7 +71,7 @@ func decrypt(cmd *cobra.Command) error {
 		return err
 	}
 
-	decryptedDataPath, err := cmd.Flags().GetString(constants.DecryptedDataFilePathOption)
+	decryptedDataPath, err := cmd.Flags().GetString(constants.DecryptCmdOutputOption)
 	if err != nil {
 		return err
 	}

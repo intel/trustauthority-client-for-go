@@ -8,9 +8,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/intel/amber/v1/client/tdx-cli/constants"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var Version = ""
@@ -20,7 +21,7 @@ var BuildDate = ""
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
 	Use:   constants.VersionCmd,
-	Short: "Version details of Amber Attestation Client for TDX",
+	Short: "Displays version of " + constants.CLIShortDescription,
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		err := getVersion()
@@ -38,7 +39,7 @@ func init() {
 }
 
 func getVersion() error {
-	verStr := fmt.Sprintf("CLI Name: %s\n", constants.CLIShortDescription)
+	verStr := fmt.Sprintf("%s\n", constants.CLIShortDescription)
 	verStr = verStr + fmt.Sprintf("Version: %s-%s\n", Version, GitHash)
 	verStr = verStr + fmt.Sprintf("Build Date: %s\n", BuildDate)
 	fmt.Fprintln(os.Stdout, verStr)

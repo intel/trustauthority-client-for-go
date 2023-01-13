@@ -1,6 +1,7 @@
 /*
- * Copyright (C) 2022 Intel Corporation
- * SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (c) 2022 Intel Corporation
+ *   All rights reserved.
+ *   SPDX-License-Identifier: BSD-3-Clause
  */
 
 package cmd

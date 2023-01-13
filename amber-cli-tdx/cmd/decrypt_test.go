@@ -80,7 +80,7 @@ func TestDecryptCmd(t *testing.T) {
 			},
 			wantErr: false,
 			description: "Test with all valid inputs without providing value for " + constants.
-				DecryptedDataFilePathOption + " option",
+				DecryptCmdOutputOption + " option",
 		},
 		{
 			args: []string{
@@ -89,12 +89,12 @@ func TestDecryptCmd(t *testing.T) {
 				privateKeyPath,
 				"--" + constants.DecryptCmdInputOption,
 				base64EncCipherText,
-				"--" + constants.DecryptedDataFilePathOption,
+				"--" + constants.DecryptCmdOutputOption,
 				decryptedFilePath,
 			},
 			wantErr: false,
 			description: "Test with all valid inputs with providing value for " + constants.
-				DecryptedDataFilePathOption + " option",
+				DecryptCmdOutputOption + " option",
 		},
 	}
 

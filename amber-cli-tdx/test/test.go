@@ -8,10 +8,11 @@ package test
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gorilla/mux"
 )
 
 var nonce = `

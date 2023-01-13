@@ -38,7 +38,7 @@ func TestTokenCmd(t *testing.T) {
 	defer server.Close()
 
 	viper.Set("AMBER_URL", server.URL)
-	viper.Set("AMBER_API_KEY", "111")
+	viper.Set("AMBER_API_KEY", "YXBpa2V5")
 	tt := []struct {
 		args        []string
 		wantErr     bool
@@ -47,10 +47,9 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.TLSVerifyOption,
 			},
 			wantErr:     false,
-			description: "Test with all valid inputs with tls verify option",
+			description: "Test without inputs",
 		},
 		{
 			args: []string{

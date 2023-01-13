@@ -11,6 +11,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+
 	"github.com/intel/amber/v1/client/tdx-cli/constants"
 	"github.com/pkg/errors"
 )

@@ -8,17 +8,18 @@ package cmd
 
 import (
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/pem"
 	"fmt"
-	"github.com/intel/amber/v1/client"
-	"github.com/intel/amber/v1/client/tdx"
-	"github.com/intel/amber/v1/client/tdx-cli/constants"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/intel/amber/v1/client"
+	"github.com/intel/amber/v1/client/tdx"
+	"github.com/intel/amber/v1/client/tdx-cli/constants"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -44,8 +45,6 @@ func init() {
 	rootCmd.AddCommand(tokenCmd)
 	tokenCmd.Flags().StringP(constants.PolicyIdsOption, "p", "",
 		"Amber Policy Ids, comma separated")
-	tokenCmd.Flags().
-		Bool(constants.TLSVerifyOption, true, "Verify tls certificates when making connection to amber")
 }
 
 func getToken(cmd *cobra.Command) error {
@@ -66,8 +65,9 @@ func getToken(cmd *cobra.Command) error {
 	if amberApikey == "" {
 		return errors.Errorf("%s is not set in env", constants.AmberApiKeyEnv)
 	} else {
-		if len(amberApikey) > constants.MaxKeyLen || !constants.HexReg.MatchString(amberApikey) {
-			return errors.New("Invalid Api key")
+		_, err = base64.URLEncoding.DecodeString(amberApikey)
+		if err != nil {
+			return errors.Wrap(err, "Invalid Api key, must be base64 string")
 		}
 	}
 
@@ -88,21 +88,8 @@ func getToken(cmd *cobra.Command) error {
 		}
 	}
 
-	tlsVerify, err := cmd.Flags().GetBool(constants.TLSVerifyOption)
-	if err != nil {
-		return err
-	}
-	var tlsConfig *tls.Config
-
-	if tlsVerify {
-		tlsConfig = &tls.Config{
-			MinVersion:         tls.VersionTLS13,
-			InsecureSkipVerify: false,
-		}
-	} else {
-		tlsConfig = &tls.Config{
-			InsecureSkipVerify: true,
-		}
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: false,
 	}
 
 	cfg := client.Config{
