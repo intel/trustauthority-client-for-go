@@ -83,7 +83,7 @@ func getToken(cmd *cobra.Command) error {
 
 	var userDataBytes []byte
 	if userData != "" {
-		userDataBytes, err = base64.URLEncoding.DecodeString(userData)
+		userDataBytes, err = base64.StdEncoding.DecodeString(userData)
 		if err != nil {
 			return errors.Wrap(err, "Error while base64 decoding of userdata")
 		}

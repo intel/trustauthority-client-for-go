@@ -53,7 +53,7 @@ func decrypt(cmd *cobra.Command) error {
 		return err
 	}
 
-	encryptedData, err := base64.URLEncoding.DecodeString(b64EncryptedData)
+	encryptedData, err := base64.StdEncoding.DecodeString(b64EncryptedData)
 	if err != nil {
 		return errors.Wrap(err, "Error while base64 decoding of encrypted data")
 	}

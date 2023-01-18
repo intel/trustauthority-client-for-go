@@ -64,7 +64,7 @@ func TestDecryptCmd(t *testing.T) {
 		log.Fatal("failed to encrypt" + err.Error())
 	}
 
-	base64EncCipherText := base64.URLEncoding.EncodeToString(ciphertext)
+	base64EncCipherText := base64.StdEncoding.EncodeToString(ciphertext)
 	tt := []struct {
 		args        []string
 		wantErr     bool
