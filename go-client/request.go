@@ -41,6 +41,7 @@ func doRequest(tlsCfg *tls.Config,
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: tlsCfg,
+			Proxy:           http.ProxyFromEnvironment,
 		},
 	}
 
