@@ -11,4 +11,5 @@ const (
 	headerContentType = "Content-Type"
 
 	mimeApplicationJson = "application/json"
+	AtsCertChainMaxLen  = 10
 )

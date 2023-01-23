@@ -150,6 +150,9 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 			intermediate := x509.NewCertPool()
 			var leafCert *x509.Certificate
 
+			if atsCerts.Len() > AtsCertChainMaxLen {
+				return errors.Errorf("Error: ATS Cert chain has more than %d certificates", AtsCertChainMaxLen)
+			}
 			for i := 0; i < atsCerts.Len(); i++ {
 				atsCert, ok := atsCerts.Get(i)
 				if !ok {
