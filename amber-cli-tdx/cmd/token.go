@@ -94,6 +94,9 @@ func getToken(cmd *cobra.Command) error {
 		}
 
 		publicKeyBlock, _ := pem.Decode(publicKey)
+		if publicKeyBlock == nil {
+			return errors.Errorf("No PEM data found in %s file", constants.PublicKeyFileName)
+		}
 		userDataBytes = publicKeyBlock.Bytes
 	}
 

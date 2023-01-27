@@ -1,0 +1,54 @@
+name: OnMergeRelease
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'release/*'
+    tags:
+      - '**'
+
+jobs:
+  build-test-scan:
+    runs-on: [ self-hosted ]
+    env:
+      http_proxy: ${{ secrets.HTTP_PROXY }}
+      https_proxy: ${{ secrets.HTTPS_PROXY }}
+      no_proxy: ${{ secrets.NO_PROXY }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Style Checker
+        run: |
+          /usr/local/go/bin/gofmt -l .
+          if [[ $(/usr/local/go/bin/gofmt -l . | wc -l) -gt 0 ]]; then
+             echo "Atleast 1 file need formatting"
+             exit 1
+          fi
+
+      - name: Snyk Scan
+        run: |
+          snyk config set endpoint=${{ secrets.SNYK_URL }}
+          snyk config set api=${{ secrets.SYNK_API_TOKEN }}
+          snyk config set org=${{ secrets.ORG_NAME }}
+          snyk auth ${{ secrets.SNYK_AUTH_TOKEN }}
+          snyk test --insecure --all-projects --json-file-output=snyc-scan.json
+
+      - name: Unit Test Coverage
+        run: |
+          client_coverage=$(cd go-client && /usr/local/go/bin/go test ./... -coverprofile=cover.out)
+          echo $client_coverage
+          COVERAGE=$(echo $client_coverage | awk '{print $5}' | awk -F. '{print $1}')
+          if [[ $COVERAGE -lt 80 ]]; then
+            echo "Unit test coverage must be above 80%"
+            exit 1
+          fi
+          tdx_cli_coverage=$(cd amber-cli-tdx && /usr/local/go/bin/go test --tags=test ./... -coverprofile=cover.out)
+          echo $tdx_cli_coverage
+          COVERAGE=$(echo $tdx_cli_coverage | awk '{print $5}' | awk -F. '{print $1}')
+          if [[ $COVERAGE -lt 80 ]]; then
+            echo "Unit test coverage must be above 80%"
+            exit 1
+          fi
