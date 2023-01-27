@@ -33,16 +33,14 @@ jobs:
 
       - name: Unit Test Coverage
         run: |
-          client_coverage=$(cd go-client && /usr/local/go/bin/go test ./... -coverprofile=cover.out)
-          echo $client_coverage
-          COVERAGE=$(echo $client_coverage | awk '{print $5}' | awk -F. '{print $1}')
+          COVERAGE=$(cd amber-cli-tdx && make test-coverage | grep 'total' | awk '{print $3}' | awk -F. '{print $1}')
+          echo "Unit test coverage for amber-cli-tdx is - $COVERAGE%"
           if [[ $COVERAGE -lt 80 ]]; then
             echo "Unit test coverage must be above 80%"
             exit 1
           fi
-          tdx_cli_coverage=$(cd amber-cli-tdx && /usr/local/go/bin/go test --tags=test ./... -coverprofile=cover.out)
-          echo $tdx_cli_coverage
-          COVERAGE=$(echo $tdx_cli_coverage | awk '{print $5}' | awk -F. '{print $1}')
+          COVERAGE=$(cd go-client && /usr/local/go/bin/go test ./... -coverprofile=cover.out | awk '{print $5}' | awk -F. '{print $1}')
+          echo "Unit test coverage for go-client is - $COVERAGE%"
           if [[ $COVERAGE -lt 80 ]]; then
             echo "Unit test coverage must be above 80%"
             exit 1

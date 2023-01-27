@@ -78,9 +78,8 @@ func TestDecryptCmd(t *testing.T) {
 				"--" + constants.DecryptCmdInputOption,
 				base64EncCipherText,
 			},
-			wantErr: false,
-			description: "Test with all valid inputs without providing value for " + constants.
-				DecryptCmdOutputOption + " option",
+			wantErr:     false,
+			description: "Test with all valid inputs",
 		},
 		{
 			args: []string{
@@ -92,9 +91,30 @@ func TestDecryptCmd(t *testing.T) {
 				"--" + constants.DecryptCmdOutputOption,
 				decryptedFilePath,
 			},
-			wantErr: false,
-			description: "Test with all valid inputs with providing value for " + constants.
-				DecryptCmdOutputOption + " option",
+			wantErr:     false,
+			description: "Test with all valid inputs with output filepath",
+		},
+		{
+			args: []string{
+				constants.DecryptCmd,
+				"--" + constants.PrivateKeyPathOption,
+				privateKeyPath,
+				"--" + constants.DecryptCmdInputOption,
+				plaintText,
+			},
+			wantErr:     true,
+			description: "Test with invalid encrypted blob",
+		},
+		{
+			args: []string{
+				constants.DecryptCmd,
+				"--" + constants.PrivateKeyPathOption,
+				privateKeyPath,
+				"--" + constants.DecryptCmdInputOption,
+				"encryptedD@t@",
+			},
+			wantErr:     true,
+			description: "Test with malformed encrypted blob",
 		},
 	}
 

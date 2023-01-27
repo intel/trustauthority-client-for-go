@@ -20,12 +20,6 @@ func TestQuoteCmd(t *testing.T) {
 		description string
 	}{
 		{
-			args:    []string{constants.QuoteCmd, "--" + constants.UserDataOption, "dGVzdHVzZXJkYXRh"},
-			wantErr: false,
-			description: "Test with all valid inputs with providing value for " + constants.
-				UserDataOption + " option",
-		},
-		{
 			args:        []string{constants.QuoteCmd},
 			wantErr:     false,
 			description: "Test without inputs",
@@ -33,9 +27,18 @@ func TestQuoteCmd(t *testing.T) {
 		{
 			args: []string{constants.QuoteCmd, "--" + constants.UserDataOption, "dGVzdHVzZXJkYXRh",
 				"--" + constants.NonceOption, "dGVzdHVzZXJkYXRh"},
-			wantErr: false,
-			description: "Test with all valid inputs with providing value for " + constants.
-				UserDataOption + " " + constants.NonceOption + " options",
+			wantErr:     false,
+			description: "Test with all valid inputs",
+		},
+		{
+			args:        []string{constants.QuoteCmd, "--" + constants.UserDataOption, "u$erd@t@"},
+			wantErr:     true,
+			description: "Test with malformed userdata",
+		},
+		{
+			args:        []string{constants.QuoteCmd, "--" + constants.NonceOption, "n@nce"},
+			wantErr:     true,
+			description: "Test with malformed nonce",
 		},
 	}
 

@@ -55,11 +55,18 @@ func TestTokenCmd(t *testing.T) {
 			args: []string{
 				constants.TokenCmd,
 				"--" + constants.UserDataOption, "dGVzdHVzZXJkYXRh",
-				"--" + constants.PolicyIdsOption,
-				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
+				"--" + constants.PolicyIdsOption, "4312c813-ecb2-4e6e-83d3-515d88ac06f2",
 			},
 			wantErr:     false,
-			description: "Test with all valid inputs with providing value for " + constants.UserDataOption + " option",
+			description: "Test with all valid inputs",
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.UserDataOption, "u$erd@t@",
+			},
+			wantErr:     true,
+			description: "Test with malformed userdata",
 		},
 		{
 			args: []string{
@@ -81,4 +88,42 @@ func TestTokenCmd(t *testing.T) {
 			assert.NoError(t, err)
 		}
 	}
+}
+
+func TestTokenCmd_MissingAmberUrl(t *testing.T) {
+
+	viper.Set("AMBER_URL", "")
+	viper.Set("AMBER_API_KEY", "YXBpa2V5")
+	_, err := execute(t, rootCmd, constants.TokenCmd)
+	assert.Error(t, err)
+}
+
+func TestTokenCmd_MissingAmberApiKey(t *testing.T) {
+
+	server := test.MockAmberServer(t)
+	defer server.Close()
+
+	viper.Set("AMBER_URL", server.URL)
+	viper.Set("AMBER_API_KEY", "")
+	_, err := execute(t, rootCmd, constants.TokenCmd)
+	assert.Error(t, err)
+}
+
+func TestTokenCmd_MalformedAmberUrl(t *testing.T) {
+
+	viper.Set("AMBER_URL", ":amber.com")
+	viper.Set("AMBER_API_KEY", "YXBpa2V5")
+	_, err := execute(t, rootCmd, constants.TokenCmd)
+	assert.Error(t, err)
+}
+
+func TestTokenCmd_MalformedAmberApiKey(t *testing.T) {
+
+	server := test.MockAmberServer(t)
+	defer server.Close()
+
+	viper.Set("AMBER_URL", server.URL)
+	viper.Set("AMBER_API_KEY", "@p!key")
+	_, err := execute(t, rootCmd, constants.TokenCmd)
+	assert.Error(t, err)
 }

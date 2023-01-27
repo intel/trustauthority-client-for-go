@@ -17,7 +17,7 @@ func TestGetVersion(t *testing.T) {
 	GitHash = "abc1234"
 	BuildDate = "01-01-1990"
 
-	expected := fmt.Sprintf("CLI Name: %s\n", constants.RootCmd)
+	expected := fmt.Sprintf("%s\n", constants.RootCmd)
 	expected = expected + fmt.Sprintf("Version: %s-%s\n", Version, GitHash)
 	expected = expected + fmt.Sprintf("Build Date: %s\n", BuildDate)
 
