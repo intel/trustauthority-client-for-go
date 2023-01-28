@@ -89,6 +89,7 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 
 		var kid string
+		var tokenSignCertUrl string
 
 		keyIDValue, keyIDExists := token.Header["kid"]
 		if !keyIDExists {
@@ -97,18 +98,19 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 			var ok bool
 			kid, ok = keyIDValue.(string)
 			if !ok {
-				return nil, errors.Errorf("kid field in jwt header is not valid : %v", kid)
+				return nil, errors.Errorf("kid field in jwt header is not a valid string: %v", kid)
 			}
 		}
 
 		jkuValue, jkuExists := token.Header["jku"]
 		if !jkuExists {
 			return nil, errors.New("jku field missing in token header")
-		}
-
-		tokenSignCertUrl, ok := jkuValue.(string)
-		if !ok {
-			return nil, errors.Errorf("jku in jwt header is not a valid string: %v", tokenSignCertUrl)
+		} else {
+			var ok bool
+			tokenSignCertUrl, ok = jkuValue.(string)
+			if !ok {
+				return nil, errors.Errorf("jku in jwt header is not a valid string: %v", tokenSignCertUrl)
+			}
 		}
 
 		_, err := url.Parse(tokenSignCertUrl)
@@ -145,14 +147,14 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 
 			// Verify the cert chain. x5c field in the JWKS would contain the cert chain
 			atsCerts := jwkKey.X509CertChain()
+			if atsCerts.Len() > AtsCertChainMaxLen {
+				return errors.Errorf("Token Signing Cert chain has more than %d certificates", AtsCertChainMaxLen)
+			}
 
 			root := x509.NewCertPool()
 			intermediate := x509.NewCertPool()
 			var leafCert *x509.Certificate
 
-			if atsCerts.Len() > AtsCertChainMaxLen {
-				return errors.Errorf("Error: ATS Cert chain has more than %d certificates", AtsCertChainMaxLen)
-			}
 			for i := 0; i < atsCerts.Len(); i++ {
 				atsCert, ok := atsCerts.Get(i)
 				if !ok {

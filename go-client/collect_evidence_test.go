@@ -84,7 +84,31 @@ func TestCollectToken_evidenceFailure(t *testing.T) {
 
 	mux.HandleFunc("/appraisal/v1/attest", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(token))
+		w.Write([]byte(`{"token":"` + token + `"}`))
+	})
+
+	_, err := client.CollectToken(adapter, nil)
+	if err == nil {
+		t.Errorf("CollectToken returned nil, expected error")
+	}
+}
+
+func TestCollectToken_tokenFailure(t *testing.T) {
+	client, mux, _, teardown := setup()
+	defer teardown()
+
+	mux.HandleFunc("/appraisal/v1/nonce", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"val":"` + nonceVal + `","iat":"` + nonceIat + `","signature":"` + nonceSig + `"}`))
+	})
+
+	adapter := MockAdapter{}
+	evidence := &Evidence{}
+	adapter.On("CollectEvidence", mock.Anything).Return(evidence, nil)
+
+	mux.HandleFunc("/appraisal/v1/attest", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`invalid token`))
 	})
 
 	_, err := client.CollectToken(adapter, nil)
