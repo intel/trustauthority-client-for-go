@@ -114,6 +114,7 @@ func getToken(cmd *cobra.Command) error {
 
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: false,
+		MinVersion:         tls.VersionTLS12,
 	}
 
 	cfg := client.Config{
