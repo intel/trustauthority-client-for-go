@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/intel/amber/v1/client/tdx"
 	"github.com/intel/amber/v1/client/tdx-cli/constants"
 	"github.com/intel/amber/v1/client/tdx-cli/utils"
 	"github.com/pkg/errors"
@@ -45,6 +46,7 @@ func createKeyPair(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
+	defer tdx.ZeroizeByteArray(privateKeyPem)
 
 	privateKeyPath, err := cmd.Flags().GetString(constants.PrivateKeyPathOption)
 	if err != nil {

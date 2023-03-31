@@ -44,6 +44,7 @@ func Decrypt(encryptedData []byte, em *EncryptionMetadata) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error while decrypting data")
 	}
+	defer ZeroizeRSAPrivateKey(priv)
 
 	return decryptedData, nil
 }
