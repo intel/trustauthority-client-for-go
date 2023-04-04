@@ -1,6 +1,6 @@
 module github.com/intel/amber/v1/client/tdx
 
-go 1.18
+go 1.20
 
 require (
 	github.com/intel/amber/v1/client v0.0.0

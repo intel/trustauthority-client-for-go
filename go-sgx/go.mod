@@ -1,6 +1,6 @@
 module github.com/intel/amber-client/go-sgx
 
-go 1.18
+go 1.20
 
 require (
 	github.com/intel/amber-client/go-client v0.0.0

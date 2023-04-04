@@ -15,10 +15,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20.2'
+
+
       - name: Style Checker
         run: |
-          /usr/local/go/bin/gofmt -l .
-          if [[ $(/usr/local/go/bin/gofmt -l . | wc -l) -gt 0 ]]; then
+          gofmt -l .
+          if [[ $(gofmt -l . | wc -l) -gt 0 ]]; then
              echo "Atleast 1 file need formatting"
              exit 1
           fi
@@ -39,7 +45,7 @@ jobs:
             echo "Unit test coverage must be above 80%"
             exit 1
           fi
-          COVERAGE=$(cd go-client && /usr/local/go/bin/go test ./... -coverprofile=cover.out | awk '{print $5}' | awk -F. '{print $1}')
+          COVERAGE=$(cd go-client && go test ./... -coverprofile=cover.out | awk '{print $5}' | awk -F. '{print $1}')
           echo "Unit test coverage for go-client is - $COVERAGE%"
           if [[ $COVERAGE -lt 65 ]]; then
             echo "Unit test coverage must be above 65%"
