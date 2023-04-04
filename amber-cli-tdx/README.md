@@ -1,8 +1,6 @@
 # Intel Project Amber Go TDX CLI
 This is the beta version of Go TDX CLI for integrating with Intel Project Amber V1 API.
 
-You can view Intel Project Amber API docs here: [https://intel.github.io/amber-docs/rest/overview/](https://intel.github.io/amber-docs/rest/overview/)
-
 ## Prerequisites
 
 The Amber Client TDX CLI has dependency on Intel SGX DCAP. Install TDX Attestation library devel packages from Intel SGX DCAP.
@@ -83,13 +81,6 @@ cd amber-cli-tdx/
 make cli
 ```
 
-### Install prebuilt binary
-Install the latest version of the CLI with the following commands:
-
-```sh
-go get github.com/intel/amber/v1/client/tdx-cli
-```
-
 ## Usage
 
 Amber Client TDX CLI exposes help option to get a list of all the
@@ -97,6 +88,12 @@ commands that it supports. More info about a command can be found using
 
 ```sh
 amber-cli <command> --help
+```
+
+### To create RSA keypair
+
+```sh
+amber-cli create-key-pair --key-path <private key file path>
 ```
 
 ### To get a Amber signed token
@@ -117,12 +114,6 @@ amber-cli quote --nonce <base64 encoded nonce> --user-data <base64 encoded userd
 
 ```sh
 amber-cli decrypt --key-path <private key file path> --in <base64 encoded encrypted blob> --out <output file path>
-```
-
-### To create RSA keypair
-
-```sh
-amber-cli create-key-pair --key-path <private key file path>
 ```
 
 ## License
