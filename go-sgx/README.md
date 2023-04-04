@@ -3,14 +3,6 @@ This is the beta version of Go SGX Adapter for collecting Quote from SGX enabled
 
 This library leverages Intel SGX DCAP for Quote generation: [https://github.com/intel/SGXDataCenterAttestationPrimitives](https://github.com/intel/SGXDataCenterAttestationPrimitives)
 
-## Installation
-
-Install the latest version of the library with the following commands:
-
-```sh
-go get github.com/intel/amber-client/go-sgx
-```
-
 ## Go Requirement
 
 Use <b>go1.17 or newer</b>.
