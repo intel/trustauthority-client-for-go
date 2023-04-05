@@ -7,6 +7,7 @@ package client
 
 import (
 	"crypto/tls"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -60,7 +61,11 @@ func doRequest(tlsCfg *tls.Config,
 	}
 
 	if resp.StatusCode != http.StatusOK || resp.ContentLength == 0 {
-		return errors.Errorf("Request to %q failed: StatusCode = %d, ContentLength = %d", req.URL, resp.StatusCode, resp.ContentLength)
+		response, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return errors.Errorf("Failed to read response body: %s", err)
+		}
+		return errors.Errorf("Request to %q failed: StatusCode = %d, Response = %s", req.URL, resp.StatusCode, string(response))
 	}
 
 	return processResponse(resp)
