@@ -9,7 +9,6 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/intel/amber/v1/client/tdx"
@@ -35,20 +34,32 @@ var decryptCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(decryptCmd)
-	decryptCmd.Flags().StringP(constants.PrivateKeyPathOption, "k", "",
+	decryptCmd.Flags().StringP(constants.PrivateKeyPathOption, "f", "",
 		"Private key file path")
-	decryptCmd.Flags().StringP(constants.DecryptCmdInputOption, "i", "",
+	decryptCmd.Flags().String(constants.InputOption, "",
 		"Base64 encoded encrypted blob")
-	decryptCmd.Flags().StringP(constants.DecryptCmdOutputOption, "o", "",
-		"File path for saving decrypted data, if not specified decrypted data will be written to stdout")
-	decryptCmd.MarkFlagRequired(constants.DecryptCmdInputOption)
-	decryptCmd.MarkFlagRequired(constants.PrivateKeyPathOption)
-
+	decryptCmd.Flags().StringP(constants.PrivateKeyOption, "k", "",
+		"Private key to be used for decryption")
+	decryptCmd.MarkFlagRequired(constants.InputOption)
 }
 
 func decrypt(cmd *cobra.Command) error {
 
-	b64EncryptedData, err := cmd.Flags().GetString(constants.DecryptCmdInputOption)
+	privateKeyPath, err := cmd.Flags().GetString(constants.PrivateKeyPathOption)
+	if err != nil {
+		return err
+	}
+
+	b64PrivateKey, err := cmd.Flags().GetString(constants.PrivateKeyOption)
+	if err != nil {
+		return err
+	}
+
+	if privateKeyPath == "" && b64PrivateKey == "" {
+		return errors.Errorf("One of the --%s or --%s are required", constants.PrivateKeyPathOption, constants.PrivateKeyOption)
+	}
+
+	b64EncryptedData, err := cmd.Flags().GetString(constants.InputOption)
 	if err != nil {
 		return err
 	}
@@ -58,31 +69,20 @@ func decrypt(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Error while base64 decoding of encrypted data")
 	}
 
-	privateKeyPath, err := cmd.Flags().GetString(constants.PrivateKeyPathOption)
+	privateKey, err := base64.StdEncoding.DecodeString(b64PrivateKey)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Error while base64 decoding of private key")
 	}
 
 	em := tdx.EncryptionMetadata{
 		PrivateKeyLocation: privateKeyPath,
+		PrivateKey:         privateKey,
 	}
 	decryptedData, err := tdx.Decrypt(encryptedData, &em)
 	if err != nil {
 		return err
 	}
 
-	decryptedDataPath, err := cmd.Flags().GetString(constants.DecryptCmdOutputOption)
-	if err != nil {
-		return err
-	}
-	if decryptedDataPath == "" {
-		fmt.Fprintln(os.Stdout, decryptedData)
-	} else {
-		err = ioutil.WriteFile(decryptedDataPath, decryptedData, 0600)
-		if err != nil {
-			return errors.Wrapf(err, "Error while writing data to file: %s", decryptedDataPath)
-		}
-	}
-
+	fmt.Fprintln(os.Stdout, decryptedData)
 	return nil
 }

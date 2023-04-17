@@ -19,32 +19,38 @@ import (
 // EncryptionMetadata holds information around encryption mechanism, e.g., algorithm and key used for encryption
 type EncryptionMetadata struct {
 	Algorithm          string
-	PrivateKey         *rsa.PrivateKey
+	PrivateKey         []byte
 	PrivateKeyLocation string
 }
 
 // Decrypt is used to decryt the encrypted data based on provided encryption metadata
 func Decrypt(encryptedData []byte, em *EncryptionMetadata) ([]byte, error) {
 	priv := em.PrivateKey
-	if priv == nil {
+	if len(priv) == 0 {
 		// If Private key is not provided, read private key from file
 		privateKey, err := ioutil.ReadFile(em.PrivateKeyLocation)
 		if err != nil {
-			return nil, errors.Wrap(err, "Error reading private key from file")
+			return nil, errors.Wrapf(err, "Error reading private key from file: %s", em.PrivateKeyLocation)
 		}
 
 		privateKeyBlock, _ := pem.Decode(privateKey)
-		priv, err = x509.ParsePKCS1PrivateKey(privateKeyBlock.Bytes)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error decoding private key")
+		if privateKeyBlock == nil {
+			return nil, errors.New("No PEM data found in private key")
 		}
+		priv = privateKeyBlock.Bytes
 	}
+	defer ZeroizeByteArray(priv)
 
-	decryptedData, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, priv, encryptedData, nil)
+	privateKey, err := x509.ParsePKCS1PrivateKey(priv)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error parsing private key")
+	}
+	defer ZeroizeRSAPrivateKey(privateKey)
+
+	decryptedData, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, privateKey, encryptedData, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error while decrypting data")
 	}
-	defer ZeroizeRSAPrivateKey(priv)
 
 	return decryptedData, nil
 }

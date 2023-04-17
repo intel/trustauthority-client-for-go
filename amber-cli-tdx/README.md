@@ -116,13 +116,17 @@ amber-cli quote --nonce <base64 encoded nonce> --user-data <base64 encoded userd
 ### To decrypt an encrypted blob
 
 ```sh
-amber-cli decrypt --key-path <private key file path> --in <base64 encoded encrypted blob> --out <output file path>
+amber-cli decrypt --key-path <private key file path> --in <base64 encoded encrypted blob>
+```
+OR
+```sh
+amber-cli decrypt --key <base64 encoded private key> --in <base64 encoded encrypted blob>
 ```
 
 ### To create RSA keypair
 
 ```sh
-amber-cli create-key-pair --key-path <private key file path>
+amber-cli create-key-pair
 ```
 
 ## License

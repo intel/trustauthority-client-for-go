@@ -27,12 +27,12 @@ const (
 
 // Options Names
 const (
-	PrivateKeyPathOption   = "key-path"
-	PolicyIdsOption        = "policy-ids"
-	DecryptCmdInputOption  = "in"
-	DecryptCmdOutputOption = "out"
-	UserDataOption         = "user-data"
-	NonceOption            = "nonce"
+	PrivateKeyPathOption = "key-path"
+	PrivateKeyOption     = "key"
+	PolicyIdsOption      = "policy-ids"
+	InputOption          = "in"
+	UserDataOption       = "user-data"
+	NonceOption          = "nonce"
 )
 
 const (
