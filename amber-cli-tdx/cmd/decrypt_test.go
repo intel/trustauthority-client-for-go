@@ -17,7 +17,6 @@ import (
 	"github.com/intel/amber/v1/client/tdx-cli/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -29,7 +28,7 @@ func TestDecryptCmd(t *testing.T) {
 		log.Fatal("failed to generate key pair")
 	}
 
-	err = ioutil.WriteFile(privateKeyPath, privateKeyPem, 0600)
+	err = os.WriteFile(privateKeyPath, privateKeyPem, 0600)
 	if err != nil {
 		log.Fatal("failed to save key")
 	}

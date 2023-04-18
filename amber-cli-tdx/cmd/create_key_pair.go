@@ -8,7 +8,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/intel/amber/v1/client/tdx"
@@ -45,7 +44,7 @@ func createKeyPair(cmd *cobra.Command) error {
 	}
 	defer tdx.ZeroizeByteArray(privateKeyPem)
 
-	err = ioutil.WriteFile(constants.PublicKeyFileName, publicKeyPem, 0644)
+	err = os.WriteFile(constants.PublicKeyFileName, publicKeyPem, 0644)
 	if err != nil {
 		return errors.Wrapf(err, "I/O error while saving public key at %s", constants.PublicKeyFileName)
 	}

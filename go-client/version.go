@@ -8,7 +8,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -28,7 +28,7 @@ func (client *amberClient) GetAmberVersion() (*Version, error) {
 
 	var ver Version
 	processResponse := func(resp *http.Response) error {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf("Failed to read body from %s: %s", url, err)
 		}

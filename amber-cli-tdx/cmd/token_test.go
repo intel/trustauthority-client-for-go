@@ -11,7 +11,6 @@ import (
 	"github.com/intel/amber/v1/client/tdx-cli/test"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -31,8 +30,8 @@ avTXCTSHY5JoX20KEwfu8QQXQRDUzyc0QKn9SiE3
 
 func TestTokenCmd(t *testing.T) {
 
-	ioutil.WriteFile("publickey.pem", []byte(pubKey), 0600)
-	defer os.Remove("publickey.pem")
+	os.WriteFile(publicKeyPath, []byte(pubKey), 0600)
+	defer os.Remove(publicKeyPath)
 
 	server := test.MockAmberServer(t)
 	defer server.Close()

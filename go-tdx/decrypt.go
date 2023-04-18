@@ -11,7 +11,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
-	"io/ioutil"
+	"os"
 
 	"github.com/pkg/errors"
 )
@@ -28,7 +28,7 @@ func Decrypt(encryptedData []byte, em *EncryptionMetadata) ([]byte, error) {
 	priv := em.PrivateKey
 	if len(priv) == 0 {
 		// If Private key is not provided, read private key from file
-		privateKey, err := ioutil.ReadFile(em.PrivateKeyLocation)
+		privateKey, err := os.ReadFile(em.PrivateKeyLocation)
 		if err != nil {
 			return nil, errors.Wrapf(err, "Error reading private key from file: %s", em.PrivateKeyLocation)
 		}

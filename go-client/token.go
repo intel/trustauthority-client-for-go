@@ -10,7 +10,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -66,7 +66,7 @@ func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidenc
 	var tokenResponse AttestationTokenResponse
 	processResponse := func(resp *http.Response) error {
 		var err error
-		attestationToken, err := ioutil.ReadAll(resp.Body)
+		attestationToken, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf("Failed to read body from %s: %s", url, err)
 		}
@@ -129,7 +129,7 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 		var pubKey interface{}
 		processResponse := func(resp *http.Response) error {
 			// Read the JWKS payload from HTTP Response body
-			jwks, err := ioutil.ReadAll(resp.Body)
+			jwks, err := io.ReadAll(resp.Body)
 			if err != nil {
 				return errors.Errorf("Failed to read body from %s: %s", tokenSignCertUrl, err)
 			}

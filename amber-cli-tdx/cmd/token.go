@@ -11,7 +11,6 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"strings"
@@ -88,7 +87,7 @@ func getToken(cmd *cobra.Command) error {
 			return errors.Wrap(err, "Error while base64 decoding of userdata")
 		}
 	} else {
-		publicKey, err := ioutil.ReadFile(constants.PublicKeyFileName)
+		publicKey, err := os.ReadFile(constants.PublicKeyFileName)
 		if err != nil {
 			return errors.Wrap(err, "Error reading public key from file")
 		}

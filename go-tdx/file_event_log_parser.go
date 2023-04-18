@@ -7,7 +7,7 @@ package tdx
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 
 	"github.com/pkg/errors"
 )
@@ -21,7 +21,7 @@ type fileEventLogParser struct {
 func (parser *fileEventLogParser) GetEventLogs() ([]RtmrEventLog, error) {
 
 	var eventLogs []RtmrEventLog
-	b, err := ioutil.ReadFile(parser.file)
+	b, err := os.ReadFile(parser.file)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to read event log file %s", parser.file)
 	}
