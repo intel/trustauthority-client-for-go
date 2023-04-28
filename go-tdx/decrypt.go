@@ -32,14 +32,15 @@ func Decrypt(encryptedData []byte, em *EncryptionMetadata) ([]byte, error) {
 		if err != nil {
 			return nil, errors.Wrapf(err, "Error reading private key from file: %s", em.PrivateKeyLocation)
 		}
+		defer ZeroizeByteArray(privateKey)
 
 		privateKeyBlock, _ := pem.Decode(privateKey)
 		if privateKeyBlock == nil {
 			return nil, errors.New("No PEM data found in private key")
 		}
 		priv = privateKeyBlock.Bytes
+		defer ZeroizeByteArray(priv)
 	}
-	defer ZeroizeByteArray(priv)
 
 	privateKey, err := x509.ParsePKCS1PrivateKey(priv)
 	if err != nil {

@@ -73,6 +73,7 @@ func decrypt(cmd *cobra.Command) error {
 	if err != nil {
 		return errors.Wrap(err, "Error while base64 decoding of private key")
 	}
+	defer tdx.ZeroizeByteArray(privateKey)
 
 	em := tdx.EncryptionMetadata{
 		PrivateKeyLocation: privateKeyPath,
@@ -82,6 +83,7 @@ func decrypt(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
+	defer tdx.ZeroizeByteArray(decryptedData)
 
 	fmt.Fprintln(os.Stdout, decryptedData)
 	return nil
