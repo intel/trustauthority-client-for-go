@@ -15,17 +15,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// uefiEventLogParser manages TD eventlog collection from ACPI tables
+// uefiEventLogParser manages Confidential Computing (CC) eventlog collection from ACPI tables
 type uefiEventLogParser struct {
 	uefiTableFilePath    string
 	uefiEventLogFilePath string
 }
 
-// GetEventLogs is used to get TD eventlog by reading through ACPI tables
+// GetEventLogs is used to get CC eventlog by reading through ACPI tables
 func (parser *uefiEventLogParser) GetEventLogs() ([]RtmrEventLog, error) {
 
-	tdelSig := make([]byte, Uint32Size)
-	tdelLen := make([]byte, Uint32Size)
+	ccelSig := make([]byte, Uint32Size)
+	ccelLen := make([]byte, Uint32Size)
 	uefiEventSize := make([]byte, Uint64Size)
 	if _, err := os.Stat(parser.uefiTableFilePath); os.IsNotExist(err) {
 		return nil, errors.Wrapf(err, "%s file does not exist", parser.uefiTableFilePath)
@@ -42,25 +42,25 @@ func (parser *uefiEventLogParser) GetEventLogs() ([]RtmrEventLog, error) {
 		}
 	}()
 
-	// Validate TDEL file signature
-	_, err = io.ReadFull(file, tdelSig)
+	// Validate CCEL file signature
+	_, err = io.ReadFull(file, ccelSig)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error reading TDEL Signature from %s", parser.uefiTableFilePath)
+		return nil, errors.Wrapf(err, "error reading CCEL Signature from %s", parser.uefiTableFilePath)
 	}
 
-	tdelSignature := string(tdelSig)
-	if TdelSignature != tdelSignature {
-		return nil, errors.Errorf("Invalid TDEL Signature in %s", parser.uefiTableFilePath)
+	ccelSignature := string(ccelSig)
+	if CcelSignature != ccelSignature {
+		return nil, errors.Errorf("Invalid CCEL Signature in %s", parser.uefiTableFilePath)
 	}
 
-	// Validate TDEL file length
-	_, err = io.ReadFull(file, tdelLen)
+	// Validate CCEL file length
+	_, err = io.ReadFull(file, ccelLen)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error reading TDEL File Length from %s", parser.uefiTableFilePath)
+		return nil, errors.Wrapf(err, "error reading CCEL File Length from %s", parser.uefiTableFilePath)
 	}
 
-	tdelFileLength := binary.LittleEndian.Uint32(tdelLen)
-	if tdelFileLength < TdelFileLength {
+	ccelFileLength := binary.LittleEndian.Uint32(ccelLen)
+	if ccelFileLength < CcelFileLength {
 		return nil, errors.Errorf("UEFI Event Info missing in %s", parser.uefiTableFilePath)
 	}
 
@@ -96,7 +96,7 @@ func (parser *uefiEventLogParser) GetEventLogs() ([]RtmrEventLog, error) {
 	return uefiEventLogs, nil
 }
 
-// ReadUefiEvent - Function to read Uefi Event binary data from /sys/firmware/acpi/tables/data/TDEL
+// ReadUefiEvent - Function to read Uefi Event binary data from /sys/firmware/acpi/tables/data/CCEL
 func readUefiEvent(uefiEventLogFilePath string, uefiEventSize uint32) (*bytes.Buffer, error) {
 
 	eventLogBuffer := make([]byte, uefiEventSize)

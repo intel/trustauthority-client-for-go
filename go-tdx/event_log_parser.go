@@ -36,8 +36,8 @@ func NewEventLogParser() EventLogParser {
 		uefiParser = &fileEventLogParser{file: uefiEventLogFile}
 	} else {
 		uefiParser = &uefiEventLogParser{
-			uefiTableFilePath:    TdelPath,
-			uefiEventLogFilePath: TdelDataPath,
+			uefiTableFilePath:    CcelPath,
+			uefiEventLogFilePath: CcelDataPath,
 		}
 	}
 	return uefiParser

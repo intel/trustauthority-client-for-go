@@ -19,12 +19,12 @@ var (
 )
 
 const (
-	TdelFileLength    = 56
-	TdelSignature     = "TDEL"
+	CcelFileLength    = 56
+	CcelSignature     = "CCEL"
 	AcpiTablePath     = "/sys/firmware/acpi/tables/"
 	AcpiTableDataPath = "/sys/firmware/acpi/tables/data/"
-	TdelPath          = AcpiTablePath + TdelSignature
-	TdelDataPath      = AcpiTableDataPath + TdelSignature
+	CcelPath          = AcpiTablePath + CcelSignature
+	CcelDataPath      = AcpiTableDataPath + CcelSignature
 )
 
 const (
