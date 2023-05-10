@@ -36,9 +36,11 @@ func TestCreateKeyPairCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.CreateKeyPairCmd,
+				"--" + constants.PublicKeyPathOption,
+				publicKeyPath,
 			},
 			wantErr:     false,
-			description: "Test without inputs",
+			description: "Test with all valid inputs",
 		},
 	}
 

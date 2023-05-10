@@ -53,19 +53,33 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.UserDataOption, "dGVzdHVzZXJkYXRh",
-				"--" + constants.PolicyIdsOption, "4312c813-ecb2-4e6e-83d3-515d88ac06f2",
+				"--" + constants.PublicKeyPathOption,
+				publicKeyPath,
+				"--" + constants.PolicyIdsOption,
+				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
 			},
 			wantErr:     false,
-			description: "Test with all valid inputs",
+			description: "Test with public-key file and policy ids",
 		},
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.UserDataOption, "u$erd@t@",
+				"--" + constants.PublicKeyPathOption,
+				"public-key.pem",
 			},
 			wantErr:     true,
-			description: "Test with malformed userdata",
+			description: "Test with non-existent public-key file",
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.UserDataOption,
+				"dGVzdHVzZXJkYXRh",
+				"--" + constants.PolicyIdsOption,
+				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
+			},
+			wantErr:     false,
+			description: "Test with userdata and policy ids",
 		},
 		{
 			args: []string{
@@ -75,6 +89,15 @@ func TestTokenCmd(t *testing.T) {
 			},
 			wantErr:     true,
 			description: "Test with invalid policy ids",
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.UserDataOption,
+				"u$erd@t@",
+			},
+			wantErr:     true,
+			description: "Test with malformed userdata",
 		},
 	}
 

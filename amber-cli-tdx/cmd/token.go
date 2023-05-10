@@ -44,6 +44,7 @@ func init() {
 	rootCmd.AddCommand(tokenCmd)
 	tokenCmd.Flags().StringP(constants.UserDataOption, "u", "", "User Data in base64 encoded format")
 	tokenCmd.Flags().StringP(constants.PolicyIdsOption, "p", "", "Amber Policy Ids, comma separated")
+	tokenCmd.Flags().StringP(constants.PublicKeyPathOption, "f", "", "Public key to be used as userdata")
 }
 
 func getToken(cmd *cobra.Command) error {
@@ -80,21 +81,26 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
+	publicKeyPath, err := cmd.Flags().GetString(constants.PublicKeyPathOption)
+	if err != nil {
+		return err
+	}
+
 	var userDataBytes []byte
 	if userData != "" {
 		userDataBytes, err = base64.StdEncoding.DecodeString(userData)
 		if err != nil {
 			return errors.Wrap(err, "Error while base64 decoding of userdata")
 		}
-	} else {
-		publicKey, err := os.ReadFile(constants.PublicKeyFileName)
+	} else if publicKeyPath != "" {
+		publicKey, err := os.ReadFile(publicKeyPath)
 		if err != nil {
 			return errors.Wrap(err, "Error reading public key from file")
 		}
 
 		publicKeyBlock, _ := pem.Decode(publicKey)
 		if publicKeyBlock == nil {
-			return errors.Errorf("No PEM data found in %s file", constants.PublicKeyFileName)
+			return errors.Errorf("No PEM data found in public key file")
 		}
 		userDataBytes = publicKeyBlock.Bytes
 	}

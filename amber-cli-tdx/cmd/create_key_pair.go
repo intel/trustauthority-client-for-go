@@ -34,9 +34,16 @@ var createKeyPairCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(createKeyPairCmd)
+	createKeyPairCmd.Flags().StringP(constants.PublicKeyPathOption, "f", "", "File path to store public key")
+	createKeyPairCmd.MarkFlagRequired(constants.PublicKeyPathOption)
 }
 
 func createKeyPair(cmd *cobra.Command) error {
+
+	publicKeyPath, err := cmd.Flags().GetString(constants.PublicKeyPathOption)
+	if err != nil {
+		return err
+	}
 
 	privateKeyPem, publicKeyPem, err := utils.GenerateKeyPair()
 	if err != nil {
@@ -44,9 +51,9 @@ func createKeyPair(cmd *cobra.Command) error {
 	}
 	defer tdx.ZeroizeByteArray(privateKeyPem)
 
-	err = os.WriteFile(constants.PublicKeyFileName, publicKeyPem, 0644)
+	err = os.WriteFile(publicKeyPath, publicKeyPem, 0644)
 	if err != nil {
-		return errors.Wrapf(err, "I/O error while saving public key at %s", constants.PublicKeyFileName)
+		return errors.Wrap(err, "I/O error while saving public key")
 	}
 
 	fmt.Println(string(privateKeyPem))
