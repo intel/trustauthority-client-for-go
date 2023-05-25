@@ -1,8 +1,6 @@
 # Intel® Trust Authority Go TDX Adapter
 Go module for collecting TDX Quote from TDX enabled platform.
 
-This library leverages Intel SGX DCAP for Quote generation: [https://github.com/intel/SGXDataCenterAttestationPrimitives](https://github.com/intel/SGXDataCenterAttestationPrimitives)
-
 ## Go Requirement
 
 Use <b>go1.19 or newer</b>. Follow https://go.dev/doc/install for installation of Go.
