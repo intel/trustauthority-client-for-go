@@ -66,8 +66,7 @@ func getQuote(cmd *cobra.Command) error {
 		}
 	}
 
-	evLogParser := tdx.NewEventLogParser()
-	adapter, err := tdx.NewAdapter(userDataBytes, evLogParser)
+	adapter, err := tdx.NewAzureAdapter(userDataBytes, nil)
 	if err != nil {
 		return errors.Wrap(err, "Error while creating tdx adapter")
 	}
@@ -76,6 +75,6 @@ func getQuote(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Failed to collect evidence")
 	}
 
-	fmt.Fprintln(os.Stdout, evidence.Evidence)
+	fmt.Fprintln(os.Stdout, base64.StdEncoding.EncodeToString(evidence.Evidence))
 	return nil
 }

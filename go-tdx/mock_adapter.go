@@ -17,7 +17,7 @@ type MockTdxAdapter struct {
 	EvLogParser EventLogParser
 }
 
-func NewAdapter(udata []byte, evLogParser EventLogParser) (*MockTdxAdapter, error) {
+func NewAzureAdapter(udata []byte, evLogParser EventLogParser) (*MockTdxAdapter, error) {
 	return &MockTdxAdapter{
 		uData:       udata,
 		EvLogParser: evLogParser,

@@ -1,15 +1,5 @@
 # Intel Project Amber Go TDX Adapter
-This is the beta version of Go TDX Adapter for collecting Quote from TDX enabled platform.
-
-This library leverages Intel SGX DCAP for Quote generation: [https://github.com/intel/SGXDataCenterAttestationPrimitives](https://github.com/intel/SGXDataCenterAttestationPrimitives)
-
-## Installation
-
-Install the latest version of the library with the following commands:
-
-```sh
-go get github.com/intel/amber-client/go-tdx
-```
+This is the beta version of Go TDX Azure Adapter for collecting Quote from TDX enabled platform.
 
 ## Go Requirement
 
@@ -24,7 +14,7 @@ collect quote from TDX enabled platform.
 import "github.com/intel/amber-client/go-tdx"
 
 evLogParser := tdx.NewEventLogParser()
-adapter, err := tdx.NewAdapter(tdHeldData, evLogParser)
+adapter, err := tdx.NewAzureAdapter(tdHeldData, evLogParser)
 if err != nil {
     return err
 }
