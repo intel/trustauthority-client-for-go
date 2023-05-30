@@ -24,7 +24,7 @@ func NewAzureAdapter(udata []byte, evLogParser EventLogParser) (*MockTdxAdapter,
 	}, nil
 }
 
-// CollectEvidence is used to get TDX quote using DCAP Quote Generation service
+// CollectEvidence returns mock Evidence
 func (adapter *MockTdxAdapter) CollectEvidence(nonce []byte) (*client.Evidence, error) {
 
 	return &client.Evidence{

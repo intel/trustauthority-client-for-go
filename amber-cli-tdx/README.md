@@ -31,6 +31,10 @@ export AMBER_URL=<amber api url>
 export AMBER_API_KEY=<amber attestation api key>
 amber-cli token --user-data <base64 encoded userdata> --policy-ids <comma separated amber attestation policy ids>
 ```
+OR
+```sh
+amber-cli token --pub-path <public key file path> --policy-ids <comma separated amber attestation policy ids>
+```
 
 ### To get a TD quote with Nonce and UserData
 
@@ -51,7 +55,7 @@ amber-cli decrypt --key <base64 encoded private key> --in <base64 encoded encryp
 ### To create RSA keypair
 
 ```sh
-amber-cli create-key-pair
+amber-cli create-key-pair --pub-path <public key file path>
 ```
 
 ## License

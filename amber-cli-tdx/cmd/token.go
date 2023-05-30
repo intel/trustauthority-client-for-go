@@ -133,7 +133,6 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
-	// evLogParser := tdx.NewEventLogParser()
 	adapter, err := tdx.NewAzureAdapter(userDataBytes, nil)
 	if err != nil {
 		return errors.Wrap(err, "Error while creating tdx adapter")
