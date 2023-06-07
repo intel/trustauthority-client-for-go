@@ -33,9 +33,5 @@ const (
 	InputOption          = "in"
 	UserDataOption       = "user-data"
 	NonceOption          = "nonce"
-)
-
-const (
-	AmberApiKeyEnv = "AMBER_API_KEY"
-	AmberUrlEnv    = "AMBER_URL"
+	ConfigOption         = "config"
 )

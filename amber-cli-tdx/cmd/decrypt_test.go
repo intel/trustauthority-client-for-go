@@ -28,10 +28,8 @@ func TestDecryptCmd(t *testing.T) {
 		log.Fatal("failed to generate key pair")
 	}
 
-	err = os.WriteFile(privateKeyPath, privateKeyPem, 0600)
-	if err != nil {
-		log.Fatal("failed to save key")
-	}
+	_ = os.WriteFile(privateKeyPath, privateKeyPem, 0600)
+	defer os.Remove(privateKeyPath)
 
 	plaintText := "secret"
 	block, _ := pem.Decode(privateKeyPem)
@@ -132,13 +130,4 @@ func TestDecryptCmd(t *testing.T) {
 			assert.NoError(t, err)
 		}
 	}
-
-	cleanupFiles()
-}
-
-func cleanupFiles() {
-	os.Remove(privateKeyPath)
-	home, _ := os.UserHomeDir()
-	os.Remove(home + "/" + ".amber-cli-tdx.yaml")
-	os.Remove(".amber-cli-tdx.yaml")
 }

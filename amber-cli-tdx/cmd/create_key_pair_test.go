@@ -19,6 +19,7 @@ import (
 const (
 	privateKeyPath = "privatekey.pem"
 	publicKeyPath  = "publickey.pem"
+	confFilePath   = "config.json"
 )
 
 func TestCreateKeyPairCmd(t *testing.T) {

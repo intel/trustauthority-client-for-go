@@ -9,7 +9,6 @@ package cmd
 import (
 	"github.com/intel/amber/v1/client/tdx-cli/constants"
 	"github.com/intel/amber/v1/client/tdx-cli/test"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -30,14 +29,16 @@ avTXCTSHY5JoX20KEwfu8QQXQRDUzyc0QKn9SiE3
 
 func TestTokenCmd(t *testing.T) {
 
-	os.WriteFile(publicKeyPath, []byte(pubKey), 0600)
+	_ = os.WriteFile(publicKeyPath, []byte(pubKey), 0600)
 	defer os.Remove(publicKeyPath)
 
 	server := test.MockAmberServer(t)
 	defer server.Close()
 
-	viper.Set("AMBER_URL", server.URL)
-	viper.Set("AMBER_API_KEY", "YXBpa2V5")
+	configJson := `{"amber_url":"` + server.URL + `","amber_api_key":"YXBpa2V5"}`
+	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
+	defer os.Remove(confFilePath)
+
 	tt := []struct {
 		args        []string
 		wantErr     bool
@@ -46,13 +47,26 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
+				"--" + constants.ConfigOption,
+				confFilePath,
 			},
 			wantErr:     false,
-			description: "Test without inputs",
+			description: "Test with config file",
 		},
 		{
 			args: []string{
 				constants.TokenCmd,
+				"--" + constants.ConfigOption,
+				"config-file.json",
+			},
+			wantErr:     true,
+			description: "Test with non-existent config file",
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOption,
+				confFilePath,
 				"--" + constants.PublicKeyPathOption,
 				publicKeyPath,
 				"--" + constants.PolicyIdsOption,
@@ -64,6 +78,8 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
+				"--" + constants.ConfigOption,
+				confFilePath,
 				"--" + constants.PublicKeyPathOption,
 				"public-key.pem",
 			},
@@ -73,6 +89,8 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
+				"--" + constants.ConfigOption,
+				confFilePath,
 				"--" + constants.UserDataOption,
 				"dGVzdHVzZXJkYXRh",
 				"--" + constants.PolicyIdsOption,
@@ -84,6 +102,8 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
+				"--" + constants.ConfigOption,
+				confFilePath,
 				"--" + constants.PolicyIdsOption,
 				"4312c813-ecb2-4e6e-83d3-515d88ac06f2343",
 			},
@@ -93,6 +113,8 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
+				"--" + constants.ConfigOption,
+				confFilePath,
 				"--" + constants.UserDataOption,
 				"u$erd@t@",
 			},
@@ -114,9 +136,10 @@ func TestTokenCmd(t *testing.T) {
 
 func TestTokenCmd_MissingAmberUrl(t *testing.T) {
 
-	viper.Set("AMBER_URL", "")
-	viper.Set("AMBER_API_KEY", "YXBpa2V5")
-	_, err := execute(t, rootCmd, constants.TokenCmd)
+	configJson := `{"amber_url":"","amber_api_key":"YXBpa2V5"}`
+	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
+	defer os.Remove(confFilePath)
+	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOption, confFilePath)
 	assert.Error(t, err)
 }
 
@@ -125,17 +148,19 @@ func TestTokenCmd_MissingAmberApiKey(t *testing.T) {
 	server := test.MockAmberServer(t)
 	defer server.Close()
 
-	viper.Set("AMBER_URL", server.URL)
-	viper.Set("AMBER_API_KEY", "")
-	_, err := execute(t, rootCmd, constants.TokenCmd)
+	configJson := `{"amber_url":"` + server.URL + `","amber_api_key":""}`
+	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
+	defer os.Remove(confFilePath)
+	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOption, confFilePath)
 	assert.Error(t, err)
 }
 
 func TestTokenCmd_MalformedAmberUrl(t *testing.T) {
 
-	viper.Set("AMBER_URL", ":amber.com")
-	viper.Set("AMBER_API_KEY", "YXBpa2V5")
-	_, err := execute(t, rootCmd, constants.TokenCmd)
+	configJson := `{"amber_url":":amber.com","amber_api_key":"YXBpa2V5"}`
+	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
+	defer os.Remove(confFilePath)
+	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOption, confFilePath)
 	assert.Error(t, err)
 }
 
@@ -144,8 +169,9 @@ func TestTokenCmd_MalformedAmberApiKey(t *testing.T) {
 	server := test.MockAmberServer(t)
 	defer server.Close()
 
-	viper.Set("AMBER_URL", server.URL)
-	viper.Set("AMBER_API_KEY", "@p!key")
-	_, err := execute(t, rootCmd, constants.TokenCmd)
+	configJson := `{"amber_url":"` + server.URL + `","amber_api_key":"@p!key"}`
+	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
+	defer os.Remove(confFilePath)
+	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOption, confFilePath)
 	assert.Error(t, err)
 }

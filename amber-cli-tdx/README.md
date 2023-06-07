@@ -43,7 +43,7 @@ Install the Debian package for `libtdx-attest-dev` following these steps:
 Install the RPM package for `libtdx-attest-devel` following these steps:
 
 1. Find RPM packages for DCAP libraries and services, which are currently provided in a single TAR archive at
-    ```
+    ```sh
     https://download.01.org/intel-sgx/latest/linux-latest/distro/<distro>/
     ```
 2. Download the file `sgx_rpm_local_repo.tgz` to a selected folder, for example `/opt/intel`
@@ -92,19 +92,32 @@ go get github.com/intel/amber/v1/client/tdx-cli
 
 ## Usage
 
-Amber Client TDX CLI exposes help option to get a list of all the
-commands that it supports. More info about a command can be found using
+### To get a list of all the available commands
 
+```sh
+amber-cli --help
+```
+More info about a specific command can be found using
 ```sh
 amber-cli <command> --help
 ```
 
 ### To get a Amber signed token
 
+`token` command requires Amber properties to be passed in json format
+```json
+{
+    "amber_url": "<amber api url>",
+    "amber_api_key": "<amber attestation api key>"
+}
+```
+Save this data in config.json file and invoke `token` command
 ```sh
-export AMBER_URL=<amber api url>
-export AMBER_API_KEY=<amber attestation api key>
-amber-cli token --user-data <base64 encoded userdata> --policy-ids <comma separated amber attestation policy ids>
+amber-cli token --config config.json --user-data <base64 encoded userdata> --policy-ids <comma separated amber attestation policy ids>
+```
+OR
+```sh
+amber-cli token --config config.json --pub-path <public key file path> --policy-ids <comma separated amber attestation policy ids>
 ```
 
 ### To get a TD quote with Nonce and UserData
@@ -126,7 +139,7 @@ amber-cli decrypt --key <base64 encoded private key> --in <base64 encoded encryp
 ### To create RSA keypair
 
 ```sh
-amber-cli create-key-pair
+amber-cli create-key-pair --pub-path <public key file path>
 ```
 
 ## License

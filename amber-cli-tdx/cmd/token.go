@@ -9,6 +9,7 @@ package cmd
 import (
 	"crypto/tls"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"net/url"
@@ -21,7 +22,6 @@ import (
 	"github.com/intel/amber/v1/client/tdx-cli/constants"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // tokenCmd represents the token command
@@ -35,40 +35,54 @@ var tokenCmd = &cobra.Command{
 			fmt.Fprintln(os.Stderr, err.Error())
 			return err
 		}
-
 		return nil
 	},
 }
 
+type Config struct {
+	AmberUrl    string `json:"amber_url"`
+	AmberApiKey string `json:"amber_api_key"`
+}
+
 func init() {
 	rootCmd.AddCommand(tokenCmd)
+	tokenCmd.Flags().StringP(constants.ConfigOption, "c", "", "Amber config in JSON format")
 	tokenCmd.Flags().StringP(constants.UserDataOption, "u", "", "User Data in base64 encoded format")
 	tokenCmd.Flags().StringP(constants.PolicyIdsOption, "p", "", "Amber Policy Ids, comma separated")
 	tokenCmd.Flags().StringP(constants.PublicKeyPathOption, "f", "", "Public key to be used as userdata")
+	tokenCmd.MarkFlagRequired(constants.ConfigOption)
 }
 
 func getToken(cmd *cobra.Command) error {
-	var err error
 
-	viper.AutomaticEnv()
-	amberUrl := viper.GetString(constants.AmberUrlEnv)
-	if amberUrl == "" {
-		return errors.Errorf("%s is not set in env", constants.AmberUrlEnv)
-	} else {
-		_, err = url.ParseRequestURI(amberUrl)
-		if err != nil {
-			return errors.Wrap(err, "Invalid Amber URL")
-		}
+	configFile, err := cmd.Flags().GetString(constants.ConfigOption)
+	if err != nil {
+		return err
 	}
 
-	amberApikey := viper.GetString(constants.AmberApiKeyEnv)
-	if amberApikey == "" {
-		return errors.Errorf("%s is not set in env", constants.AmberApiKeyEnv)
-	} else {
-		_, err = base64.URLEncoding.DecodeString(amberApikey)
-		if err != nil {
-			return errors.Wrap(err, "Invalid Api key, must be base64 string")
-		}
+	configJson, err := os.ReadFile(configFile)
+	if err != nil {
+		return errors.Wrapf(err, "Error reading config from file")
+	}
+
+	var config Config
+	err = json.Unmarshal(configJson, &config)
+	if err != nil {
+		return errors.Wrap(err, "Error unmarshalling JSON from config")
+	}
+
+	if config.AmberUrl == "" || config.AmberApiKey == "" {
+		return errors.New("Either Amber URL or Amber API Key is missing in config")
+	}
+
+	_, err = url.ParseRequestURI(config.AmberUrl)
+	if err != nil {
+		return errors.Wrap(err, "Invalid Amber URL")
+	}
+
+	_, err = base64.URLEncoding.DecodeString(config.AmberApiKey)
+	if err != nil {
+		return errors.Wrap(err, "Invalid Api key, must be base64 string")
 	}
 
 	userData, err := cmd.Flags().GetString(constants.UserDataOption)
@@ -123,9 +137,9 @@ func getToken(cmd *cobra.Command) error {
 	}
 
 	cfg := client.Config{
-		Url:    amberUrl,
+		Url:    config.AmberUrl,
 		TlsCfg: tlsConfig,
-		ApiKey: amberApikey,
+		ApiKey: config.AmberApiKey,
 	}
 
 	amberClient, err := client.New(&cfg)
