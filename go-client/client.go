@@ -7,6 +7,7 @@ package client
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"net/url"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -20,6 +21,7 @@ type AmberClient interface {
 	GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) (string, error)
 	CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) (string, error)
 	VerifyToken(string) (*jwt.Token, error)
+	GetCRL([]string) (*x509.RevocationList, error)
 }
 
 // EvidenceAdapter is an interface which exposes methods for collecting Quote using Adapter

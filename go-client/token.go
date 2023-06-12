@@ -9,11 +9,13 @@ import (
 	"bytes"
 	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
@@ -83,6 +85,70 @@ func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidenc
 	return tokenResponse.Token, nil
 }
 
+// Function to get CRL Object from CRL URL
+func (client *amberClient) GetCRL(crlArr []string) (*x509.RevocationList, error) {
+
+	if len(crlArr) < 1 {
+		return nil, errors.New("Invalid CRL count present in the certificate")
+	}
+
+	_, err := url.Parse(crlArr[0])
+	if err != nil {
+		return nil, errors.Wrap(err, "Invalid CRL URL")
+	}
+
+	var crlObj *x509.RevocationList
+
+	newRequest := func() (*http.Request, error) {
+		return http.NewRequest(http.MethodGet, crlArr[0], nil)
+	}
+	processResponse := func(resp *http.Response) error {
+		crlPem, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return errors.Errorf("Failed to read body from %s: %s", crlArr[0], err)
+		}
+
+		block, _ := pem.Decode([]byte(crlPem))
+		if block == nil {
+			return errors.New("No PEM data found")
+		}
+
+		crlObj, err = x509.ParseRevocationList(block.Bytes)
+		if err != nil {
+			return errors.Wrap(err, "Failed to parse revocation list")
+		}
+		return nil
+	}
+	if err := doRequest(client.cfg.TlsCfg, newRequest, nil, nil, processResponse); err != nil {
+		return nil, errors.Wrap(err, "Error in fetching CRL")
+	}
+	return crlObj, nil
+}
+
+// Function to verify the Certificate against CRL
+func verifyCRL(crl *x509.RevocationList, leafCert *x509.Certificate, caCert *x509.Certificate) error {
+	if leafCert == nil || caCert == nil || crl == nil {
+		return errors.New("Leaf Cert or caCert or CRL is nil")
+	}
+
+	//Checking CRL signed by CA Certificate
+	err := crl.CheckSignatureFrom(caCert)
+	if err != nil {
+		return errors.Wrap(err, "CRL signature verification failed")
+	}
+
+	if crl.NextUpdate.Before(time.Now()) {
+		return errors.New("CRL not valid, outdated CRL")
+	}
+
+	for _, rCert := range crl.RevokedCertificates {
+		if rCert.SerialNumber.Cmp(leafCert.SerialNumber) == 0 {
+			return errors.New("Certificate already Revoked")
+		}
+	}
+	return nil
+}
+
 // VerifyToken is used to do signature verification of attestation token recieved from Amber
 func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 
@@ -126,6 +192,9 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 			headerAccept: "application/json",
 		}
 
+		var leafCert *x509.Certificate
+		var interCACert *x509.Certificate
+		var rootCert *x509.Certificate
 		var pubKey interface{}
 		processResponse := func(resp *http.Response) error {
 			// Read the JWKS payload from HTTP Response body
@@ -168,8 +237,10 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 
 				if cer.IsCA && cer.BasicConstraintsValid && strings.Contains(cer.Subject.CommonName, "Root CA") {
 					root.AddCert(cer)
+					rootCert = cer
 				} else if strings.Contains(cer.Subject.CommonName, "Signing CA") {
 					intermediate.AddCert(cer)
+					interCACert = cer
 				} else {
 					leafCert = cer
 				}
@@ -197,6 +268,23 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 			return nil, err
 		}
 
+		rootCrl, err := client.GetCRL(interCACert.CRLDistributionPoints)
+		if err != nil {
+			return nil, errors.Errorf("Failed to get ROOT CA CRL Object: %v", err.Error())
+		}
+
+		if err = verifyCRL(rootCrl, interCACert, rootCert); err != nil {
+			return nil, errors.Errorf("Failed to check ATS CA Certificate against Root CA CRL: %v", err.Error())
+		}
+
+		atsCrl, err := client.GetCRL(leafCert.CRLDistributionPoints)
+		if err != nil {
+			return nil, errors.Errorf("Failed to get ATS CRL Object: %v", err.Error())
+		}
+
+		if err = verifyCRL(atsCrl, leafCert, interCACert); err != nil {
+			return nil, errors.Errorf("Failed to check ATS Leaf certificate against ATS CRL: %v", err.Error())
+		}
 		return pubKey, nil
 	})
 	if err != nil {
