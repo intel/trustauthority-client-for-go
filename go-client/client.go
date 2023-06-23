@@ -7,7 +7,6 @@ package client
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"net/url"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -16,12 +15,11 @@ import (
 
 // AmberClient is an interface which exposes methods for calling Amber REST APIs
 type AmberClient interface {
-	GetAmberVersion() (*Version, error)
+	GetAmberCertificates() ([]byte, error)
 	GetNonce() (*Nonce, error)
 	GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) (string, error)
 	CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) (string, error)
 	VerifyToken(string) (*jwt.Token, error)
-	GetCRL([]string) (*x509.RevocationList, error)
 }
 
 // EvidenceAdapter is an interface which exposes methods for collecting Quote using Adapter
@@ -39,10 +37,11 @@ type Evidence struct {
 
 // Config holds the Amber configuration for Client
 type Config struct {
-	Url    string
-	TlsCfg *tls.Config
-	ApiKey string
-	url    *url.URL
+	BaseUrl string
+	TlsCfg  *tls.Config
+	ApiUrl  string
+	ApiKey  string
+	url     *url.URL
 }
 
 // Nonce holds the signed nonce issued from Amber
@@ -52,18 +51,14 @@ type Nonce struct {
 	Signature []byte `json:"signature"`
 }
 
-// Version holds the Amber version details
-type Version struct {
-	Name      string `json:"name"`
-	SemVer    string `json:"version"`
-	Commit    string `json:"commit"`
-	BuildDate string `json:"buildDate"`
-}
-
 // New returns a new Amber API client instance
 func New(cfg *Config) (AmberClient, error) {
-	var err error
-	cfg.url, err = url.ParseRequestURI(cfg.Url)
+	_, err := url.Parse(cfg.BaseUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg.url, err = url.Parse(cfg.ApiUrl)
 	if err != nil {
 		return nil, err
 	}

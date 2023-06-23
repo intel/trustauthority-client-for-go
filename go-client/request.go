@@ -48,7 +48,7 @@ func doRequest(tlsCfg *tls.Config,
 
 	var resp *http.Response
 	if resp, err = client.Do(req); err != nil {
-		return errors.Wrapf(err, "Request to %q failed", req.URL)
+		return errors.Errorf("Request to %q failed: %s", req.URL, err)
 	}
 
 	if resp != nil {

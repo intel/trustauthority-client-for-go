@@ -66,7 +66,7 @@ func TestGetToken_invalidToken(t *testing.T) {
 
 func TestVerifyToken_emptyToken(t *testing.T) {
 	cfg := Config{
-		Url: "https://custom-url/api/v1",
+		ApiUrl: "https://custom-url/api/v1",
 	}
 
 	client, _ := New(&cfg)
@@ -78,7 +78,7 @@ func TestVerifyToken_emptyToken(t *testing.T) {
 
 func TestVerifyToken_missingKID(t *testing.T) {
 	cfg := Config{
-		Url: "https://custom-url/api/v1",
+		ApiUrl: "https://custom-url/api/v1",
 	}
 
 	client, _ := New(&cfg)
@@ -90,7 +90,7 @@ func TestVerifyToken_missingKID(t *testing.T) {
 
 func TestVerifyToken_invalidKID(t *testing.T) {
 	cfg := Config{
-		Url: "https://custom-url/api/v1",
+		ApiUrl: "https://custom-url/api/v1",
 	}
 
 	client, _ := New(&cfg)
@@ -102,7 +102,7 @@ func TestVerifyToken_invalidKID(t *testing.T) {
 
 func TestVerifyToken_missingJKU(t *testing.T) {
 	cfg := Config{
-		Url: "https://custom-url/api/v1",
+		ApiUrl: "https://custom-url/api/v1",
 	}
 
 	client, _ := New(&cfg)
@@ -114,7 +114,7 @@ func TestVerifyToken_missingJKU(t *testing.T) {
 
 func TestVerifyToken_invalidJKU(t *testing.T) {
 	cfg := Config{
-		Url: "https://custom-url/api/v1",
+		ApiUrl: "https://custom-url/api/v1",
 	}
 
 	client, _ := New(&cfg)
@@ -126,7 +126,7 @@ func TestVerifyToken_invalidJKU(t *testing.T) {
 
 func TestVerifyToken_malformedJKU(t *testing.T) {
 	cfg := Config{
-		Url: "https://custom-url/api/v1",
+		ApiUrl: "https://custom-url/api/v1",
 	}
 
 	client, _ := New(&cfg)
@@ -135,18 +135,17 @@ func TestVerifyToken_malformedJKU(t *testing.T) {
 		t.Error("VerifyToken returned nil, expected error")
 	}
 }
-func TestGetCRLObject_emptyCRLURL(t *testing.T) {
-	client, _, _, teardown := setup()
-	defer teardown()
 
+func TestGetCRLObject_emptyCRLURL(t *testing.T) {
 	var emptyCRLArry []string
-	_, err := client.GetCRL(emptyCRLArry)
+	_, err := getCRL(emptyCRLArry)
 	if err == nil {
 		t.Errorf("verifyCRL returned nil, expected error")
 	}
 }
+
 func TestGetCRLObject_validCRLUrl(t *testing.T) {
-	client, mux, serverUrl, teardown := setup()
+	_, mux, serverUrl, teardown := setup()
 	defer teardown()
 
 	crlBytes, _ := hex.DecodeString(crlHex)
@@ -156,15 +155,14 @@ func TestGetCRLObject_validCRLUrl(t *testing.T) {
 		w.Write(crlBytes)
 	})
 
-	_, err := client.GetCRL([]string{crlUrl})
+	_, err := getCRL([]string{crlUrl})
 	if err != nil {
 		t.Errorf("GetCRL returned err,  expected nil")
 	}
 }
 
 func TestGetCRLObject_invalidCRL(t *testing.T) {
-
-	client, mux, serverUrl, teardown := setup()
+	_, mux, serverUrl, teardown := setup()
 	defer teardown()
 
 	crlUrl := serverUrl + "/ats.crl"
@@ -173,16 +171,13 @@ func TestGetCRLObject_invalidCRL(t *testing.T) {
 		w.Write([]byte("invalidcrl"))
 	})
 
-	_, err := client.GetCRL([]string{crlUrl})
+	_, err := getCRL([]string{crlUrl})
 	if err == nil {
 		t.Errorf("GetCRL returned nil,  expected error")
 	}
 }
 
 func TestVerifyCRL_nullCerts(t *testing.T) {
-	_, _, _, teardown := setup()
-	defer teardown()
-
 	var leafCert *x509.Certificate
 	var interCaCert *x509.Certificate
 
@@ -193,9 +188,6 @@ func TestVerifyCRL_nullCerts(t *testing.T) {
 }
 
 func TestVerifyCRL_nilArguments(t *testing.T) {
-	_, _, _, teardown := setup()
-	defer teardown()
-
 	certBytes, _ := hex.DecodeString(certHex)
 	leafCert, _ := x509.ParseCertificate(certBytes)
 	interCaCert, _ := x509.ParseCertificate(certBytes)
@@ -206,8 +198,6 @@ func TestVerifyCRL_nilArguments(t *testing.T) {
 	}
 }
 func TestVerifyCRL_validCertAndCrl(t *testing.T) {
-	_, _, _, teardown := setup()
-	defer teardown()
 	crlBytes, _ := hex.DecodeString(crlHex)
 	certBytes, _ := hex.DecodeString(validCertHex)
 	caCertBytes, _ := hex.DecodeString(validInterCaCertHex)
@@ -227,9 +217,6 @@ func TestVerifyCRL_validCertAndCrl(t *testing.T) {
 }
 
 func TestVerifyCRL_invalidCACert(t *testing.T) {
-
-	_, _, _, teardown := setup()
-	defer teardown()
 	crlBytes, _ := hex.DecodeString(crlHex)
 	certBytes, _ := hex.DecodeString(invalidCRLCertHex)
 	caCertBytes, _ := hex.DecodeString(invalidCACertHex)

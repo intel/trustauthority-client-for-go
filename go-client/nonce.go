@@ -16,7 +16,7 @@ import (
 
 // GetNonce is used to get Amber signed nonce
 func (client *amberClient) GetNonce() (*Nonce, error) {
-	url := fmt.Sprintf("%s/appraisal/v1/nonce", client.cfg.Url)
+	url := fmt.Sprintf("%s/appraisal/v1/nonce", client.cfg.ApiUrl)
 
 	newRequest := func() (*http.Request, error) {
 		return http.NewRequest(http.MethodGet, url, nil)
