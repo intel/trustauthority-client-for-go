@@ -10,7 +10,6 @@ const (
 	MaxKeyLen              = 256
 	PemBlockTypePrivateKey = "PRIVATE KEY"
 	PemBlockTypePubliceKey = "PUBLIC KEY"
-	PublicKeyFileName      = "public-key.pem"
 	RSAKeyBitLength        = 3072
 	CLIShortDescription    = "Amber Attestation Client for TDX"
 )
@@ -27,15 +26,12 @@ const (
 
 // Options Names
 const (
-	PrivateKeyPathOption   = "key-path"
-	PolicyIdsOption        = "policy-ids"
-	DecryptCmdInputOption  = "in"
-	DecryptCmdOutputOption = "out"
-	UserDataOption         = "user-data"
-	NonceOption            = "nonce"
-)
-
-const (
-	AmberApiKeyEnv = "AMBER_API_KEY"
-	AmberUrlEnv    = "AMBER_URL"
+	PrivateKeyPathOption = "key-path"
+	PublicKeyPathOption  = "pub-path"
+	PrivateKeyOption     = "key"
+	PolicyIdsOption      = "policy-ids"
+	InputOption          = "in"
+	UserDataOption       = "user-data"
+	NonceOption          = "nonce"
+	ConfigOption         = "config"
 )

@@ -8,7 +8,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -16,7 +16,7 @@ import (
 
 // GetNonce is used to get Amber signed nonce
 func (client *amberClient) GetNonce() (*Nonce, error) {
-	url := fmt.Sprintf("%s/appraisal/v1/nonce", client.cfg.Url)
+	url := fmt.Sprintf("%s/appraisal/v1/nonce", client.cfg.ApiUrl)
 
 	newRequest := func() (*http.Request, error) {
 		return http.NewRequest(http.MethodGet, url, nil)
@@ -29,7 +29,7 @@ func (client *amberClient) GetNonce() (*Nonce, error) {
 
 	var nonce Nonce
 	processResponse := func(resp *http.Response) error {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf("Failed to read body from %s: %s", url, err)
 		}

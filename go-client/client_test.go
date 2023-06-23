@@ -31,10 +31,11 @@ func setup() (client AmberClient, mux *http.ServeMux, serverURL string, teardown
 	// client is the Amber client being tested and is
 	// configured to use test server.
 	cfg := Config{
+		BaseUrl: server.URL,
 		TlsCfg: &tls.Config{
 			InsecureSkipVerify: true,
 		},
-		Url: server.URL,
+		ApiUrl: server.URL,
 	}
 	client, _ = New(&cfg)
 
@@ -43,7 +44,7 @@ func setup() (client AmberClient, mux *http.ServeMux, serverURL string, teardown
 
 func TestNew(t *testing.T) {
 	cfg := Config{
-		Url: "https://custom-url/api/v1",
+		ApiUrl: "https://custom-url/api/v1",
 	}
 
 	_, err := New(&cfg)
@@ -54,7 +55,7 @@ func TestNew(t *testing.T) {
 
 func TestNew_badBaseURL(t *testing.T) {
 	cfg := Config{
-		Url: "bogus\nbase\nURL",
+		ApiUrl: "bogus\nbase\nURL",
 	}
 
 	if _, err := New(&cfg); err == nil {

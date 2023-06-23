@@ -1,42 +1,37 @@
 /*
- *   Copyright (c) 2022 Intel Corporation
+ *   Copyright (c) 2023 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
 )
 
-// GetAmberVersion is used to get Amber version details
-func (client *amberClient) GetAmberVersion() (*Version, error) {
-	url := fmt.Sprintf("%s/appraisal/v1/version", client.cfg.Url)
+// GetAmberCertificates is used to get Amber attestation token signing certificates
+func (client *amberClient) GetAmberCertificates() ([]byte, error) {
+	url := fmt.Sprintf("%s/certs", client.cfg.BaseUrl)
 
 	newRequest := func() (*http.Request, error) {
 		return http.NewRequest(http.MethodGet, url, nil)
 	}
 
 	var headers = map[string]string{
-		headerXApiKey: client.cfg.ApiKey,
+		headerAccept: mimeApplicationJson,
 	}
 
-	var ver Version
+	var jwks []byte
 	processResponse := func(resp *http.Response) error {
-		body, err := ioutil.ReadAll(resp.Body)
+		var err error
+		jwks, err = io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf("Failed to read body from %s: %s", url, err)
 		}
-
-		if err = json.Unmarshal(body, &ver); err != nil {
-			return errors.Errorf("Failed to decode json from %s: %s", url, err)
-		}
-
 		return nil
 	}
 
@@ -44,5 +39,5 @@ func (client *amberClient) GetAmberVersion() (*Version, error) {
 		return nil, err
 	}
 
-	return &ver, nil
+	return jwks, nil
 }

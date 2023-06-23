@@ -8,9 +8,9 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
+	"github.com/intel/amber/v1/client/tdx"
 	"github.com/intel/amber/v1/client/tdx-cli/constants"
 	"github.com/intel/amber/v1/client/tdx-cli/utils"
 	"github.com/pkg/errors"
@@ -34,32 +34,28 @@ var createKeyPairCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(createKeyPairCmd)
-	createKeyPairCmd.Flags().StringP(constants.PrivateKeyPathOption, "k", "",
-		"File path to store private key")
-	createKeyPairCmd.MarkFlagRequired(constants.PrivateKeyPathOption)
+	createKeyPairCmd.Flags().StringP(constants.PublicKeyPathOption, "f", "", "File path to store public key")
+	createKeyPairCmd.MarkFlagRequired(constants.PublicKeyPathOption)
 }
 
 func createKeyPair(cmd *cobra.Command) error {
+
+	publicKeyPath, err := cmd.Flags().GetString(constants.PublicKeyPathOption)
+	if err != nil {
+		return err
+	}
 
 	privateKeyPem, publicKeyPem, err := utils.GenerateKeyPair()
 	if err != nil {
 		return err
 	}
+	defer tdx.ZeroizeByteArray(privateKeyPem)
 
-	privateKeyPath, err := cmd.Flags().GetString(constants.PrivateKeyPathOption)
+	err = os.WriteFile(publicKeyPath, publicKeyPem, 0644)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "I/O error while saving public key")
 	}
 
-	err = ioutil.WriteFile(privateKeyPath, privateKeyPem, 0600)
-	if err != nil {
-		return errors.Wrap(err, "I/O error while saving private key")
-	}
-
-	err = ioutil.WriteFile(constants.PublicKeyFileName, publicKeyPem, 0644)
-	if err != nil {
-		return errors.Wrapf(err, "I/O error while saving public key at %s", constants.PublicKeyFileName)
-	}
-
+	fmt.Println(string(privateKeyPem))
 	return nil
 }

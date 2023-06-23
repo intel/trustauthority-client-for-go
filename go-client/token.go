@@ -7,13 +7,16 @@ package client
 
 import (
 	"bytes"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
@@ -37,8 +40,7 @@ type AttestationTokenResponse struct {
 
 // GetToken is used to get attestation token from Amber
 func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) (string, error) {
-
-	url := fmt.Sprintf("%s/appraisal/v1/attest", client.cfg.Url)
+	url := fmt.Sprintf("%s/appraisal/v1/attest", client.cfg.ApiUrl)
 
 	newRequest := func() (*http.Request, error) {
 		tr := tokenRequest{
@@ -66,13 +68,13 @@ func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidenc
 	var tokenResponse AttestationTokenResponse
 	processResponse := func(resp *http.Response) error {
 		var err error
-		attestationToken, err := ioutil.ReadAll(resp.Body)
+		attestationToken, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf("Failed to read body from %s: %s", url, err)
 		}
 		err = json.Unmarshal(attestationToken, &tokenResponse)
 		if err != nil {
-			return errors.Wrap(err, "Error unmarshalling Token response from appraise")
+			return errors.Errorf("Error unmarshalling Token response from appraise: %s", err)
 		}
 		return nil
 	}
@@ -83,14 +85,81 @@ func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidenc
 	return tokenResponse.Token, nil
 }
 
+// getCRL is used to get CRL Object from CRL distribution points
+func getCRL(crlArr []string) (*x509.RevocationList, error) {
+
+	if len(crlArr) < 1 {
+		return nil, errors.New("Invalid CDP count present in the certificate")
+	}
+
+	_, err := url.Parse(crlArr[0])
+	if err != nil {
+		return nil, errors.Wrap(err, "Invalid CRL distribution point")
+	}
+
+	newRequest := func() (*http.Request, error) {
+		return http.NewRequest(http.MethodGet, crlArr[0], nil)
+	}
+
+	var crlObj *x509.RevocationList
+	processResponse := func(resp *http.Response) error {
+		crlPem, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return errors.Wrapf(err, "Failed to read body from %s", crlArr[0])
+		}
+
+		block, _ := pem.Decode([]byte(crlPem))
+		if block == nil {
+			return errors.New("No PEM data found")
+		}
+
+		crlObj, err = x509.ParseRevocationList(block.Bytes)
+		if err != nil {
+			return errors.Wrap(err, "Failed to parse revocation list")
+		}
+		return nil
+	}
+
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: false,
+		MinVersion:         tls.VersionTLS12,
+	}
+	if err := doRequest(tlsConfig, newRequest, nil, nil, processResponse); err != nil {
+		return nil, err
+	}
+	return crlObj, nil
+}
+
+// verifyCRL is used to verify the Certificate against CRL
+func verifyCRL(crl *x509.RevocationList, leafCert *x509.Certificate, caCert *x509.Certificate) error {
+	if leafCert == nil || caCert == nil || crl == nil {
+		return errors.New("Leaf Cert or CA Cert or CRL is nil")
+	}
+
+	//Checking CRL signed by CA Certificate
+	err := crl.CheckSignatureFrom(caCert)
+	if err != nil {
+		return errors.Wrap(err, "CRL signature verification failed")
+	}
+
+	if crl.NextUpdate.Before(time.Now()) {
+		return errors.New("Outdated CRL")
+	}
+
+	for _, rCert := range crl.RevokedCertificates {
+		if rCert.SerialNumber.Cmp(leafCert.SerialNumber) == 0 {
+			return errors.New("Certificate was Revoked")
+		}
+	}
+	return nil
+}
+
 // VerifyToken is used to do signature verification of attestation token recieved from Amber
 func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 
 	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 
 		var kid string
-		var tokenSignCertUrl string
-
 		keyIDValue, keyIDExists := token.Header["kid"]
 		if !keyIDExists {
 			return nil, errors.New("kid field missing in token header")
@@ -102,105 +171,95 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 			}
 		}
 
-		jkuValue, jkuExists := token.Header["jku"]
-		if !jkuExists {
-			return nil, errors.New("jku field missing in token header")
-		} else {
-			var ok bool
-			tokenSignCertUrl, ok = jkuValue.(string)
-			if !ok {
-				return nil, errors.Errorf("jku in jwt header is not a valid string: %v", tokenSignCertUrl)
-			}
-		}
-
-		_, err := url.Parse(tokenSignCertUrl)
+		// Get the JWT Signing Certificates from Amber
+		jwks, err := client.GetAmberCertificates()
 		if err != nil {
-			return nil, errors.Wrap(err, "malformed URL provided for Token Signing Cert download")
+			return nil, errors.Errorf("Failed to get token signing certificates: %s", err)
 		}
 
-		newRequest := func() (*http.Request, error) {
-			return http.NewRequest(http.MethodGet, tokenSignCertUrl, nil)
+		// Unmarshal the JWKS
+		jwkSet, err := jwk.Parse(jwks)
+		if err != nil {
+			return nil, errors.Errorf("Unable to unmarshal response into a JWT Key Set: %s", err)
 		}
 
-		var headers = map[string]string{
-			headerAccept: "application/json",
+		jwkKey, found := jwkSet.LookupKeyID(kid)
+		if !found {
+			return nil, errors.New("Could not find Key matching the key id")
 		}
 
+		// Verify the cert chain. x5c field in the JWKS would contain the cert chain
+		atsCerts := jwkKey.X509CertChain()
+		if atsCerts.Len() > AtsCertChainMaxLen {
+			return nil, errors.Errorf("Token Signing Cert chain has more than %d certificates", AtsCertChainMaxLen)
+		}
+
+		root := x509.NewCertPool()
+		intermediate := x509.NewCertPool()
+		var leafCert *x509.Certificate
+		var interCACert *x509.Certificate
+		var rootCert *x509.Certificate
+
+		for i := 0; i < atsCerts.Len(); i++ {
+			atsCert, ok := atsCerts.Get(i)
+			if !ok {
+				return nil, errors.Errorf("Failed to fetch certificate at index %d", i)
+			}
+
+			cer, err := cert.Parse(atsCert)
+			if err != nil {
+				return nil, errors.Errorf("Failed to parse x509 certificate[%d]: %v", i, err)
+			}
+
+			if cer.IsCA && cer.BasicConstraintsValid && strings.Contains(cer.Subject.CommonName, "Root CA") {
+				root.AddCert(cer)
+				rootCert = cer
+			} else if strings.Contains(cer.Subject.CommonName, "Signing CA") {
+				intermediate.AddCert(cer)
+				interCACert = cer
+			} else {
+				leafCert = cer
+			}
+		}
+
+		rootCrl, err := getCRL(interCACert.CRLDistributionPoints)
+		if err != nil {
+			return nil, errors.Errorf("Failed to get ROOT CA CRL Object: %v", err.Error())
+		}
+
+		if err = verifyCRL(rootCrl, interCACert, rootCert); err != nil {
+			return nil, errors.Errorf("Failed to check ATS CA Certificate against Root CA CRL: %v", err.Error())
+		}
+
+		atsCrl, err := getCRL(leafCert.CRLDistributionPoints)
+		if err != nil {
+			return nil, errors.Errorf("Failed to get ATS CRL Object: %v", err.Error())
+		}
+
+		if err = verifyCRL(atsCrl, leafCert, interCACert); err != nil {
+			return nil, errors.Errorf("Failed to check ATS Leaf certificate against ATS CRL: %v", err.Error())
+		}
+
+		// Verify the Leaf certificate against the CA
+		opts := x509.VerifyOptions{
+			Roots:         root,
+			Intermediates: intermediate,
+		}
+
+		if _, err := leafCert.Verify(opts); err != nil {
+			return nil, errors.Errorf("Failed to verify cert chain: %v", err)
+		}
+
+		// Extract the public key from JWK using exponent and modulus
 		var pubKey interface{}
-		processResponse := func(resp *http.Response) error {
-			// Read the JWKS payload from HTTP Response body
-			jwks, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				return errors.Errorf("Failed to read body from %s: %s", tokenSignCertUrl, err)
-			}
-
-			// Unmarshal the JWKS
-			jwkSet, err := jwk.Parse(jwks)
-			if err != nil {
-				return errors.New("Unable to unmarshal response into a JWT Key Set")
-			}
-
-			jwkKey, found := jwkSet.LookupKeyID(kid)
-			if !found {
-				return errors.New("Could not find Key matching the key id")
-			}
-
-			// Verify the cert chain. x5c field in the JWKS would contain the cert chain
-			atsCerts := jwkKey.X509CertChain()
-			if atsCerts.Len() > AtsCertChainMaxLen {
-				return errors.Errorf("Token Signing Cert chain has more than %d certificates", AtsCertChainMaxLen)
-			}
-
-			root := x509.NewCertPool()
-			intermediate := x509.NewCertPool()
-			var leafCert *x509.Certificate
-
-			for i := 0; i < atsCerts.Len(); i++ {
-				atsCert, ok := atsCerts.Get(i)
-				if !ok {
-					return errors.Errorf("Failed to fetch certificate at index %d", i)
-				}
-
-				cer, err := cert.Parse(atsCert)
-				if err != nil {
-					return errors.Errorf("Failed to parse x509 certificate[%d]: %v", i, err)
-				}
-
-				if cer.IsCA && cer.BasicConstraintsValid && strings.Contains(cer.Subject.CommonName, "Root CA") {
-					root.AddCert(cer)
-				} else if strings.Contains(cer.Subject.CommonName, "Signing CA") {
-					intermediate.AddCert(cer)
-				} else {
-					leafCert = cer
-				}
-			}
-
-			// Verify the Leaf certificate against the CA
-			opts := x509.VerifyOptions{
-				Roots:         root,
-				Intermediates: intermediate,
-			}
-
-			if _, err := leafCert.Verify(opts); err != nil {
-				return errors.Errorf("Failed to verify cert chain: %v", err.Error())
-			}
-
-			// Extract the public key from JWK using exponent and modulus
-			err = jwkKey.Raw(&pubKey)
-			if err != nil {
-				return errors.New("Failed to extract Public Key from Certificate")
-			}
-			return nil
+		err = jwkKey.Raw(&pubKey)
+		if err != nil {
+			return nil, errors.Errorf("Failed to extract Public Key from Certificate: %s", err)
 		}
-
-		if err := doRequest(client.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
-			return nil, err
-		}
-
 		return pubKey, nil
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to parse jwt token")
+		return nil, errors.Errorf("Failed to parse jwt token: %s", err)
 	}
 
 	return parsedToken, nil

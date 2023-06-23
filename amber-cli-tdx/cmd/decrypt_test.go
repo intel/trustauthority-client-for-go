@@ -17,13 +17,8 @@ import (
 	"github.com/intel/amber/v1/client/tdx-cli/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"os"
 	"testing"
-)
-
-const (
-	decryptedFilePath = "data"
 )
 
 func TestDecryptCmd(t *testing.T) {
@@ -33,15 +28,14 @@ func TestDecryptCmd(t *testing.T) {
 		log.Fatal("failed to generate key pair")
 	}
 
-	err = ioutil.WriteFile(privateKeyPath, privateKeyPem, 0600)
-	if err != nil {
-		log.Fatal("failed to save key")
-	}
+	_ = os.WriteFile(privateKeyPath, privateKeyPem, 0600)
+	defer os.Remove(privateKeyPath)
 
 	plaintText := "secret"
+	block, _ := pem.Decode(privateKeyPem)
+	privateKey := base64.StdEncoding.EncodeToString(block.Bytes)
 
-	block, _ := pem.Decode(publicKeyPem)
-
+	block, _ = pem.Decode(publicKeyPem)
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
 		log.Fatal("failed to parse RSA encoded  public key" + err.Error())
@@ -49,10 +43,10 @@ func TestDecryptCmd(t *testing.T) {
 
 	var rsaPubKey *rsa.PublicKey
 	var ok bool
-
 	if rsaPubKey, ok = pub.(*rsa.PublicKey); !ok {
 		log.Fatal("failed to parse public key")
 	}
+
 	ciphertext, err := rsa.EncryptOAEP(
 		sha256.New(),
 		rand.Reader,
@@ -75,42 +69,51 @@ func TestDecryptCmd(t *testing.T) {
 				constants.DecryptCmd,
 				"--" + constants.PrivateKeyPathOption,
 				privateKeyPath,
-				"--" + constants.DecryptCmdInputOption,
+				"--" + constants.InputOption,
 				base64EncCipherText,
 			},
 			wantErr:     false,
-			description: "Test with all valid inputs",
+			description: "Test with private-key file and encrypted blob",
 		},
 		{
 			args: []string{
 				constants.DecryptCmd,
 				"--" + constants.PrivateKeyPathOption,
-				privateKeyPath,
-				"--" + constants.DecryptCmdInputOption,
+				"private-key.pem",
+				"--" + constants.InputOption,
 				base64EncCipherText,
-				"--" + constants.DecryptCmdOutputOption,
-				decryptedFilePath,
-			},
-			wantErr:     false,
-			description: "Test with all valid inputs with output filepath",
-		},
-		{
-			args: []string{
-				constants.DecryptCmd,
-				"--" + constants.PrivateKeyPathOption,
-				privateKeyPath,
-				"--" + constants.DecryptCmdInputOption,
-				plaintText,
 			},
 			wantErr:     true,
-			description: "Test with invalid encrypted blob",
+			description: "Test with non-existent private-key file",
+		},
+		{
+			args: []string{
+				constants.DecryptCmd,
+				"--" + constants.PrivateKeyOption,
+				privateKey,
+				"--" + constants.InputOption,
+				base64EncCipherText,
+			},
+			wantErr:     false,
+			description: "Test with private key and encrypted blob",
+		},
+		{
+			args: []string{
+				constants.DecryptCmd,
+				"--" + constants.PrivateKeyOption,
+				string(privateKeyPem),
+				"--" + constants.InputOption,
+				base64EncCipherText,
+			},
+			wantErr:     true,
+			description: "Test with malformed private key",
 		},
 		{
 			args: []string{
 				constants.DecryptCmd,
 				"--" + constants.PrivateKeyPathOption,
 				privateKeyPath,
-				"--" + constants.DecryptCmdInputOption,
+				"--" + constants.InputOption,
 				"encryptedD@t@",
 			},
 			wantErr:     true,
@@ -127,15 +130,4 @@ func TestDecryptCmd(t *testing.T) {
 			assert.NoError(t, err)
 		}
 	}
-
-	cleanupFiles()
-}
-
-func cleanupFiles() {
-	os.Remove(decryptedFilePath)
-	os.Remove(privateKeyPath)
-
-	home, _ := os.UserHomeDir()
-	os.Remove(home + "/" + ".amber-cli-tdx.yaml")
-	os.Remove(".amber-cli-tdx.yaml")
 }

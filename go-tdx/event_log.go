@@ -13,7 +13,8 @@ package tdx
 // be available.  In these scenarios, an integrator can compile the application
 // with go build flags and specify a file containing TCG event-log data.
 // For example...
-//   env CGO_CFLAGS_ALLOW="-f.*" go build -ldflags "-X github.com/go-module/eventlog.uefiEventLogFile=/tmp/myuefieventlogs.bin"
+//
+//	env CGO_CFLAGS_ALLOW="-f.*" go build -ldflags "-X github.com/go-module/eventlog.uefiEventLogFile=/tmp/myuefieventlogs.bin"
 var (
 	uefiEventLogFile = ""
 )

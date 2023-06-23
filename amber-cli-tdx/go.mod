@@ -1,6 +1,6 @@
 module github.com/intel/amber/v1/client/tdx-cli
 
-go 1.18
+go 1.20
 
 require (
 	github.com/google/uuid v1.3.0

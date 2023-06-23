@@ -17,8 +17,9 @@ import (
 )
 
 const (
-	privateKeyPath = "private-key.pem"
+	privateKeyPath = "privatekey.pem"
 	publicKeyPath  = "publickey.pem"
+	confFilePath   = "config.json"
 )
 
 func TestCreateKeyPairCmd(t *testing.T) {
@@ -36,8 +37,8 @@ func TestCreateKeyPairCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.CreateKeyPairCmd,
-				"--" + constants.PrivateKeyPathOption,
-				privateKeyPath,
+				"--" + constants.PublicKeyPathOption,
+				publicKeyPath,
 			},
 			wantErr:     false,
 			description: "Test with all valid inputs",
