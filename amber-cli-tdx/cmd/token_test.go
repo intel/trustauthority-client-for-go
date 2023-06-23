@@ -35,7 +35,7 @@ func TestTokenCmd(t *testing.T) {
 	server := test.MockAmberServer(t)
 	defer server.Close()
 
-	configJson := `{"amber_url":"` + server.URL + `","amber_api_key":"YXBpa2V5"}`
+	configJson := `{"amber_api_url":"` + server.URL + `","amber_api_key":"YXBpa2V5"}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
 
@@ -136,7 +136,7 @@ func TestTokenCmd(t *testing.T) {
 
 func TestTokenCmd_MissingAmberUrl(t *testing.T) {
 
-	configJson := `{"amber_url":"","amber_api_key":"YXBpa2V5"}`
+	configJson := `{"amber_api_url":"","amber_api_key":"YXBpa2V5"}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
 	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOption, confFilePath)
@@ -148,7 +148,7 @@ func TestTokenCmd_MissingAmberApiKey(t *testing.T) {
 	server := test.MockAmberServer(t)
 	defer server.Close()
 
-	configJson := `{"amber_url":"` + server.URL + `","amber_api_key":""}`
+	configJson := `{"amber_api_url":"` + server.URL + `","amber_api_key":""}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
 	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOption, confFilePath)
@@ -157,7 +157,7 @@ func TestTokenCmd_MissingAmberApiKey(t *testing.T) {
 
 func TestTokenCmd_MalformedAmberUrl(t *testing.T) {
 
-	configJson := `{"amber_url":":amber.com","amber_api_key":"YXBpa2V5"}`
+	configJson := `{"amber_api_url":":amber.com","amber_api_key":"YXBpa2V5"}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
 	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOption, confFilePath)
@@ -169,7 +169,7 @@ func TestTokenCmd_MalformedAmberApiKey(t *testing.T) {
 	server := test.MockAmberServer(t)
 	defer server.Close()
 
-	configJson := `{"amber_url":"` + server.URL + `","amber_api_key":"@p!key"}`
+	configJson := `{"amber_api_url":"` + server.URL + `","amber_api_key":"@p!key"}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
 	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOption, confFilePath)

@@ -41,6 +41,7 @@ var tokenCmd = &cobra.Command{
 
 type Config struct {
 	AmberUrl    string `json:"amber_url"`
+	AmberApiUrl string `json:"amber_api_url"`
 	AmberApiKey string `json:"amber_api_key"`
 }
 
@@ -71,18 +72,18 @@ func getToken(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Error unmarshalling JSON from config")
 	}
 
-	if config.AmberUrl == "" || config.AmberApiKey == "" {
-		return errors.New("Either Amber URL or Amber API Key is missing in config")
+	if config.AmberApiUrl == "" || config.AmberApiKey == "" {
+		return errors.New("Either Amber API URL or Amber API Key is missing in config")
 	}
 
-	_, err = url.ParseRequestURI(config.AmberUrl)
+	_, err = url.ParseRequestURI(config.AmberApiUrl)
 	if err != nil {
-		return errors.Wrap(err, "Invalid Amber URL")
+		return errors.Wrap(err, "Invalid Amber API URL")
 	}
 
 	_, err = base64.URLEncoding.DecodeString(config.AmberApiKey)
 	if err != nil {
-		return errors.Wrap(err, "Invalid Api key, must be base64 string")
+		return errors.Wrap(err, "Invalid Amber Api key, must be base64 string")
 	}
 
 	userData, err := cmd.Flags().GetString(constants.UserDataOption)
@@ -137,8 +138,8 @@ func getToken(cmd *cobra.Command) error {
 	}
 
 	cfg := client.Config{
-		Url:    config.AmberUrl,
 		TlsCfg: tlsConfig,
+		ApiUrl: config.AmberApiUrl,
 		ApiKey: config.AmberApiKey,
 	}
 
