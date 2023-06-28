@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Intel Corporation All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
 APPNAME := amber-cli
 GITCOMMIT := $(shell git describe --always)
 GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)

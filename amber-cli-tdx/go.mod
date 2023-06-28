@@ -1,3 +1,5 @@
+// Copyright (c) 2022 Intel Corporation All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause
 module github.com/intel/amber/v1/client/tdx-cli
 
 go 1.20
