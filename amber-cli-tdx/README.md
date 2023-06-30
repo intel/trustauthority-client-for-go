@@ -104,7 +104,7 @@ amber-cli create-key-pair --key-path <private key file path>
 `token` command requires Amber properties to be passed in json format
 ```json
 {
-    "amber_url": "<amber api url>",
+    "amber_api_url": "<amber attestation api url>",
     "amber_api_key": "<amber attestation api key>"
 }
 ```

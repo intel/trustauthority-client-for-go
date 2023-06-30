@@ -51,6 +51,7 @@ func init() {
 	tokenCmd.Flags().StringP(constants.UserDataOption, "u", "", "User Data in base64 encoded format")
 	tokenCmd.Flags().StringP(constants.PolicyIdsOption, "p", "", "Amber Policy Ids, comma separated")
 	tokenCmd.Flags().StringP(constants.PublicKeyPathOption, "f", "", "Public key to be used as userdata")
+	tokenCmd.Flags().Bool(constants.NoEventLogOption, false, "Do not collect Event Log")
 	tokenCmd.MarkFlagRequired(constants.ConfigOption)
 }
 
@@ -97,6 +98,11 @@ func getToken(cmd *cobra.Command) error {
 	}
 
 	publicKeyPath, err := cmd.Flags().GetString(constants.PublicKeyPathOption)
+	if err != nil {
+		return err
+	}
+
+	noEvLog, err := cmd.Flags().GetBool(constants.NoEventLogOption)
 	if err != nil {
 		return err
 	}
@@ -148,7 +154,11 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
-	evLogParser := tdx.NewEventLogParser()
+	var evLogParser tdx.EventLogParser
+	if !noEvLog {
+		evLogParser = tdx.NewEventLogParser()
+	}
+
 	adapter, err := tdx.NewAdapter(userDataBytes, evLogParser)
 	if err != nil {
 		return errors.Wrap(err, "Error while creating tdx adapter")

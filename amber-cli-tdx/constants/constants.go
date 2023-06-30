@@ -34,4 +34,5 @@ const (
 	UserDataOption       = "user-data"
 	NonceOption          = "nonce"
 	ConfigOption         = "config"
+	NoEventLogOption     = "no-eventlog"
 )
