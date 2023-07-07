@@ -53,9 +53,19 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestNew_badAPIURL(t *testing.T) {
+	cfg := Config{
+		ApiUrl: "bogus\napi\nURL",
+	}
+
+	if _, err := New(&cfg); err == nil {
+		t.Error("New retruned nil, expected error")
+	}
+}
+
 func TestNew_badBaseURL(t *testing.T) {
 	cfg := Config{
-		ApiUrl: "bogus\nbase\nURL",
+		BaseUrl: "bogus\nbase\nURL",
 	}
 
 	if _, err := New(&cfg); err == nil {

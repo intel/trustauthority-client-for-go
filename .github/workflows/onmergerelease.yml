@@ -52,7 +52,7 @@ jobs:
           fi
           COVERAGE=$(cd go-client && go test ./... -coverprofile=cover.out | awk '{print $5}' | awk -F. '{print $1}')
           echo "Unit test coverage for go-client is - $COVERAGE%"
-          if [[ $COVERAGE -lt 65 ]]; then
-            echo "Unit test coverage must be above 65%"
+          if [[ $COVERAGE -lt 80 ]]; then
+            echo "Unit test coverage must be above 80%"
             exit 1
           fi
