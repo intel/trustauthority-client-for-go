@@ -81,6 +81,12 @@ cd amber-cli-tdx/
 make cli
 ```
 
+## Unit Tests
+
+To run the tests, run `cd amber-cli-tdx && make test-coverage`
+
+See the example test in `amber-cli-tdx/token_test.go` for an example of a test.
+
 ## Usage
 
 ### To get a list of all the available commands

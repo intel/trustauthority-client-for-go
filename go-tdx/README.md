@@ -7,6 +7,12 @@ This library leverages Intel SGX DCAP for Quote generation: [https://github.com/
 
 Use <b>go1.17 or newer</b>.
 
+## Unit Tests
+
+To run the tests, run `cd go-tdx && go test ./... --tags=test`
+
+See the example test in `go-tdx/crypto_test.go` for an example of a test.
+
 ## Usage
 
 Create a new Go TDX adapter, then use the adapter to
@@ -16,7 +22,7 @@ collect quote from TDX enabled platform.
 import "github.com/intel/amber-client/go-tdx"
 
 evLogParser := tdx.NewEventLogParser()
-adapter, err := tdx.NewAdapter(tdHeldData, evLogParser)
+adapter, err := tdx.NewEvidenceAdapter(tdHeldData, evLogParser)
 if err != nil {
     return err
 }
@@ -27,11 +33,25 @@ if err != nil {
 }
 ```
 
+### To generate a RSA keypair
+
+```go
+km := &tdx.KeyMetadata{
+	KeyLength: 3072,
+}
+privateKeyPem, publicKeyPem, err := tdx.GenerateKeyPair(km)
+if err != nil {
+    fmt.Printf("Something bad happened: %s\n\n", err)
+    return err
+}
+```
+
 ### To decrypt an encrypted blob
 
 ```go
 em := &tdx.EncryptionMetadata{
 	PrivateKeyLocation: privateKeyPath,
+	HashAlgorithm:      "SHA256",
 }
 decryptedData, err := tdx.Decrypt(encryptedData, em)
 if err != nil {

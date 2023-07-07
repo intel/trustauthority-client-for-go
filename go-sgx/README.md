@@ -15,7 +15,10 @@ collect quote from SGX enabled platform.
 ```go
 import "github.com/intel/amber-client/go-sgx"
 
-adapter, err := sgx.NewAdapter(enclaveId, enclaveHeldData, unsafe.Pointer(C.enclave_create_report))
+adapter, err := sgx.NewEvidenceAdapter(enclaveId, enclaveHeldData, unsafe.Pointer(C.enclave_create_report))
+if err != nil {
+    return err
+}
 
 evidence, err := adapter.CollectEvidence(nonce)
 if err != nil {

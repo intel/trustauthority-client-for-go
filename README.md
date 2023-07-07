@@ -13,6 +13,12 @@ go get github.com/intel/amber-client/go-client
 
 Use <b>go1.17 or newer</b>.
 
+## Unit Tests
+
+To run the tests, run `cd go-client && go test ./...`
+
+See the example test in `go-client/token_test.go` for an example of a test.
+
 ## Usage
 
 Create a new Project Amber client, then use the exposed services to
@@ -22,8 +28,10 @@ access different parts of the Project Amber API.
 import amberclient "github.com/intel/amber-client/go-client"
 
 cfg := amberclient.Config{
-        // Replace AMBER_API_URL with real Amber URL
-        Url: "AMBER_API_URL",
+        // Replace AMBER_URL with real Amber URL
+        BaseUrl: "AMBER_URL",
+        // Replace AMBER_API_URL with real Amber Attestation API URL
+        ApiUrl: "AMBER_API_URL",
         // Provide TLS config
         TlsCfg: &tls.Config{},
         // Replace AMBER_API_KEY with your real key
@@ -63,8 +71,18 @@ if err != nil {
 }
 ```
 
+### To download Amber token signing certificates
+
+```go
+jwks, err := client.GetAmberCertificates()
+if err != nil {
+    fmt.Printf("Something bad happened: %s\n\n", err)
+    return err
+}
+```
+
 ### To collect Amber signed token with Adapter
-To create adapter refer [go-sgx](./go-sgx/README.md):
+To create adapter refer [go-sgx](./go-sgx/README.md) or [go-tdx](./go-tdx/README.md):
 
 ```go
 token, err := client.CollectToken(adapter, policyIds)
