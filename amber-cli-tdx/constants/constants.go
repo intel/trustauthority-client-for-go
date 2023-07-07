@@ -7,11 +7,8 @@
 package constants
 
 const (
-	MaxKeyLen              = 256
-	PemBlockTypePrivateKey = "PRIVATE KEY"
-	PemBlockTypePubliceKey = "PUBLIC KEY"
-	RSAKeyBitLength        = 3072
-	CLIShortDescription    = "Amber Attestation Client for TDX"
+	RSAKeyBitLength     = 3072
+	CLIShortDescription = "Amber Attestation Client for TDX"
 )
 
 // Command Names

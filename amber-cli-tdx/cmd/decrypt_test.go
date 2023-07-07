@@ -14,7 +14,6 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"github.com/intel/amber/v1/client/tdx-cli/constants"
-	"github.com/intel/amber/v1/client/tdx-cli/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -23,37 +22,22 @@ import (
 
 func TestDecryptCmd(t *testing.T) {
 
-	privateKeyPem, publicKeyPem, err := utils.GenerateKeyPair()
+	keyPair, err := rsa.GenerateKey(rand.Reader, 3072)
 	if err != nil {
 		log.Fatal("failed to generate key pair")
 	}
 
+	block := &pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(keyPair),
+	}
+	privateKeyPem := pem.EncodeToMemory(block)
+
 	_ = os.WriteFile(privateKeyPath, privateKeyPem, 0600)
 	defer os.Remove(privateKeyPath)
 
-	plaintText := "secret"
-	block, _ := pem.Decode(privateKeyPem)
 	privateKey := base64.StdEncoding.EncodeToString(block.Bytes)
-
-	block, _ = pem.Decode(publicKeyPem)
-	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		log.Fatal("failed to parse RSA encoded  public key" + err.Error())
-	}
-
-	var rsaPubKey *rsa.PublicKey
-	var ok bool
-	if rsaPubKey, ok = pub.(*rsa.PublicKey); !ok {
-		log.Fatal("failed to parse public key")
-	}
-
-	ciphertext, err := rsa.EncryptOAEP(
-		sha256.New(),
-		rand.Reader,
-		rsaPubKey,
-		[]byte(plaintText),
-		nil,
-	)
+	ciphertext, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, &keyPair.PublicKey, []byte("secret"), nil)
 	if err != nil {
 		log.Fatal("failed to encrypt" + err.Error())
 	}
@@ -67,13 +51,11 @@ func TestDecryptCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.DecryptCmd,
-				"--" + constants.PrivateKeyPathOption,
-				privateKeyPath,
 				"--" + constants.InputOption,
 				base64EncCipherText,
 			},
-			wantErr:     false,
-			description: "Test with private-key file and encrypted blob",
+			wantErr:     true,
+			description: "Test without private-key file and private key",
 		},
 		{
 			args: []string{

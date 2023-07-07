@@ -12,7 +12,6 @@ import (
 
 	"github.com/intel/amber/v1/client/tdx"
 	"github.com/intel/amber/v1/client/tdx-cli/constants"
-	"github.com/intel/amber/v1/client/tdx-cli/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -45,7 +44,10 @@ func createKeyPair(cmd *cobra.Command) error {
 		return err
 	}
 
-	privateKeyPem, publicKeyPem, err := utils.GenerateKeyPair()
+	km := &tdx.KeyMetadata{
+		KeyLength: constants.RSAKeyBitLength,
+	}
+	privateKeyPem, publicKeyPem, err := tdx.GenerateKeyPair(km)
 	if err != nil {
 		return err
 	}

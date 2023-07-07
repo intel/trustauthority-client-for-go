@@ -78,6 +78,7 @@ func decrypt(cmd *cobra.Command) error {
 	em := tdx.EncryptionMetadata{
 		PrivateKeyLocation: privateKeyPath,
 		PrivateKey:         privateKey,
+		HashAlgorithm:      "SHA256",
 	}
 	decryptedData, err := tdx.Decrypt(encryptedData, &em)
 	if err != nil {
