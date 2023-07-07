@@ -7,7 +7,6 @@
  */
 package tdx
 
-// #cgo CFLAGS: -fstack-protector-strong
 // #cgo LDFLAGS: -ltdx_attest -L/usr/lib/x86_64-linux-gnu/
 //
 // #include <stdlib.h>
