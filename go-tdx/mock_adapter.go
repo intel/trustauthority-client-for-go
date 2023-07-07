@@ -5,27 +5,25 @@
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
-
 package tdx
 
 import (
 	"github.com/intel/amber/v1/client"
 )
 
-type MockTdxAdapter struct {
+type mockAdapter struct {
 	uData       []byte
 	EvLogParser EventLogParser
 }
 
-func NewAdapter(udata []byte, evLogParser EventLogParser) (*MockTdxAdapter, error) {
-	return &MockTdxAdapter{
+func NewEvidenceAdapter(udata []byte, evLogParser EventLogParser) (client.EvidenceAdapter, error) {
+	return &mockAdapter{
 		uData:       udata,
 		EvLogParser: evLogParser,
 	}, nil
 }
 
-// CollectEvidence is used to get TDX quote using DCAP Quote Generation service
-func (adapter *MockTdxAdapter) CollectEvidence(nonce []byte) (*client.Evidence, error) {
+func (adapter *mockAdapter) CollectEvidence(nonce []byte) (*client.Evidence, error) {
 
 	return &client.Evidence{
 		Type:     1,

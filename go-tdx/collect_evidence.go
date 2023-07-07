@@ -23,7 +23,7 @@ import (
 )
 
 // CollectEvidence is used to get TDX quote using DCAP Quote Generation service
-func (adapter *TdxAdapter) CollectEvidence(nonce []byte) (*client.Evidence, error) {
+func (adapter *tdxAdapter) CollectEvidence(nonce []byte) (*client.Evidence, error) {
 
 	hash := sha512.New()
 	_, err := hash.Write(nonce)

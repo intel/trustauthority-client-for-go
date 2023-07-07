@@ -7,18 +7,20 @@ package sgx
 
 import (
 	"unsafe"
+
+	"github.com/intel/amber-client/go-client"
 )
 
-// SgxAdapter manages SGX Quote collection from SGX enabled platform
-type SgxAdapter struct {
+// sgxAdapter manages SGX Quote collection from SGX enabled platform
+type sgxAdapter struct {
 	EID            uint64
 	uData          []byte
 	ReportFunction unsafe.Pointer
 }
 
-// NewAdapter returns a new SGX Adapter instance
-func NewAdapter(eid uint64, udata []byte, reportFunction unsafe.Pointer) (*SgxAdapter, error) {
-	return &SgxAdapter{
+// NewEvidenceAdapter returns a new SGX Adapter instance
+func NewEvidenceAdapter(eid uint64, udata []byte, reportFunction unsafe.Pointer) (client.EvidenceAdapter, error) {
+	return &sgxAdapter{
 		EID:            eid,
 		uData:          udata,
 		ReportFunction: reportFunction,

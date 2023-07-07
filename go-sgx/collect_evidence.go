@@ -39,7 +39,7 @@ import (
 )
 
 // CollectEvidence is used to get SGX quote using DCAP Quote Generation library
-func (adapter *SgxAdapter) CollectEvidence(nonce []byte) (*client.Evidence, error) {
+func (adapter *sgxAdapter) CollectEvidence(nonce []byte) (*client.Evidence, error) {
 
 	retVal := C.uint32_t(0)
 	qe3_target := C.sgx_target_info_t{}

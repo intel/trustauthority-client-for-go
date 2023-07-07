@@ -7,15 +7,19 @@
  */
 package tdx
 
+import (
+	"github.com/intel/amber/v1/client"
+)
+
 // TdxAdapter manages TDX Quote collection from TDX enabled platform
-type TdxAdapter struct {
+type tdxAdapter struct {
 	uData       []byte
 	EvLogParser EventLogParser
 }
 
-// NewAdapter returns a new TDX Adapter instance
-func NewAdapter(udata []byte, evLogParser EventLogParser) (*TdxAdapter, error) {
-	return &TdxAdapter{
+// NewEvidenceAdapter returns a new TDX Adapter instance
+func NewEvidenceAdapter(udata []byte, evLogParser EventLogParser) (client.EvidenceAdapter, error) {
+	return &tdxAdapter{
 		uData:       udata,
 		EvLogParser: evLogParser,
 	}, nil
