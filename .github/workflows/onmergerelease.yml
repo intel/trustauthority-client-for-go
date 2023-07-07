@@ -56,3 +56,9 @@ jobs:
             echo "Unit test coverage must be above 80%"
             exit 1
           fi
+          COVERAGE=$(cd go-tdx && go test ./... --tags=test -coverprofile=cover.out | awk '{print $5}' | awk -F. '{print $1}')
+          echo "Unit test coverage for go-tdx is - $COVERAGE%"
+          if [[ $COVERAGE -lt 80 ]]; then
+            echo "Unit test coverage must be above 80%"
+            exit 1
+          fi

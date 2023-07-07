@@ -246,7 +246,7 @@ func getEventTag(eventType uint32, eventData []byte, eventSize uint32, pcrIndex 
 
 		// Check whether garbage data is filled in place of event data
 		if (uefiVarData.UnicodeNameLength + uefiVarData.VariableDataLength) > uint64(eventSize-32) {
-			return nil, errors.Wrap(err, "Garbage data is filled in place of event data.")
+			return nil, errors.New("Garbage data is filled in place of event data.")
 		}
 
 		unicodeName = buf.Next(int(uefiVarData.UnicodeNameLength * 2))
