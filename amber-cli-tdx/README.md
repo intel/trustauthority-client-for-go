@@ -36,6 +36,14 @@ OR
 amber-cli token --pub-path <public key file path> --policy-ids <comma separated amber attestation policy ids>
 ```
 
+### To verify an Amber signed token
+
+```sh
+export AMBER_URL=<amber api url>
+export AMBER_API_KEY=<amber attestation api key>
+amber-cli verify --token-path <token file path>
+```
+
 ### To get a TD quote with Nonce and UserData
 
 ```sh

@@ -22,6 +22,7 @@ const (
 	TokenCmd         = "token"
 	RootCmd          = "amber-cli"
 	VersionCmd       = "version"
+	VerifyCmd        = "verify"
 )
 
 // Options Names
@@ -33,6 +34,7 @@ const (
 	InputOption          = "in"
 	UserDataOption       = "user-data"
 	NonceOption          = "nonce"
+	VerifyTokenOption    = "token-path"
 )
 
 const (
