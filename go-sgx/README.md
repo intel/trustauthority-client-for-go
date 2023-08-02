@@ -5,7 +5,7 @@ This library leverages Intel SGX DCAP for Quote generation: [https://github.com/
 
 ## Go Requirement
 
-Use <b>go1.17 or newer</b>.
+Use <b>go1.19 or newer</b>. Follow https://go.dev/doc/install for installation of Go.
 
 ## Usage
 

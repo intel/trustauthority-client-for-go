@@ -69,7 +69,7 @@ Install the RPM package for `libtdx-attest-devel` following these steps:
 
 ## Go Requirement
 
-Use <b>go1.17 or newer</b>.
+Use <b>go1.19 or newer</b>. Follow https://go.dev/doc/install for installation of Go.
 
 ## Installation
 
@@ -104,7 +104,7 @@ amber-cli create-key-pair --key-path <private key file path>
 `token` command requires Amber properties to be passed in json format
 ```json
 {
-    "amber_url": "<amber api url>",
+    "amber_api_url": "<amber attestation api url>",
     "amber_api_key": "<amber attestation api key>"
 }
 ```

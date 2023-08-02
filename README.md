@@ -1,9 +1,9 @@
 # Intel Project Amber Go Client Library - API V1
 This is the beta version of Go Library for integrating with Intel Project Amber V1 API.
 
-## Installation
+## Download
 
-Install the latest version of the library with the following commands:
+Download the latest version of the library with the following commands:
 
 ```sh
 go get github.com/intel/amber-client/go-client
@@ -11,7 +11,7 @@ go get github.com/intel/amber-client/go-client
 
 ## Go Requirement
 
-Use <b>go1.17 or newer</b>.
+Use <b>go1.19 or newer</b>. Follow https://go.dev/doc/install for installation of Go.
 
 ## Usage
 
