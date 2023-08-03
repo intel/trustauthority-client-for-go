@@ -1,9 +1,9 @@
 # Intel® Trust Authority Client
 This is the beta version of Client for integrating with Intel Trust Authority V1 API.
 
-## Installation
+## Download
 
-Install the latest version of the library with the following commands:
+Download the latest version of the library with the following commands:
 
 ```sh
 go get github.com/intel/trustauthority-client/go-connector
@@ -11,7 +11,7 @@ go get github.com/intel/trustauthority-client/go-connector
 
 ## Go Requirement
 
-Use <b>go1.17 or newer</b>.
+Use <b>go1.19 or newer</b>. Follow https://go.dev/doc/install for installation of Go.
 
 ## Unit Tests
 

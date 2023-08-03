@@ -9,10 +9,6 @@ The Intel Trust Authority TDX CLI has dependency on Intel SGX DCAP. Install TDX 
 Install the Debian package for `libtdx-attest-dev` following these steps:
 
 1. Add the following repository to your sources:
-    * For Ubuntu* 18.04:
-        ```sh
-        echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
-        ```
     * For Ubuntu* 20.04:
         ```sh
         echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
@@ -22,7 +18,7 @@ Install the Debian package for `libtdx-attest-dev` following these steps:
         echo 'deb [signed-by=/etc/apt/keyrings/intel-sgx-keyring.asc arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu jammy main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
         ```
 2. Get the Debian repo public key and add it to the list of trusted keys that are used by apt to authenticate packages:
-    * For Ubuntu* 18.04 and Ubuntu* 20.04:
+    * For Ubuntu* 20.04:
         ```sh
         wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add
         ```
@@ -69,7 +65,7 @@ Install the RPM package for `libtdx-attest-devel` following these steps:
 
 ## Go Requirement
 
-Use <b>go1.17 or newer</b>.
+Use <b>go1.19 or newer</b>. Follow https://go.dev/doc/install for installation of Go.
 
 ## Installation
 
