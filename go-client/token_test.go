@@ -37,7 +37,7 @@ func TestGetToken(t *testing.T) {
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
 
-	nonce := &Nonce{}
+	nonce := &VerifierNonce{}
 	evidence := &Evidence{}
 	_, err := client.GetToken(nonce, nil, evidence)
 	if err != nil {
@@ -54,7 +54,7 @@ func TestGetToken_invalidToken(t *testing.T) {
 		w.Write([]byte(`invalid token`))
 	})
 
-	nonce := &Nonce{}
+	nonce := &VerifierNonce{}
 	evidence := &Evidence{}
 	_, err := client.GetToken(nonce, nil, evidence)
 	if err == nil {

@@ -15,7 +15,7 @@ import (
 )
 
 // GetNonce is used to get Amber signed nonce
-func (client *amberClient) GetNonce() (*Nonce, error) {
+func (client *amberClient) GetNonce() (*VerifierNonce, error) {
 	url := fmt.Sprintf("%s/appraisal/v1/nonce", client.cfg.ApiUrl)
 
 	newRequest := func() (*http.Request, error) {
@@ -27,7 +27,7 @@ func (client *amberClient) GetNonce() (*Nonce, error) {
 		headerAccept:  mimeApplicationJson,
 	}
 
-	var nonce Nonce
+	var nonce VerifierNonce
 	processResponse := func(resp *http.Response) error {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {

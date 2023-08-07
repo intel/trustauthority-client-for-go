@@ -26,11 +26,11 @@ import (
 
 // tokenRequest holds all the data required for attestation
 type tokenRequest struct {
-	Quote     []byte      `json:"quote"`
-	Nonce     *Nonce      `json:"nonce,omitempty"`
-	UserData  []byte      `json:"user_data,omitempty"`
-	PolicyIds []uuid.UUID `json:"policy_ids,omitempty"`
-	EventLog  []byte      `json:"event_log,omitempty"`
+	Quote         []byte         `json:"quote"`
+	VerifierNonce *VerifierNonce `json:"verifier_nonce,omitempty"`
+	RuntimeData   []byte         `json:"runtime_data,omitempty"`
+	PolicyIds     []uuid.UUID    `json:"policy_ids,omitempty"`
+	EventLog      []byte         `json:"event_log,omitempty"`
 }
 
 type AttestationTokenResponse struct {
@@ -38,16 +38,16 @@ type AttestationTokenResponse struct {
 }
 
 // GetToken is used to get attestation token from Amber
-func (client *amberClient) GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) (string, error) {
+func (client *amberClient) GetToken(nonce *VerifierNonce, policyIds []uuid.UUID, evidence *Evidence) (string, error) {
 	url := fmt.Sprintf("%s/appraisal/v1/attest", client.cfg.ApiUrl)
 
 	newRequest := func() (*http.Request, error) {
 		tr := tokenRequest{
-			Quote:     evidence.Evidence,
-			Nonce:     nonce,
-			UserData:  evidence.UserData,
-			PolicyIds: policyIds,
-			EventLog:  evidence.EventLog,
+			Quote:         evidence.Evidence,
+			VerifierNonce: nonce,
+			RuntimeData:   evidence.UserData,
+			PolicyIds:     policyIds,
+			EventLog:      evidence.EventLog,
 		}
 
 		body, err := json.Marshal(tr)

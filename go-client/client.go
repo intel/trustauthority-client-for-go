@@ -16,8 +16,8 @@ import (
 // AmberClient is an interface which exposes methods for calling Amber REST APIs
 type AmberClient interface {
 	GetAmberCertificates() ([]byte, error)
-	GetNonce() (*Nonce, error)
-	GetToken(nonce *Nonce, policyIds []uuid.UUID, evidence *Evidence) (string, error)
+	GetNonce() (*VerifierNonce, error)
+	GetToken(verifierNonce *VerifierNonce, policyIds []uuid.UUID, evidence *Evidence) (string, error)
 	CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) (string, error)
 	VerifyToken(string) (*jwt.Token, error)
 }
@@ -44,8 +44,8 @@ type Config struct {
 	url     *url.URL
 }
 
-// Nonce holds the signed nonce issued from Amber
-type Nonce struct {
+// VerifierNonce holds the signed nonce issued from Amber
+type VerifierNonce struct {
 	Val       []byte `json:"val"`
 	Iat       []byte `json:"iat"`
 	Signature []byte `json:"signature"`

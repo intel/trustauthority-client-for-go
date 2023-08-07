@@ -37,7 +37,7 @@ func TestGetNonce(t *testing.T) {
 	iat, _ := base64.StdEncoding.DecodeString(nonceIat)
 	sig, _ := base64.StdEncoding.DecodeString(nonceSig)
 
-	want := &Nonce{
+	want := &VerifierNonce{
 		Val:       val,
 		Iat:       iat,
 		Signature: sig,
