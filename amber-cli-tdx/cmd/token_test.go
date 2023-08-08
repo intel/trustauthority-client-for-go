@@ -68,13 +68,24 @@ func TestTokenCmd(t *testing.T) {
 				constants.TokenCmd,
 				"--" + constants.ConfigOption,
 				confFilePath,
+				"--" + constants.RequestIdOption,
+				"r@q1",
+			},
+			wantErr:     true,
+			description: "Test with malformed request id",
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOption,
+				confFilePath,
 				"--" + constants.PublicKeyPathOption,
 				publicKeyPath,
-				"--" + constants.PolicyIdsOption,
-				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
+				"--" + constants.RequestIdOption,
+				"req1",
 			},
 			wantErr:     false,
-			description: "Test with public-key file and policy ids",
+			description: "Test with public-key file and request id",
 		},
 		{
 			args: []string{

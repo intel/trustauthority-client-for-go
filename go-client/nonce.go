@@ -15,7 +15,7 @@ import (
 )
 
 // GetNonce is used to get Amber signed nonce
-func (client *amberClient) GetNonce() (*VerifierNonce, error) {
+func (client *amberClient) GetNonce(reqId string) (*VerifierNonce, map[string][]string, error) {
 	url := fmt.Sprintf("%s/appraisal/v1/nonce", client.cfg.ApiUrl)
 
 	newRequest := func() (*http.Request, error) {
@@ -23,12 +23,15 @@ func (client *amberClient) GetNonce() (*VerifierNonce, error) {
 	}
 
 	var headers = map[string]string{
-		headerXApiKey: client.cfg.ApiKey,
-		headerAccept:  mimeApplicationJson,
+		headerXApiKey:   client.cfg.ApiKey,
+		headerAccept:    mimeApplicationJson,
+		HeaderRequestId: reqId,
 	}
 
 	var nonce VerifierNonce
+	var respHeaders map[string][]string
 	processResponse := func(resp *http.Response) error {
+		respHeaders = resp.Header
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf("Failed to read body from %s: %s", url, err)
@@ -42,8 +45,8 @@ func (client *amberClient) GetNonce() (*VerifierNonce, error) {
 	}
 
 	if err := doRequest(client.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
-		return nil, err
+		return nil, respHeaders, err
 	}
 
-	return &nonce, nil
+	return &nonce, respHeaders, nil
 }

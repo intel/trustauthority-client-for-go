@@ -27,7 +27,7 @@ func TestGetNonce(t *testing.T) {
 		w.Write([]byte(`{"val":"` + nonceVal + `","iat":"` + nonceIat + `","signature":"` + nonceSig + `"}`))
 	})
 
-	got, err := client.GetNonce()
+	got, _, err := client.GetNonce("req1")
 	if err != nil {
 		t.Errorf("GetNonce returned unexpected error: %v", err)
 		return
@@ -56,7 +56,7 @@ func TestGetNonce_invalidNonce(t *testing.T) {
 		w.Write([]byte(`invalid nonce`))
 	})
 
-	_, err := client.GetNonce()
+	_, _, err := client.GetNonce("req1")
 	if err == nil {
 		t.Error("GetNonce returned nil, expected error")
 	}

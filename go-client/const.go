@@ -9,6 +9,8 @@ const (
 	headerXApiKey     = "x-api-key"
 	headerAccept      = "Accept"
 	headerContentType = "Content-Type"
+	HeaderRequestId   = "X-Amber-Request-Id"
+	HeaderTraceId     = "X-Amber-Trace-Id"
 
 	mimeApplicationJson = "application/json"
 	AtsCertChainMaxLen  = 10

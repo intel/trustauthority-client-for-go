@@ -61,11 +61,12 @@ func doRequest(tlsCfg *tls.Config,
 	}
 
 	if resp.StatusCode != http.StatusOK || resp.ContentLength == 0 {
+		traceId, requestId := resp.Header.Get(HeaderTraceId), resp.Header.Get(HeaderRequestId)
 		response, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return errors.Errorf("Failed to read response body: %s", err)
+			return errors.Errorf("Failed to read response body: %s, Trace-Id = %s, Request-Id = %s", err, traceId, requestId)
 		}
-		return errors.Errorf("Request to %q failed: StatusCode = %d, Response = %s", req.URL, resp.StatusCode, string(response))
+		return errors.Errorf("Request to %q failed: StatusCode = %d, Response = %s, Trace-Id = %s, Request-Id = %s", req.URL, resp.StatusCode, string(response), traceId, requestId)
 	}
 
 	return processResponse(resp)

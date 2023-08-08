@@ -11,22 +11,22 @@ import (
 )
 
 // CollectToken is used to initiate remote attestation from Amber
-func (client *amberClient) CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) (string, error) {
+func (client *amberClient) CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID, reqId string) (string, map[string][]string, error) {
 
-	nonce, err := client.GetNonce()
+	nonce, headers, err := client.GetNonce(reqId)
 	if err != nil {
-		return "", errors.Errorf("Failed to collect nonce from Amber: %s", err)
+		return "", headers, errors.Errorf("Failed to collect nonce from Amber: %s", err)
 	}
 
 	evidence, err := adapter.CollectEvidence(append(nonce.Val, nonce.Iat[:]...))
 	if err != nil {
-		return "", errors.Errorf("Failed to collect evidence from adapter: %s", err)
+		return "", headers, errors.Errorf("Failed to collect evidence from adapter: %s", err)
 	}
 
-	token, err := client.GetToken(nonce, policyIds, evidence)
+	token, headers, err := client.GetToken(nonce, policyIds, evidence, reqId)
 	if err != nil {
-		return "", errors.Errorf("Failed to collect token from Amber: %s", err)
+		return "", headers, errors.Errorf("Failed to collect token from Amber: %s", err)
 	}
 
-	return token, nil
+	return token, headers, nil
 }

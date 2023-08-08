@@ -38,7 +38,7 @@ type AttestationTokenResponse struct {
 }
 
 // GetToken is used to get attestation token from Amber
-func (client *amberClient) GetToken(nonce *VerifierNonce, policyIds []uuid.UUID, evidence *Evidence) (string, error) {
+func (client *amberClient) GetToken(nonce *VerifierNonce, policyIds []uuid.UUID, evidence *Evidence, reqId string) (string, map[string][]string, error) {
 	url := fmt.Sprintf("%s/appraisal/v1/attest", client.cfg.ApiUrl)
 
 	newRequest := func() (*http.Request, error) {
@@ -62,11 +62,14 @@ func (client *amberClient) GetToken(nonce *VerifierNonce, policyIds []uuid.UUID,
 		headerXApiKey:     client.cfg.ApiKey,
 		headerAccept:      mimeApplicationJson,
 		headerContentType: mimeApplicationJson,
+		HeaderRequestId:   reqId,
 	}
 
 	var tokenResponse AttestationTokenResponse
+	var respHeaders map[string][]string
 	processResponse := func(resp *http.Response) error {
 		var err error
+		respHeaders = resp.Header
 		attestationToken, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf("Failed to read body from %s: %s", url, err)
@@ -79,9 +82,9 @@ func (client *amberClient) GetToken(nonce *VerifierNonce, policyIds []uuid.UUID,
 	}
 
 	if err := doRequest(client.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
-		return "", err
+		return "", respHeaders, err
 	}
-	return tokenResponse.Token, nil
+	return tokenResponse.Token, respHeaders, nil
 }
 
 // getCRL is used to get CRL Object from CRL distribution points

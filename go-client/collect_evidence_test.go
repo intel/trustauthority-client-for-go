@@ -40,7 +40,7 @@ func TestCollectToken(t *testing.T) {
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
 
-	_, err := client.CollectToken(adapter, nil)
+	_, _, err := client.CollectToken(adapter, nil, "req1")
 	if err != nil {
 		t.Errorf("CollectToken returned unexpcted error: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestCollectToken_nonceFailure(t *testing.T) {
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
 
-	_, err := client.CollectToken(adapter, nil)
+	_, _, err := client.CollectToken(adapter, nil, "req1")
 	if err == nil {
 		t.Errorf("CollectToken returned nil, expected error")
 	}
@@ -87,7 +87,7 @@ func TestCollectToken_evidenceFailure(t *testing.T) {
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
 
-	_, err := client.CollectToken(adapter, nil)
+	_, _, err := client.CollectToken(adapter, nil, "req1")
 	if err == nil {
 		t.Errorf("CollectToken returned nil, expected error")
 	}
@@ -111,7 +111,7 @@ func TestCollectToken_tokenFailure(t *testing.T) {
 		w.Write([]byte(`invalid token`))
 	})
 
-	_, err := client.CollectToken(adapter, nil)
+	_, _, err := client.CollectToken(adapter, nil, "req1")
 	if err == nil {
 		t.Errorf("CollectToken returned nil, expected error")
 	}

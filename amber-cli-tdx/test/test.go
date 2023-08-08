@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/intel/amber-client/go-client"
 )
 
 var nonce = `
@@ -36,6 +37,8 @@ func MockAmberServer(t *testing.T) *httptest.Server {
 
 	r.HandleFunc(nonceApi, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Add(client.HeaderRequestId, "req1")
+		w.Header().Add(client.HeaderTraceId, "JVygrGiiIAMEJPw=")
 		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 		_, err := w.Write([]byte(nonce))
 		if err != nil {
@@ -45,6 +48,8 @@ func MockAmberServer(t *testing.T) *httptest.Server {
 
 	r.HandleFunc(attestApi, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Add(client.HeaderRequestId, "req1")
+		w.Header().Add(client.HeaderTraceId, "JVygrGiiIAMEJPw=")
 		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 		_, err := w.Write([]byte(attestationToken))
 		if err != nil {

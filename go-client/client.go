@@ -16,9 +16,9 @@ import (
 // AmberClient is an interface which exposes methods for calling Amber REST APIs
 type AmberClient interface {
 	GetAmberCertificates() ([]byte, error)
-	GetNonce() (*VerifierNonce, error)
-	GetToken(verifierNonce *VerifierNonce, policyIds []uuid.UUID, evidence *Evidence) (string, error)
-	CollectToken(adapter EvidenceAdapter, policyIds []uuid.UUID) (string, error)
+	GetNonce(string) (*VerifierNonce, map[string][]string, error)
+	GetToken(*VerifierNonce, []uuid.UUID, *Evidence, string) (string, map[string][]string, error)
+	CollectToken(EvidenceAdapter, []uuid.UUID, string) (string, map[string][]string, error)
 	VerifyToken(string) (*jwt.Token, error)
 }
 

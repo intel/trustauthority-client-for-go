@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/google/uuid"
@@ -51,6 +52,7 @@ func init() {
 	tokenCmd.Flags().StringP(constants.UserDataOption, "u", "", "User Data in base64 encoded format")
 	tokenCmd.Flags().StringP(constants.PolicyIdsOption, "p", "", "Amber Policy Ids, comma separated")
 	tokenCmd.Flags().StringP(constants.PublicKeyPathOption, "f", "", "Public key to be used as userdata")
+	tokenCmd.Flags().StringP(constants.RequestIdOption, "r", "", "Request id to be associated with request")
 	tokenCmd.Flags().Bool(constants.NoEventLogOption, false, "Do not collect Event Log")
 	tokenCmd.MarkFlagRequired(constants.ConfigOption)
 }
@@ -102,6 +104,11 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
+	reqId, err := cmd.Flags().GetString(constants.RequestIdOption)
+	if err != nil {
+		return err
+	}
+
 	noEvLog, err := cmd.Flags().GetBool(constants.NoEventLogOption)
 	if err != nil {
 		return err
@@ -138,6 +145,13 @@ func getToken(cmd *cobra.Command) error {
 		}
 	}
 
+	if reqId != "" {
+		requestIdRegex := regexp.MustCompile(`^[a-zA-Z0-9_ \/.-]{1,128}$`)
+		if !requestIdRegex.Match([]byte(reqId)) {
+			return errors.Errorf("Request ID should be atmost 128 characters long and should contain only alphanumeric characters, _, space, -, ., / or \\")
+		}
+	}
+
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: false,
 		MinVersion:         tls.VersionTLS12,
@@ -164,7 +178,13 @@ func getToken(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Error while creating tdx adapter")
 	}
 
-	token, err := amberClient.CollectToken(adapter, pIds)
+	token, headers, err := amberClient.CollectToken(adapter, pIds, reqId)
+	if headers != nil {
+		fmt.Fprintln(os.Stdout, "Trace Id:", headers[client.HeaderTraceId][0])
+		if reqId != "" {
+			fmt.Fprintln(os.Stdout, "Request Id:", headers[client.HeaderRequestId][0])
+		}
+	}
 	if err != nil {
 		return err
 	}
