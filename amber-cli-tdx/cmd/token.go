@@ -17,9 +17,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/intel/amber/v1/client"
-	"github.com/intel/amber/v1/client/tdx"
-	"github.com/intel/amber/v1/client/tdx-cli/constants"
+	"github.com/intel/amber-client/go-client"
+	"github.com/intel/amber-client/go-tdx"
+	"github.com/intel/amber-client/tdx-cli/constants"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

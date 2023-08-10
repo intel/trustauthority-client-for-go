@@ -7,9 +7,10 @@
 package cmd
 
 import (
-	"github.com/intel/amber/v1/client/tdx-cli/constants"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/intel/amber-client/tdx-cli/constants"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestQuoteCmd(t *testing.T) {

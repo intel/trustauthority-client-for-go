@@ -8,7 +8,7 @@
 package tdx
 
 import (
-	"github.com/intel/amber/v1/client"
+	"github.com/intel/amber-client/go-client"
 )
 
 // TdxAdapter manages TDX Quote collection from TDX enabled platform

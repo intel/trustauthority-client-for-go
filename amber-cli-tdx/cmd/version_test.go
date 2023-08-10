@@ -8,8 +8,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/intel/amber/v1/client/tdx-cli/constants"
 	"testing"
+
+	"github.com/intel/amber-client/tdx-cli/constants"
 )
 
 func TestGetVersion(t *testing.T) {

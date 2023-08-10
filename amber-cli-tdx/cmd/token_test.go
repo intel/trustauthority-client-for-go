@@ -7,11 +7,12 @@
 package cmd
 
 import (
-	"github.com/intel/amber/v1/client/tdx-cli/constants"
-	"github.com/intel/amber/v1/client/tdx-cli/test"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/intel/amber-client/tdx-cli/constants"
+	"github.com/intel/amber-client/tdx-cli/test"
+	"github.com/stretchr/testify/assert"
 )
 
 var pubKey = `

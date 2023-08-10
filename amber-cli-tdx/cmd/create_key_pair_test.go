@@ -8,12 +8,13 @@ package cmd
 
 import (
 	"bytes"
-	"github.com/intel/amber/v1/client/tdx-cli/constants"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/intel/amber-client/tdx-cli/constants"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
