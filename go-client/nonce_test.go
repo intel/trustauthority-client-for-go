@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022 Intel Corporation
+ *   Copyright (c) 2022-2023 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -27,7 +27,7 @@ func TestGetNonce(t *testing.T) {
 		w.Write([]byte(`{"val":"` + nonceVal + `","iat":"` + nonceIat + `","signature":"` + nonceSig + `"}`))
 	})
 
-	got, _, err := client.GetNonce("req1")
+	got, err := client.GetNonce(GetNonceArgs{"req1"})
 	if err != nil {
 		t.Errorf("GetNonce returned unexpected error: %v", err)
 		return
@@ -42,7 +42,7 @@ func TestGetNonce(t *testing.T) {
 		Iat:       iat,
 		Signature: sig,
 	}
-	if !reflect.DeepEqual(got, want) {
+	if !reflect.DeepEqual(got.Nonce, want) {
 		t.Errorf("GetNonce returned: %v, want %v", got, want)
 	}
 }
@@ -56,7 +56,7 @@ func TestGetNonce_invalidNonce(t *testing.T) {
 		w.Write([]byte(`invalid nonce`))
 	})
 
-	_, _, err := client.GetNonce("req1")
+	_, err := client.GetNonce(GetNonceArgs{"req1"})
 	if err == nil {
 		t.Error("GetNonce returned nil, expected error")
 	}

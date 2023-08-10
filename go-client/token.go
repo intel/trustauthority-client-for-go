@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022 Intel Corporation
+ *   Copyright (c) 2022-2023 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -33,21 +33,22 @@ type tokenRequest struct {
 	EventLog      []byte         `json:"event_log,omitempty"`
 }
 
+// AttestationTokenResponse holds the token recieved from Amber
 type AttestationTokenResponse struct {
 	Token string `json:"token"`
 }
 
 // GetToken is used to get attestation token from Amber
-func (client *amberClient) GetToken(nonce *VerifierNonce, policyIds []uuid.UUID, evidence *Evidence, reqId string) (string, map[string][]string, error) {
+func (client *amberClient) GetToken(args GetTokenArgs) (GetTokenResponse, error) {
 	url := fmt.Sprintf("%s/appraisal/v1/attest", client.cfg.ApiUrl)
 
 	newRequest := func() (*http.Request, error) {
 		tr := tokenRequest{
-			Quote:         evidence.Evidence,
-			VerifierNonce: nonce,
-			RuntimeData:   evidence.UserData,
-			PolicyIds:     policyIds,
-			EventLog:      evidence.EventLog,
+			Quote:         args.Evidence.Evidence,
+			VerifierNonce: args.Nonce,
+			RuntimeData:   args.Evidence.UserData,
+			PolicyIds:     args.PolicyIds,
+			EventLog:      args.Evidence.EventLog,
 		}
 
 		body, err := json.Marshal(tr)
@@ -62,18 +63,18 @@ func (client *amberClient) GetToken(nonce *VerifierNonce, policyIds []uuid.UUID,
 		headerXApiKey:     client.cfg.ApiKey,
 		headerAccept:      mimeApplicationJson,
 		headerContentType: mimeApplicationJson,
-		HeaderRequestId:   reqId,
+		HeaderRequestId:   args.RequestId,
 	}
 
-	var tokenResponse AttestationTokenResponse
-	var respHeaders map[string][]string
+	var response GetTokenResponse
 	processResponse := func(resp *http.Response) error {
-		var err error
-		respHeaders = resp.Header
+		response.Headers = resp.Header
 		attestationToken, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf("Failed to read body from %s: %s", url, err)
 		}
+
+		var tokenResponse AttestationTokenResponse
 		err = json.Unmarshal(attestationToken, &tokenResponse)
 		if err != nil {
 			return errors.Errorf("Error unmarshalling Token response from appraise: %s", err)
@@ -82,9 +83,10 @@ func (client *amberClient) GetToken(nonce *VerifierNonce, policyIds []uuid.UUID,
 	}
 
 	if err := doRequest(client.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
-		return "", respHeaders, err
+		return response, err
 	}
-	return tokenResponse.Token, respHeaders, nil
+
+	return response, nil
 }
 
 // getCRL is used to get CRL Object from CRL distribution points

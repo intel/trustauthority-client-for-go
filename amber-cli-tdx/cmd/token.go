@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022 Intel Corporation
+ *   Copyright (c) 2022-2023 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -178,17 +178,17 @@ func getToken(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Error while creating tdx adapter")
 	}
 
-	token, headers, err := amberClient.CollectToken(adapter, pIds, reqId)
-	if headers != nil {
-		fmt.Fprintln(os.Stdout, "Trace Id:", headers[client.HeaderTraceId][0])
+	response, err := amberClient.CollectToken(client.CollectTokenArgs{Adapter: adapter, PolicyIds: pIds, RequestId: reqId})
+	if response.Headers != nil {
+		fmt.Fprintln(os.Stdout, "Trace Id:", response.Headers.Get(client.HeaderTraceId))
 		if reqId != "" {
-			fmt.Fprintln(os.Stdout, "Request Id:", headers[client.HeaderRequestId][0])
+			fmt.Fprintln(os.Stdout, "Request Id:", response.Headers.Get(client.HeaderRequestId))
 		}
 	}
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintln(os.Stdout, token)
+	fmt.Fprintln(os.Stdout, response.Token)
 	return nil
 }

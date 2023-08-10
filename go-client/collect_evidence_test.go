@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022 Intel Corporation
+ *   Copyright (c) 2022-2023 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -40,7 +40,7 @@ func TestCollectToken(t *testing.T) {
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
 
-	_, _, err := client.CollectToken(adapter, nil, "req1")
+	_, err := client.CollectToken(CollectTokenArgs{adapter, nil, "req1"})
 	if err != nil {
 		t.Errorf("CollectToken returned unexpcted error: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestCollectToken_nonceFailure(t *testing.T) {
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
 
-	_, _, err := client.CollectToken(adapter, nil, "req1")
+	_, err := client.CollectToken(CollectTokenArgs{adapter, nil, "req1"})
 	if err == nil {
 		t.Errorf("CollectToken returned nil, expected error")
 	}
@@ -87,7 +87,7 @@ func TestCollectToken_evidenceFailure(t *testing.T) {
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
 
-	_, _, err := client.CollectToken(adapter, nil, "req1")
+	_, err := client.CollectToken(CollectTokenArgs{adapter, nil, "req1"})
 	if err == nil {
 		t.Errorf("CollectToken returned nil, expected error")
 	}
@@ -111,7 +111,7 @@ func TestCollectToken_tokenFailure(t *testing.T) {
 		w.Write([]byte(`invalid token`))
 	})
 
-	_, _, err := client.CollectToken(adapter, nil, "req1")
+	_, err := client.CollectToken(CollectTokenArgs{adapter, nil, "req1"})
 	if err == nil {
 		t.Errorf("CollectToken returned nil, expected error")
 	}
