@@ -19,6 +19,7 @@ const (
 	TokenCmd         = "token"
 	RootCmd          = "amber-cli"
 	VersionCmd       = "version"
+	VerifyCmd        = "verify"
 )
 
 // Options Names
@@ -33,4 +34,5 @@ const (
 	ConfigOption         = "config"
 	RequestIdOption      = "request-id"
 	NoEventLogOption     = "no-eventlog"
+	TokenOption          = "token"
 )
