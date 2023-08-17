@@ -35,7 +35,7 @@ func (client *amberClient) GetAmberCertificates() ([]byte, error) {
 		return nil
 	}
 
-	if err := doRequest(client.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
+	if err := doRequest(*client.rclient, client.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
 		return nil, err
 	}
 

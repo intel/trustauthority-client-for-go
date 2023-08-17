@@ -12,6 +12,10 @@ const (
 	HeaderRequestId   = "x-amber-request-id"
 	HeaderTraceId     = "x-amber-trace-id"
 
-	mimeApplicationJson = "application/json"
-	AtsCertChainMaxLen  = 10
+	mimeApplicationJson        = "application/json"
+	AtsCertChainMaxLen         = 10
+	MaxRetries                 = 2
+	DefaultRetryWaitMinSeconds = 2
+	DefaultRetryWaitMaxSeconds = 10
+	ServiceUnavailableError    = `service unavailable`
 )

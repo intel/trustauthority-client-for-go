@@ -19,6 +19,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/lestrrat-go/jwx/v2/cert"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/pkg/errors"
@@ -82,7 +83,7 @@ func (client *amberClient) GetToken(args GetTokenArgs) (GetTokenResponse, error)
 		return nil
 	}
 
-	if err := doRequest(client.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
+	if err := doRequest(*client.rclient, client.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
 		return response, err
 	}
 
@@ -90,7 +91,7 @@ func (client *amberClient) GetToken(args GetTokenArgs) (GetTokenResponse, error)
 }
 
 // getCRL is used to get CRL Object from CRL distribution points
-func getCRL(crlArr []string) (*x509.RevocationList, error) {
+func getCRL(rclient retryablehttp.Client, crlArr []string) (*x509.RevocationList, error) {
 
 	if len(crlArr) < 1 {
 		return nil, errors.New("Invalid CDP count present in the certificate")
@@ -123,7 +124,7 @@ func getCRL(crlArr []string) (*x509.RevocationList, error) {
 		InsecureSkipVerify: false,
 		MinVersion:         tls.VersionTLS12,
 	}
-	if err := doRequest(tlsConfig, newRequest, nil, nil, processResponse); err != nil {
+	if err := doRequest(rclient, tlsConfig, newRequest, nil, nil, processResponse); err != nil {
 		return nil, err
 	}
 	return crlObj, nil
@@ -221,7 +222,7 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 			}
 		}
 
-		rootCrl, err := getCRL(interCACert.CRLDistributionPoints)
+		rootCrl, err := getCRL(*client.rclient, interCACert.CRLDistributionPoints)
 		if err != nil {
 			return nil, errors.Errorf("Failed to get ROOT CA CRL Object: %v", err.Error())
 		}
@@ -230,7 +231,7 @@ func (client *amberClient) VerifyToken(token string) (*jwt.Token, error) {
 			return nil, errors.Errorf("Failed to check ATS CA Certificate against Root CA CRL: %v", err.Error())
 		}
 
-		atsCrl, err := getCRL(leafCert.CRLDistributionPoints)
+		atsCrl, err := getCRL(*client.rclient, leafCert.CRLDistributionPoints)
 		if err != nil {
 			return nil, errors.Errorf("Failed to get ATS CRL Object: %v", err.Error())
 		}

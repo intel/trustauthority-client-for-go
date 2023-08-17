@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 // setup sets up a test HTTP server along with a AmberClient that is
@@ -47,6 +48,28 @@ func TestNew(t *testing.T) {
 		ApiUrl: "https://custom-url/api/v1",
 	}
 
+	_, err := New(&cfg)
+	if err != nil {
+		t.Errorf("New returned unexpected error: %v", err)
+	}
+}
+
+func TestNewWithRetryConfig(t *testing.T) {
+
+	retryWaitMin := DefaultRetryWaitMinSeconds * time.Second
+	retryWaitMax := DefaultRetryWaitMinSeconds * time.Second
+	retryMax := DefaultRetryWaitMaxSeconds
+	retryConfig := RetryConfig{
+		RetryWaitMin:  &retryWaitMin,
+		RetryWaitMax:  &retryWaitMax,
+		RetryMax:      &retryMax,
+		CheckForRetry: defaultRetryPolicy,
+		BackOff:       nil,
+	}
+	cfg := Config{
+		ApiUrl:      "https://custom-url/api/v1",
+		RetryConfig: &retryConfig,
+	}
 	_, err := New(&cfg)
 	if err != nil {
 		t.Errorf("New returned unexpected error: %v", err)

@@ -7,14 +7,14 @@ package client
 
 import (
 	"crypto/tls"
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
-
-	"github.com/pkg/errors"
 )
 
 // doRequest creates an API request, sends the API request and returns the API response
-func doRequest(tlsCfg *tls.Config,
+func doRequest(rclient retryablehttp.Client, tlsCfg *tls.Config,
 	newRequest func() (*http.Request, error),
 	queryParams map[string]string,
 	headers map[string]string,
@@ -39,15 +39,17 @@ func doRequest(tlsCfg *tls.Config,
 		req.Header.Add(name, val)
 	}
 
-	client := &http.Client{
+	httpClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: tlsCfg,
 			Proxy:           http.ProxyFromEnvironment,
 		},
 	}
 
+	rclient.HTTPClient = httpClient
+
 	var resp *http.Response
-	if resp, err = client.Do(req); err != nil {
+	if resp, err = rclient.StandardClient().Do(req); err != nil {
 		return errors.Errorf("Request to %q failed: %s", req.URL, err)
 	}
 

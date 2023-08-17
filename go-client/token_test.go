@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/hex"
+	"github.com/hashicorp/go-retryablehttp"
 	"net/http"
 	"testing"
 	"time"
@@ -145,7 +146,7 @@ func TestVerifyToken_malformedJWKS(t *testing.T) {
 
 func TestGetCRLObject_emptyCRLURL(t *testing.T) {
 	var emptyCRLArry []string
-	_, err := getCRL(emptyCRLArry)
+	_, err := getCRL(*retryablehttp.NewClient(), emptyCRLArry)
 	if err == nil {
 		t.Error("GetCRL returned nil, expected error")
 	}
@@ -153,7 +154,7 @@ func TestGetCRLObject_emptyCRLURL(t *testing.T) {
 
 func TestGetCRLObject_invalidCRLUrl(t *testing.T) {
 	crlUrl := ":amber.com"
-	_, err := getCRL([]string{crlUrl})
+	_, err := getCRL(*retryablehttp.NewClient(), []string{crlUrl})
 	if err == nil {
 		t.Error("GetCRL returned nil,  expected error")
 	}
@@ -170,7 +171,7 @@ func TestGetCRLObject_validCRLUrl(t *testing.T) {
 		w.Write(crlBytes)
 	})
 
-	_, err := getCRL([]string{crlUrl})
+	_, err := getCRL(*retryablehttp.NewClient(), []string{crlUrl})
 	if err != nil {
 		t.Errorf("GetCRL returned err,  expected nil: %v", err)
 	}
@@ -187,7 +188,7 @@ func TestGetCRLObject_invalidCRL(t *testing.T) {
 		w.Write(crlBytes)
 	})
 
-	_, err := getCRL([]string{crlUrl})
+	_, err := getCRL(*retryablehttp.NewClient(), []string{crlUrl})
 	if err == nil {
 		t.Errorf("GetCRL returned nil,  expected error")
 	}

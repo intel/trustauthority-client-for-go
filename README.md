@@ -36,6 +36,26 @@ cfg := amberclient.Config{
         TlsCfg: &tls.Config{},
         // Replace AMBER_API_KEY with your real key
         ApiKey: "AMBER_API_KEY",
+
+        RClient: &RetryConfig{},
+}
+
+// RetryConfig a retryable client configuration for automatic retries to tolerate minor outages.
+rCfg := amberclient.RetryConfig{
+        // Minimum time to wait, default is 2s
+        RetryWaitMin:
+        // Maximum time to wait, default is 10s
+        RetryWaitMax: 
+        // Maximum number of retries, default is 2
+        RetryMax:    
+        // CheckRetry specifies the policy for handling retries, and is called
+        // after each request. Default retries when http status code is one amone 500, 503 and 504
+        // and when there is client timeout
+        CheckForRetry: 
+        // Backoff specifies the policy for how long to wait between retries, default is DefaultBackoff, which 
+        // provides a default callback for Client.Backoff which will perform exponential backoff based on the attempt 
+        // number and limited by the provided minimum and maximum durations.
+        BackOff:       
 }
 
 client, err := amberclient.New(&cfg)

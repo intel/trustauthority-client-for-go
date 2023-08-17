@@ -8,10 +8,10 @@ package client
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/pkg/errors"
 	"net/http"
 	"testing"
-
-	"github.com/pkg/errors"
 )
 
 func TestDoRequest(t *testing.T) {
@@ -44,7 +44,7 @@ func TestDoRequest(t *testing.T) {
 		return nil
 	}
 
-	if err := doRequest(tlsCfg, newRequest, queryParams, headers, processResponse); err != nil {
+	if err := doRequest(*retryablehttp.NewClient(), tlsCfg, newRequest, queryParams, headers, processResponse); err != nil {
 		t.Errorf("doRequest returned unexpected error: %v", err)
 	}
 }
@@ -59,7 +59,7 @@ func TestDoRequest_badRequest(t *testing.T) {
 		return nil, errors.New("Bad Request")
 	}
 
-	if err := doRequest(tlsCfg, newRequest, nil, nil, nil); err == nil {
+	if err := doRequest(*retryablehttp.NewClient(), tlsCfg, newRequest, nil, nil, nil); err == nil {
 		t.Error("doRequest returned nil, expected error")
 	}
 }
@@ -81,7 +81,29 @@ func TestDoRequest_emptyResponse(t *testing.T) {
 		return http.NewRequest(http.MethodGet, url, nil)
 	}
 
-	if err := doRequest(tlsCfg, newRequest, nil, nil, nil); err == nil {
+	if err := doRequest(*retryablehttp.NewClient(), tlsCfg, newRequest, nil, nil, nil); err == nil {
+		t.Error("doRequest returned nil, expected error")
+	}
+}
+
+func TestDoRequest_InternalServerError(t *testing.T) {
+	_, mux, serverURL, teardown := setup()
+	defer teardown()
+
+	mux.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+
+	tlsCfg := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+
+	url := fmt.Sprintf("%s/test", serverURL)
+	newRequest := func() (*http.Request, error) {
+		return http.NewRequest(http.MethodGet, url, nil)
+	}
+
+	if err := doRequest(*retryablehttp.NewClient(), tlsCfg, newRequest, nil, nil, nil); err == nil {
 		t.Error("doRequest returned nil, expected error")
 	}
 }
