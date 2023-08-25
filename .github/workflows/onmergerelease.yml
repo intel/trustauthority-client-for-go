@@ -44,14 +44,14 @@ jobs:
 
       - name: Unit Test Coverage
         run: |
-          COVERAGE=$(cd amber-cli-tdx && make test-coverage | grep 'total' | awk '{print $3}' | awk -F. '{print $1}')
-          echo "Unit test coverage for amber-cli-tdx is - $COVERAGE%"
+          COVERAGE=$(cd tdx-cli && make test-coverage | grep 'total' | awk '{print $3}' | awk -F. '{print $1}')
+          echo "Unit test coverage for tdx-cli is - $COVERAGE%"
           if [[ $COVERAGE -lt 80 ]]; then
             echo "Unit test coverage must be above 80%"
             exit 1
           fi
-          COVERAGE=$(cd go-client && go test ./... -coverprofile=cover.out | awk '{print $5}' | awk -F. '{print $1}')
-          echo "Unit test coverage for go-client is - $COVERAGE%"
+          COVERAGE=$(cd go-connector && go test ./... -coverprofile=cover.out | awk '{print $5}' | awk -F. '{print $1}')
+          echo "Unit test coverage for go-connector is - $COVERAGE%"
           if [[ $COVERAGE -lt 80 ]]; then
             echo "Unit test coverage must be above 80%"
             exit 1

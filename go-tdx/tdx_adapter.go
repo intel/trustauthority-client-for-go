@@ -8,7 +8,7 @@
 package tdx
 
 import (
-	"github.com/intel/amber-client/go-client"
+	"github.com/intel/trustconnector/go-connector"
 )
 
 // TdxAdapter manages TDX Quote collection from TDX enabled platform
@@ -18,7 +18,7 @@ type tdxAdapter struct {
 }
 
 // NewEvidenceAdapter returns a new TDX Adapter instance
-func NewEvidenceAdapter(udata []byte, evLogParser EventLogParser) (client.EvidenceAdapter, error) {
+func NewEvidenceAdapter(udata []byte, evLogParser EventLogParser) (connector.EvidenceAdapter, error) {
 	return &tdxAdapter{
 		uData:       udata,
 		EvLogParser: evLogParser,

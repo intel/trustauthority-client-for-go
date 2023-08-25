@@ -17,13 +17,13 @@ import (
 	"encoding/json"
 	"unsafe"
 
-	"github.com/intel/amber-client/go-client"
+	"github.com/intel/trustconnector/go-connector"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
 // CollectEvidence is used to get TDX quote using DCAP Quote Generation service
-func (adapter *tdxAdapter) CollectEvidence(nonce []byte) (*client.Evidence, error) {
+func (adapter *tdxAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, error) {
 
 	hash := sha512.New()
 	_, err := hash.Write(nonce)
@@ -75,7 +75,7 @@ func (adapter *tdxAdapter) CollectEvidence(nonce []byte) (*client.Evidence, erro
 		}
 	}
 
-	return &client.Evidence{
+	return &connector.Evidence{
 		Type:     1,
 		Evidence: quote,
 		UserData: adapter.uData,

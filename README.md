@@ -1,12 +1,12 @@
-# Intel Project Amber Go Client Library - API V1
-This is the beta version of Go Library for integrating with Intel Project Amber V1 API.
+# Trust Connector
+This is the beta version of Trust Connector for integrating with Intel Trust Authority V1 API.
 
 ## Installation
 
 Install the latest version of the library with the following commands:
 
 ```sh
-go get github.com/intel/amber-client/go-client
+go get github.com/intel/trustconnector/go-connector
 ```
 
 ## Go Requirement
@@ -15,97 +15,96 @@ Use <b>go1.17 or newer</b>.
 
 ## Unit Tests
 
-To run the tests, run `cd go-client && go test ./...`
+To run the tests, run `cd go-connector && go test ./...`
 
-See the example test in `go-client/token_test.go` for an example of a test.
+See the example test in `go-connector/token_test.go` for an example of a test.
 
 ## Usage
 
-Create a new Project Amber client, then use the exposed services to
-access different parts of the Project Amber API.
+Create a new TrustConnector instance, then use the exposed services to
+access different parts of the Trust Authority API.
 
 ```go
-import amberclient "github.com/intel/amber-client/go-client"
+import "github.com/intel/trustconnector/go-connector"
 
-cfg := amberclient.Config{
-        // Replace AMBER_URL with real Amber URL
-        BaseUrl: "AMBER_URL",
-        // Replace AMBER_API_URL with real Amber Attestation API URL
-        ApiUrl: "AMBER_API_URL",
+cfg := connector.Config{
+        // Replace TRUSTAUTHORITY_URL with real Trust Authority URL
+        BaseUrl: "TRUSTAUTHORITY_URL",
+        // Replace TRUSTAUTHORITY_API_URL with real Trust Authority API URL
+        ApiUrl: "TRUSTAUTHORITY_API_URL",
         // Provide TLS config
         TlsCfg: &tls.Config{},
-        // Replace AMBER_API_KEY with your real key
-        ApiKey: "AMBER_API_KEY",
-
+        // Replace TRUSTAUTHORITY_API_KEY with real API key
+        ApiKey: "TRUSTAUTHORITY_API_KEY",
+        // Provide Retry config
         RClient: &RetryConfig{},
 }
 
-// RetryConfig a retryable client configuration for automatic retries to tolerate minor outages.
-rCfg := amberclient.RetryConfig{
+retryCfg := connector.RetryConfig{
         // Minimum time to wait, default is 2s
         RetryWaitMin:
         // Maximum time to wait, default is 10s
-        RetryWaitMax: 
+        RetryWaitMax:
         // Maximum number of retries, default is 2
-        RetryMax:    
+        RetryMax:
         // CheckRetry specifies the policy for handling retries, and is called
-        // after each request. Default retries when http status code is one amone 500, 503 and 504
-        // and when there is client timeout
-        CheckForRetry: 
+        // after each request. Default retries when http status code is one among 500, 503 and 504
+        // and when there is client timeout or if a service is unavailable
+        CheckRetry:
         // Backoff specifies the policy for how long to wait between retries, default is DefaultBackoff, which 
-        // provides a default callback for Client.Backoff which will perform exponential backoff based on the attempt 
+        // provides a default callback for Backoff which will perform exponential backoff based on the attempt
         // number and limited by the provided minimum and maximum durations.
-        BackOff:       
+        BackOff:
 }
 
-client, err := amberclient.New(&cfg)
+connector, err := connector.New(&cfg)
 ```
 
-### To get a Amber signed nonce
+### To get a Trust Authority signed nonce
 
 ```go
-nonce, err := client.GetNonce()
+nonce, err := connector.GetNonce()
 if err != nil {
     fmt.Printf("Something bad happened: %s\n\n", err)
     return err
 }
 ```
 
-### To get a Amber signed token with Nonce and Evidence
+### To get a Trust Authority signed token with Nonce and Evidence
 
 ```go
-token, err := client.GetToken(nonce, policyIds, evidence)
+token, err := connector.GetToken(nonce, policyIds, evidence)
 if err != nil {
     fmt.Printf("Something bad happened: %s\n\n", err)
     return err
 }
 ```
 
-### To verify a Amber signed token
+### To verify a Trust Authority signed token
 
 ```go
-parsedToken, err := client.VerifyToken(string(token))
+parsedToken, err := connector.VerifyToken(string(token))
 if err != nil {
     fmt.Printf("Something bad happened: %s\n\n", err)
     return err
 }
 ```
 
-### To download Amber token signing certificates
+### To download Trust Authority token signing certificates
 
 ```go
-jwks, err := client.GetAmberCertificates()
+jwks, err := connector.GetTokenSigningCertificates()
 if err != nil {
     fmt.Printf("Something bad happened: %s\n\n", err)
     return err
 }
 ```
 
-### To collect Amber signed token with Adapter
+### To attest TEE with Trust Authority using TEE Adapter
 To create adapter refer [go-sgx](./go-sgx/README.md) or [go-tdx](./go-tdx/README.md):
 
 ```go
-token, err := client.CollectToken(adapter, policyIds)
+token, err := connector.Attest(adapter, policyIds)
 if err != nil {
     return err
 }

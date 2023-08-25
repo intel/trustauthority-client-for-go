@@ -8,7 +8,7 @@
 package tdx
 
 import (
-	"github.com/intel/amber-client/go-client"
+	"github.com/intel/trustconnector/go-connector"
 )
 
 type mockAdapter struct {
@@ -16,16 +16,16 @@ type mockAdapter struct {
 	EvLogParser EventLogParser
 }
 
-func NewEvidenceAdapter(udata []byte, evLogParser EventLogParser) (client.EvidenceAdapter, error) {
+func NewEvidenceAdapter(udata []byte, evLogParser EventLogParser) (connector.EvidenceAdapter, error) {
 	return &mockAdapter{
 		uData:       udata,
 		EvLogParser: evLogParser,
 	}, nil
 }
 
-func (adapter *mockAdapter) CollectEvidence(nonce []byte) (*client.Evidence, error) {
+func (adapter *mockAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, error) {
 
-	return &client.Evidence{
+	return &connector.Evidence{
 		Type:     1,
 		Evidence: nil,
 		UserData: nil,

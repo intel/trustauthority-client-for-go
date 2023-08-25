@@ -1,4 +1,4 @@
-# Intel Project Amber Go SGX Adapter
+# Trust Connector Go SGX Adapter
 This is the beta version of Go SGX Adapter for collecting Quote from SGX enabled platform.
 
 This library leverages Intel SGX DCAP for Quote generation: [https://github.com/intel/SGXDataCenterAttestationPrimitives](https://github.com/intel/SGXDataCenterAttestationPrimitives)
@@ -13,7 +13,7 @@ Create a new Go SGX adapter, then use the adapter to
 collect quote from SGX enabled platform.
 
 ```go
-import "github.com/intel/amber-client/go-sgx"
+import "github.com/intel/trustconnector/go-sgx"
 
 adapter, err := sgx.NewEvidenceAdapter(enclaveId, enclaveHeldData, unsafe.Pointer(C.enclave_create_report))
 if err != nil {

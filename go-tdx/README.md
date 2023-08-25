@@ -1,4 +1,4 @@
-# Intel Project Amber Go TDX Adapter
+# Trust Connector Go TDX Adapter
 This is the beta version of Go TDX Adapter for collecting Quote from TDX enabled platform.
 
 This library leverages Intel SGX DCAP for Quote generation: [https://github.com/intel/SGXDataCenterAttestationPrimitives](https://github.com/intel/SGXDataCenterAttestationPrimitives)
@@ -19,7 +19,7 @@ Create a new Go TDX adapter, then use the adapter to
 collect quote from TDX enabled platform.
 
 ```go
-import "github.com/intel/amber-client/go-tdx"
+import "github.com/intel/trustconnector/go-tdx"
 
 evLogParser := tdx.NewEventLogParser()
 adapter, err := tdx.NewEvidenceAdapter(tdHeldData, evLogParser)

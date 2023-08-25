@@ -34,12 +34,12 @@ import "C"
 import (
 	"unsafe"
 
-	"github.com/intel/amber-client/go-client"
+	"github.com/intel/trustconnector/go-connector"
 	"github.com/pkg/errors"
 )
 
 // CollectEvidence is used to get SGX quote using DCAP Quote Generation library
-func (adapter *sgxAdapter) CollectEvidence(nonce []byte) (*client.Evidence, error) {
+func (adapter *sgxAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, error) {
 
 	retVal := C.uint32_t(0)
 	qe3_target := C.sgx_target_info_t{}
@@ -82,7 +82,7 @@ func (adapter *sgxAdapter) CollectEvidence(nonce []byte) (*client.Evidence, erro
 		return nil, errors.Errorf("sgx_qe_get_quote return error code %x", qe3_ret)
 	}
 
-	return &client.Evidence{
+	return &connector.Evidence{
 		Type:     0,
 		Evidence: quote_buffer,
 		UserData: adapter.uData,

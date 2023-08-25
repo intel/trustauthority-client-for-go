@@ -2,12 +2,12 @@
 // All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
-module github.com/intel/amber-client/go-sgx
+module github.com/intel/trustconnector/go-sgx
 
-go 1.20
+go 1.21
 
 require (
-	github.com/intel/amber-client/go-client v0.0.0
+	github.com/intel/trustconnector/go-connector v0.0.0
 	github.com/pkg/errors v0.9.1
 )
 
@@ -16,6 +16,8 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.4 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.1 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
 	github.com/lestrrat-go/httprc v1.0.4 // indirect
@@ -27,4 +29,4 @@ require (
 	golang.org/x/sys v0.9.0 // indirect
 )
 
-replace github.com/intel/amber-client/go-client => ../go-client
+replace github.com/intel/trustconnector/go-connector => ../go-connector
