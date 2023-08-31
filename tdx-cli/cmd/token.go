@@ -180,9 +180,9 @@ func getToken(cmd *cobra.Command) error {
 
 	response, err := trustConnector.Attest(connector.AttestArgs{Adapter: adapter, PolicyIds: pIds, RequestId: reqId})
 	if response.Headers != nil {
-		fmt.Fprintln(os.Stdout, "Trace Id:", response.Headers.Get(connector.HeaderTraceId))
+		fmt.Fprintln(os.Stderr, "Trace Id:", response.Headers.Get(connector.HeaderTraceId))
 		if reqId != "" {
-			fmt.Fprintln(os.Stdout, "Request Id:", response.Headers.Get(connector.HeaderRequestId))
+			fmt.Fprintln(os.Stderr, "Request Id:", response.Headers.Get(connector.HeaderRequestId))
 		}
 	}
 	if err != nil {

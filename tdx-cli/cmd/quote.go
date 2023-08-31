@@ -66,8 +66,7 @@ func getQuote(cmd *cobra.Command) error {
 		}
 	}
 
-	evLogParser := tdx.NewEventLogParser()
-	adapter, err := tdx.NewEvidenceAdapter(userDataBytes, evLogParser)
+	adapter, err := tdx.NewEvidenceAdapter(userDataBytes, nil)
 	if err != nil {
 		return errors.Wrap(err, "Error while creating tdx adapter")
 	}

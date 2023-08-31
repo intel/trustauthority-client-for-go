@@ -70,16 +70,17 @@ func (connector *trustConnector) GetToken(args GetTokenArgs) (GetTokenResponse, 
 	var response GetTokenResponse
 	processResponse := func(resp *http.Response) error {
 		response.Headers = resp.Header
-		attestationToken, err := io.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf("Failed to read body from %s: %s", url, err)
 		}
 
 		var tokenResponse AttestationTokenResponse
-		err = json.Unmarshal(attestationToken, &tokenResponse)
+		err = json.Unmarshal(body, &tokenResponse)
 		if err != nil {
 			return errors.Errorf("Error unmarshalling Token response from appraise: %s", err)
 		}
+		response.Token = tokenResponse.Token
 		return nil
 	}
 
