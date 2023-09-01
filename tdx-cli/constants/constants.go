@@ -8,7 +8,7 @@ package constants
 
 const (
 	RSAKeyBitLength     = 3072
-	CLIShortDescription = "Trust Connector for TDX"
+	CLIShortDescription = "Intel® Trust Authority CLI for TDX"
 )
 
 // Command Names
@@ -17,7 +17,7 @@ const (
 	DecryptCmd       = "decrypt"
 	QuoteCmd         = "quote"
 	TokenCmd         = "token"
-	RootCmd          = "inteltrustconnector"
+	RootCmd          = "trustauthority-cli"
 	VersionCmd       = "version"
 	VerifyCmd        = "verify"
 )

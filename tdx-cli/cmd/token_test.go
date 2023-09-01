@@ -10,8 +10,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/intel/trustconnector/tdx-cli/constants"
-	"github.com/intel/trustconnector/tdx-cli/test"
+	"github.com/intel/trustauthority-client/tdx-cli/constants"
+	"github.com/intel/trustauthority-client/tdx-cli/test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,7 +33,7 @@ func TestTokenCmd(t *testing.T) {
 	_ = os.WriteFile(publicKeyPath, []byte(pubKey), 0600)
 	defer os.Remove(publicKeyPath)
 
-	server := test.MockAmberServer(t)
+	server := test.MockTrustAuthorityServer(t)
 	defer server.Close()
 
 	configJson := `{"trustauthority_api_url":"` + server.URL + `","trustauthority_api_key":"YXBpa2V5"}`
@@ -146,7 +146,7 @@ func TestTokenCmd(t *testing.T) {
 	}
 }
 
-func TestTokenCmd_MissingAmberUrl(t *testing.T) {
+func TestTokenCmd_MissingTrustAuthorityUrl(t *testing.T) {
 
 	configJson := `{"trustauthority_api_url":"","trustauthority_api_key":"YXBpa2V5"}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
@@ -155,9 +155,9 @@ func TestTokenCmd_MissingAmberUrl(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestTokenCmd_MissingAmberApiKey(t *testing.T) {
+func TestTokenCmd_MissingTrustAuthorityApiKey(t *testing.T) {
 
-	server := test.MockAmberServer(t)
+	server := test.MockTrustAuthorityServer(t)
 	defer server.Close()
 
 	configJson := `{"trustauthority_api_url":"` + server.URL + `","trustauthority_api_key":""}`
@@ -167,18 +167,18 @@ func TestTokenCmd_MissingAmberApiKey(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestTokenCmd_MalformedAmberUrl(t *testing.T) {
+func TestTokenCmd_MalformedTrustAuthorityUrl(t *testing.T) {
 
-	configJson := `{"trustauthority_api_url":":amber.com","trustauthority_api_key":"YXBpa2V5"}`
+	configJson := `{"trustauthority_api_url":":trustauthority.intel.com","trustauthority_api_key":"YXBpa2V5"}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
 	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOption, confFilePath)
 	assert.Error(t, err)
 }
 
-func TestTokenCmd_MalformedAmberApiKey(t *testing.T) {
+func TestTokenCmd_MalformedTrustAuthorityApiKey(t *testing.T) {
 
-	server := test.MockAmberServer(t)
+	server := test.MockTrustAuthorityServer(t)
 	defer server.Close()
 
 	configJson := `{"trustauthority_api_url":"` + server.URL + `","trustauthority_api_key":"@p!key"}`

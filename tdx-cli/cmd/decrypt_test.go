@@ -16,7 +16,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/intel/trustconnector/tdx-cli/constants"
+	"github.com/intel/trustauthority-client/tdx-cli/constants"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )

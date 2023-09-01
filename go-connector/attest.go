@@ -10,7 +10,7 @@ import (
 )
 
 // Attest is used to initiate remote attestation with Trust Authority
-func (connector *trustConnector) Attest(args AttestArgs) (AttestResponse, error) {
+func (connector *trustAuthorityConnector) Attest(args AttestArgs) (AttestResponse, error) {
 
 	var response AttestResponse
 	nonceResponse, err := connector.GetNonce(GetNonceArgs{args.RequestId})

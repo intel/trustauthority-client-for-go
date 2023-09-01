@@ -18,9 +18,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/intel/trustconnector/go-connector"
-	"github.com/intel/trustconnector/go-tdx"
-	"github.com/intel/trustconnector/tdx-cli/constants"
+	"github.com/intel/trustauthority-client/go-connector"
+	"github.com/intel/trustauthority-client/go-tdx"
+	"github.com/intel/trustauthority-client/tdx-cli/constants"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -41,9 +41,9 @@ var tokenCmd = &cobra.Command{
 }
 
 type Config struct {
-	AmberUrl    string `json:"amber_url"`
-	AmberApiUrl string `json:"trustauthority_api_url"`
-	AmberApiKey string `json:"trustauthority_api_key"`
+	TrustAuthorityUrl    string `json:"trustauthority_url"`
+	TrustAuthorityApiUrl string `json:"trustauthority_api_url"`
+	TrustAuthorityApiKey string `json:"trustauthority_api_key"`
 }
 
 func init() {
@@ -75,16 +75,16 @@ func getToken(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Error unmarshalling JSON from config")
 	}
 
-	if config.AmberApiUrl == "" || config.AmberApiKey == "" {
+	if config.TrustAuthorityApiUrl == "" || config.TrustAuthorityApiKey == "" {
 		return errors.New("Either Trust Authority API URL or Trust Authority API Key is missing in config")
 	}
 
-	_, err = url.ParseRequestURI(config.AmberApiUrl)
+	_, err = url.ParseRequestURI(config.TrustAuthorityApiUrl)
 	if err != nil {
 		return errors.Wrap(err, "Invalid Trust Authority API URL")
 	}
 
-	_, err = base64.URLEncoding.DecodeString(config.AmberApiKey)
+	_, err = base64.URLEncoding.DecodeString(config.TrustAuthorityApiKey)
 	if err != nil {
 		return errors.Wrap(err, "Invalid Trust Authority Api key, must be base64 string")
 	}
@@ -159,11 +159,11 @@ func getToken(cmd *cobra.Command) error {
 
 	cfg := connector.Config{
 		TlsCfg: tlsConfig,
-		ApiUrl: config.AmberApiUrl,
-		ApiKey: config.AmberApiKey,
+		ApiUrl: config.TrustAuthorityApiUrl,
+		ApiKey: config.TrustAuthorityApiKey,
 	}
 
-	trustConnector, err := connector.New(&cfg)
+	trustAuthorityConnector, err := connector.New(&cfg)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func getToken(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Error while creating tdx adapter")
 	}
 
-	response, err := trustConnector.Attest(connector.AttestArgs{Adapter: adapter, PolicyIds: pIds, RequestId: reqId})
+	response, err := trustAuthorityConnector.Attest(connector.AttestArgs{Adapter: adapter, PolicyIds: pIds, RequestId: reqId})
 	if response.Headers != nil {
 		fmt.Fprintln(os.Stderr, "Trace Id:", response.Headers.Get(connector.HeaderTraceId))
 		if reqId != "" {

@@ -34,13 +34,13 @@ type tokenRequest struct {
 	EventLog      []byte         `json:"event_log,omitempty"`
 }
 
-// AttestationTokenResponse holds the token recieved from Trust Authority
+// AttestationTokenResponse holds the token recieved from Intel Trust Authority
 type AttestationTokenResponse struct {
 	Token string `json:"token"`
 }
 
-// GetToken is used to get attestation token from Trust Authority
-func (connector *trustConnector) GetToken(args GetTokenArgs) (GetTokenResponse, error) {
+// GetToken is used to get attestation token from Intel Trust Authority
+func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenResponse, error) {
 	url := fmt.Sprintf("%s/appraisal/v1/attest", connector.cfg.ApiUrl)
 
 	newRequest := func() (*http.Request, error) {
@@ -155,8 +155,8 @@ func verifyCRL(crl *x509.RevocationList, leafCert *x509.Certificate, caCert *x50
 	return nil
 }
 
-// VerifyToken is used to do signature verification of attestation token recieved from Trust Authority
-func (connector *trustConnector) VerifyToken(token string) (*jwt.Token, error) {
+// VerifyToken is used to do signature verification of attestation token recieved from Intel Trust Authority
+func (connector *trustAuthorityConnector) VerifyToken(token string) (*jwt.Token, error) {
 
 	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 
@@ -172,7 +172,7 @@ func (connector *trustConnector) VerifyToken(token string) (*jwt.Token, error) {
 			}
 		}
 
-		// Get the JWT Signing Certificates from Trust Authority
+		// Get the JWT Signing Certificates from Intel Trust Authority
 		jwks, err := connector.GetTokenSigningCertificates()
 		if err != nil {
 			return nil, errors.Errorf("Failed to get token signing certificates: %s", err)

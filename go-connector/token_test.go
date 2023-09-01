@@ -154,7 +154,7 @@ func TestGetCRLObject_emptyCRLURL(t *testing.T) {
 }
 
 func TestGetCRLObject_invalidCRLUrl(t *testing.T) {
-	crlUrl := ":amber.com"
+	crlUrl := ":trustauthority.intel.com"
 	_, err := getCRL(*retryablehttp.NewClient(), []string{crlUrl})
 	if err == nil {
 		t.Error("GetCRL returned nil,  expected error")

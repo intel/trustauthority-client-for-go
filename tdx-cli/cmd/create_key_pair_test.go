@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/intel/trustconnector/tdx-cli/constants"
+	"github.com/intel/trustauthority-client/tdx-cli/constants"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )

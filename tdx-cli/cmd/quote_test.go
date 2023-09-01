@@ -9,7 +9,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/intel/trustconnector/tdx-cli/constants"
+	"github.com/intel/trustauthority-client/tdx-cli/constants"
 	"github.com/stretchr/testify/assert"
 )
 

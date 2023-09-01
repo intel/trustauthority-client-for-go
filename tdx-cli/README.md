@@ -1,9 +1,9 @@
-# Trust Connector TDX CLI
+# Intel® Trust Authority TDX CLI
 This is the beta version of TDX CLI for attesting TDX TEE with Intel Trust Authority.
 
 ## Prerequisites
 
-The Trust Connector TDX CLI has dependency on Intel SGX DCAP. Install TDX Attestation library devel packages from Intel SGX DCAP.
+The Intel Trust Authority TDX CLI has dependency on Intel SGX DCAP. Install TDX Attestation library devel packages from Intel SGX DCAP.
 
 ### For Ubuntu* OS
 Install the Debian package for `libtdx-attest-dev` following these steps:
@@ -74,7 +74,7 @@ Use <b>go1.17 or newer</b>.
 ## Installation
 
 ### Build
-Compile Trust Connector TDX CLI. This will generate inteltrustconnector binary in current directory:
+Compile Intel Trust Authority TDX CLI. This will generate trustauthority-cli binary in current directory:
 
 ```sh
 cd tdx-cli/
@@ -92,22 +92,22 @@ See the example test in `tdx-cli/token_test.go` for an example of a test.
 ### To get a list of all the available commands
 
 ```sh
-inteltrustconnector --help
+trustauthority-cli --help
 ```
 More info about a specific command can be found using
 ```sh
-inteltrustconnector <command> --help
+trustauthority-cli <command> --help
 ```
 
 ### To create RSA keypair
 
 ```sh
-inteltrustconnector create-key-pair --key-path <private key file path>
+trustauthority-cli create-key-pair --key-path <private key file path>
 ```
 
-### To get a Trust Authority signed token
+### To get a Intel Trust Authority signed token
 
-`token` command requires Trust Authority properties to be passed in json format
+`token` command requires Intel Trust Authority properties to be passed in json format
 ```json
 {
     "trustauthority_api_url": "<trustauthority attestation api url>",
@@ -116,33 +116,33 @@ inteltrustconnector create-key-pair --key-path <private key file path>
 ```
 Save this data in config.json file and invoke `token` command
 ```sh
-inteltrustconnector token --config config.json --user-data <base64 encoded userdata> --policy-ids <comma separated trustauthority attestation policy ids>
+trustauthority-cli token --config config.json --user-data <base64 encoded userdata> --policy-ids <comma separated trustauthority attestation policy ids>
 ```
 OR
 ```sh
-inteltrustconnector token --config config.json --pub-path <public key file path> --policy-ids <comma separated trustauthority attestation policy ids>
+trustauthority-cli token --config config.json --pub-path <public key file path> --policy-ids <comma separated trustauthority attestation policy ids>
 ```
 
 ### To get a TD quote with Nonce and UserData
 
 ```sh
-inteltrustconnector quote --nonce <base64 encoded nonce> --user-data <base64 encoded userdata>
+trustauthority-cli quote --nonce <base64 encoded nonce> --user-data <base64 encoded userdata>
 ```
 
 ### To decrypt an encrypted blob
 
 ```sh
-inteltrustconnector decrypt --key-path <private key file path> --in <base64 encoded encrypted blob>
+trustauthority-cli decrypt --key-path <private key file path> --in <base64 encoded encrypted blob>
 ```
 OR
 ```sh
-inteltrustconnector decrypt --key <base64 encoded private key> --in <base64 encoded encrypted blob>
+trustauthority-cli decrypt --key <base64 encoded private key> --in <base64 encoded encrypted blob>
 ```
 
 ### To create RSA keypair
 
 ```sh
-inteltrustconnector create-key-pair --pub-path <public key file path>
+trustauthority-cli create-key-pair --pub-path <public key file path>
 ```
 
 ## License

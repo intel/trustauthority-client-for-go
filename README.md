@@ -1,12 +1,12 @@
-# Trust Connector
-This is the beta version of Trust Connector for integrating with Intel Trust Authority V1 API.
+# Intel® Trust Authority Client
+This is the beta version of Client for integrating with Intel Trust Authority V1 API.
 
 ## Installation
 
 Install the latest version of the library with the following commands:
 
 ```sh
-go get github.com/intel/trustconnector/go-connector
+go get github.com/intel/trustauthority-client/go-connector
 ```
 
 ## Go Requirement
@@ -21,16 +21,16 @@ See the example test in `go-connector/token_test.go` for an example of a test.
 
 ## Usage
 
-Create a new TrustConnector instance, then use the exposed services to
-access different parts of the Trust Authority API.
+Create a new Connector instance, then use the exposed services to
+access different parts of the Intel Trust Authority API.
 
 ```go
-import "github.com/intel/trustconnector/go-connector"
+import "github.com/intel/trustauthority-client/go-connector"
 
 cfg := connector.Config{
-        // Replace TRUSTAUTHORITY_URL with real Trust Authority URL
+        // Replace TRUSTAUTHORITY_URL with real Intel Trust Authority URL
         BaseUrl: "TRUSTAUTHORITY_URL",
-        // Replace TRUSTAUTHORITY_API_URL with real Trust Authority API URL
+        // Replace TRUSTAUTHORITY_API_URL with real Intel Trust Authority API URL
         ApiUrl: "TRUSTAUTHORITY_API_URL",
         // Provide TLS config
         TlsCfg: &tls.Config{},
@@ -60,7 +60,7 @@ retryCfg := connector.RetryConfig{
 connector, err := connector.New(&cfg)
 ```
 
-### To get a Trust Authority signed nonce
+### To get a Intel Trust Authority signed nonce
 
 ```go
 nonce, err := connector.GetNonce()
@@ -70,7 +70,7 @@ if err != nil {
 }
 ```
 
-### To get a Trust Authority signed token with Nonce and Evidence
+### To get a Intel Trust Authority signed token with Nonce and Evidence
 
 ```go
 token, err := connector.GetToken(nonce, policyIds, evidence)
@@ -80,7 +80,7 @@ if err != nil {
 }
 ```
 
-### To verify a Trust Authority signed token
+### To verify a Intel Trust Authority signed token
 
 ```go
 parsedToken, err := connector.VerifyToken(string(token))
@@ -90,7 +90,7 @@ if err != nil {
 }
 ```
 
-### To download Trust Authority token signing certificates
+### To download Intel Trust Authority token signing certificates
 
 ```go
 jwks, err := connector.GetTokenSigningCertificates()
@@ -100,7 +100,7 @@ if err != nil {
 }
 ```
 
-### To attest TEE with Trust Authority using TEE Adapter
+### To attest TEE with Intel Trust Authority using TEE Adapter
 To create adapter refer [go-sgx](./go-sgx/README.md) or [go-tdx](./go-tdx/README.md):
 
 ```go

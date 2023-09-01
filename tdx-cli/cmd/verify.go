@@ -13,8 +13,8 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/intel/trustconnector/go-connector"
-	"github.com/intel/trustconnector/tdx-cli/constants"
+	"github.com/intel/trustauthority-client/go-connector"
+	"github.com/intel/trustauthority-client/tdx-cli/constants"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -61,11 +61,11 @@ func verifyToken(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Error unmarshalling JSON from config")
 	}
 
-	if config.AmberUrl == "" {
+	if config.TrustAuthorityUrl == "" {
 		return errors.New("Trust Authority URL is missing in config")
 	}
 
-	_, err = url.ParseRequestURI(config.AmberUrl)
+	_, err = url.ParseRequestURI(config.TrustAuthorityUrl)
 	if err != nil {
 		return errors.Wrap(err, "Invalid Trust Authority URL")
 	}
@@ -82,15 +82,15 @@ func verifyToken(cmd *cobra.Command) error {
 
 	cfg := connector.Config{
 		TlsCfg:  tlsConfig,
-		BaseUrl: config.AmberUrl,
+		BaseUrl: config.TrustAuthorityUrl,
 	}
 
-	trustConnector, err := connector.New(&cfg)
+	trustAuthorityConnector, err := connector.New(&cfg)
 	if err != nil {
 		return err
 	}
 
-	parsedToken, err := trustConnector.VerifyToken(string(token))
+	parsedToken, err := trustAuthorityConnector.VerifyToken(string(token))
 	if err != nil {
 		return errors.Wrap(err, "Could not verify the token")
 	}

@@ -14,7 +14,7 @@ import (
 )
 
 // GetTokenSigningCertificates is used to get Trust Authority attestation token signing certificates
-func (connector *trustConnector) GetTokenSigningCertificates() ([]byte, error) {
+func (connector *trustAuthorityConnector) GetTokenSigningCertificates() ([]byte, error) {
 	url := fmt.Sprintf("%s/certs", connector.cfg.BaseUrl)
 
 	newRequest := func() (*http.Request, error) {

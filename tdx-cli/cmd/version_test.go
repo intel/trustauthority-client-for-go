@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/intel/trustconnector/tdx-cli/constants"
+	"github.com/intel/trustauthority-client/tdx-cli/constants"
 )
 
 func TestGetVersion(t *testing.T) {

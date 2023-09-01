@@ -19,8 +19,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TrustConnector is an interface which exposes methods for calling Trust Authority REST APIs
-type TrustConnector interface {
+// Connector is an interface which exposes methods for calling Intel Trust Authority REST APIs
+type Connector interface {
 	GetTokenSigningCertificates() ([]byte, error)
 	GetNonce(GetNonceArgs) (GetNonceResponse, error)
 	GetToken(GetTokenArgs) (GetTokenResponse, error)
@@ -33,7 +33,7 @@ type EvidenceAdapter interface {
 	CollectEvidence(nonce []byte) (*Evidence, error)
 }
 
-// GetNonceArgs holds the request parameters needed for getting nonce from Trust Authority
+// GetNonceArgs holds the request parameters needed for getting nonce from Intel Trust Authority
 type GetNonceArgs struct {
 	RequestId string
 }
@@ -44,7 +44,7 @@ type GetNonceResponse struct {
 	Headers http.Header
 }
 
-// GetTokenArgs holds the request parameters needed for getting token from Trust Authority
+// GetTokenArgs holds the request parameters needed for getting token from Intel Trust Authority
 type GetTokenArgs struct {
 	Nonce     *VerifierNonce
 	Evidence  *Evidence
@@ -58,7 +58,7 @@ type GetTokenResponse struct {
 	Headers http.Header
 }
 
-// AttestArgs holds the request parameters needed for attestation with Trust Authority
+// AttestArgs holds the request parameters needed for attestation with Intel Trust Authority
 type AttestArgs struct {
 	Adapter   EvidenceAdapter
 	PolicyIds []uuid.UUID
@@ -89,7 +89,7 @@ type RetryConfig struct {
 	BackOff    retryablehttp.Backoff
 }
 
-// Config holds the Trust Authority configuration for Connector
+// Config holds the Intel Trust Authority configuration for Connector
 type Config struct {
 	BaseUrl string
 	TlsCfg  *tls.Config
@@ -99,15 +99,15 @@ type Config struct {
 	*RetryConfig
 }
 
-// VerifierNonce holds the signed nonce issued from Trust Authority
+// VerifierNonce holds the signed nonce issued from Intel Trust Authority
 type VerifierNonce struct {
 	Val       []byte `json:"val"`
 	Iat       []byte `json:"iat"`
 	Signature []byte `json:"signature"`
 }
 
-// New returns a new Trust Connector instance
-func New(cfg *Config) (TrustConnector, error) {
+// New returns a new Connector instance
+func New(cfg *Config) (Connector, error) {
 	_, err := url.Parse(cfg.BaseUrl)
 	if err != nil {
 		return nil, err
@@ -124,7 +124,7 @@ func New(cfg *Config) (TrustConnector, error) {
 	retryableClient.RetryWaitMin = DefaultRetryWaitMinSeconds * time.Second
 	retryableClient.RetryMax = MaxRetries
 	if cfg.RetryConfig == nil {
-		return &trustConnector{
+		return &trustAuthorityConnector{
 			cfg:     cfg,
 			rclient: retryableClient,
 		}, nil
@@ -146,14 +146,14 @@ func New(cfg *Config) (TrustConnector, error) {
 		retryableClient.Backoff = cfg.RetryConfig.BackOff
 	}
 
-	return &trustConnector{
+	return &trustAuthorityConnector{
 		cfg:     cfg,
 		rclient: retryableClient,
 	}, nil
 }
 
-// trustConnector manages communication with Trust Authority V1 API
-type trustConnector struct {
+// trustAuthorityConnector manages communication with Intel Trust Authority
+type trustAuthorityConnector struct {
 	cfg     *Config
 	rclient *retryablehttp.Client
 }

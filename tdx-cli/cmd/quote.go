@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/intel/trustconnector/go-tdx"
-	"github.com/intel/trustconnector/tdx-cli/constants"
+	"github.com/intel/trustauthority-client/go-tdx"
+	"github.com/intel/trustauthority-client/tdx-cli/constants"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

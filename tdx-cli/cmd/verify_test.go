@@ -10,8 +10,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/intel/trustconnector/tdx-cli/constants"
-	"github.com/intel/trustconnector/tdx-cli/test"
+	"github.com/intel/trustauthority-client/tdx-cli/constants"
+	"github.com/intel/trustauthority-client/tdx-cli/test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,10 +21,10 @@ eyJhbGciOiJQUzM4NCIsImprdSI6Imh0dHBzOi8vd3d3LmludGVsLmNvbS9hbWJlci9jZXJ0cyIsImtp
 
 func TestVerifyCmd(t *testing.T) {
 
-	server := test.MockAmberServer(t)
+	server := test.MockTrustAuthorityServer(t)
 	defer server.Close()
 
-	configJson := `{"amber_url":"` + server.URL + `"}`
+	configJson := `{"trustauthority_url":"` + server.URL + `"}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
 
@@ -93,18 +93,18 @@ func TestVerifyCmd(t *testing.T) {
 	}
 }
 
-func TestVerifyCmd_MissingAmberUrl(t *testing.T) {
+func TestVerifyCmd_MissingTrustAuthorityUrl(t *testing.T) {
 
-	configJson := `{"amber_url":""}`
+	configJson := `{"trustauthority_url":""}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
 	_, err := execute(t, rootCmd, constants.VerifyCmd, "--"+constants.ConfigOption, confFilePath, "--"+constants.TokenOption, token)
 	assert.Error(t, err)
 }
 
-func TestVerifyCmd_MalformedAmberUrl(t *testing.T) {
+func TestVerifyCmd_MalformedTrustAuthorityUrl(t *testing.T) {
 
-	configJson := `{"amber_url":":amber.com"}`
+	configJson := `{"trustauthority_url":":trustauthority.intel.com"}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
 	_, err := execute(t, rootCmd, constants.VerifyCmd, "--"+constants.ConfigOption, confFilePath, "--"+constants.TokenOption, token)

@@ -8,7 +8,7 @@ package sgx
 import (
 	"unsafe"
 
-	"github.com/intel/trustconnector/go-connector"
+	"github.com/intel/trustauthority-client/go-connector"
 )
 
 // sgxAdapter manages SGX Quote collection from SGX enabled platform

@@ -13,7 +13,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/intel/trustconnector/go-connector"
+	"github.com/intel/trustauthority-client/go-connector"
 )
 
 var nonce = `
@@ -29,7 +29,7 @@ var attestationToken = `
 }
 `
 
-func MockAmberServer(t *testing.T) *httptest.Server {
+func MockTrustAuthorityServer(t *testing.T) *httptest.Server {
 	nonceApi := "/appraisal/v1/nonce"
 	attestApi := "/appraisal/v1/attest"
 
@@ -42,7 +42,7 @@ func MockAmberServer(t *testing.T) *httptest.Server {
 		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 		_, err := w.Write([]byte(nonce))
 		if err != nil {
-			t.Log("test/test_utility:mockServer(): Unable to write data")
+			t.Log("Unable to write data")
 		}
 	}).Methods(http.MethodGet)
 
@@ -53,7 +53,7 @@ func MockAmberServer(t *testing.T) *httptest.Server {
 		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 		_, err := w.Write([]byte(attestationToken))
 		if err != nil {
-			t.Log("test/test_utility:mockServer(): Unable to write data")
+			t.Log("Unable to write data")
 		}
 	}).Methods(http.MethodPost)
 

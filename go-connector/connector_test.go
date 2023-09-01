@@ -13,10 +13,10 @@ import (
 	"time"
 )
 
-// setup sets up a test HTTP server along with a TrustConnector that is
+// setup sets up a test HTTP server along with a Connector that is
 // configured to talk to that test server. Tests should register handlers on
 // mux which provide mock responses for the API method being tested.
-func setup() (connector TrustConnector, mux *http.ServeMux, serverURL string, teardown func()) {
+func setup() (connector Connector, mux *http.ServeMux, serverURL string, teardown func()) {
 	// mux is the HTTP request multiplexer used with the test server.
 	mux = http.NewServeMux()
 
@@ -29,7 +29,7 @@ func setup() (connector TrustConnector, mux *http.ServeMux, serverURL string, te
 	// server is a test HTTP server used to provide mock API responses.
 	server := httptest.NewServer(mux)
 
-	// connector is the TrustConnector being tested and is
+	// connector is the Connector being tested and is
 	// configured to use test server.
 	cfg := Config{
 		BaseUrl: server.URL,

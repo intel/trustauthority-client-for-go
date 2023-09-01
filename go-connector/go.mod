@@ -2,7 +2,7 @@
 // All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
-module github.com/intel/trustconnector/go-connector
+module github.com/intel/trustauthority-client/go-connector
 
 go 1.21
 
