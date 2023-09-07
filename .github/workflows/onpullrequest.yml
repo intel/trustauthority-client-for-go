@@ -31,19 +31,34 @@ jobs:
 
       - name: Unit Test Coverage
         run: |
+          test_output=$(cd tdx-cli && make test)
+          if [ $? -ne 0 ]; then
+            echo "Unit tests failed for tdx-cli"
+            exit 1
+          fi
           COVERAGE=$(cd tdx-cli && make test-coverage | grep 'total' | awk '{print $3}' | awk -F. '{print $1}')
           echo "Unit test coverage for tdx-cli is - $COVERAGE%"
           if [[ $COVERAGE -lt 80 ]]; then
             echo "Unit test coverage must be above 80%"
             exit 1
           fi
-          COVERAGE=$(cd go-connector && go test ./... -coverprofile=cover.out | awk '{print $5}' | awk -F. '{print $1}')
+          test_output=$(cd go-connector && go test ./... -coverprofile=cover.out)
+          if [ $? -ne 0 ]; then
+            echo "Unit tests failed for go-connector"
+            exit 1
+          fi
+          COVERAGE=$(echo \"$test_output\" | awk '{print $5}' | awk -F. '{print $1}')
           echo "Unit test coverage for go-connector is - $COVERAGE%"
           if [[ $COVERAGE -lt 80 ]]; then
             echo "Unit test coverage must be above 80%"
             exit 1
           fi
-          COVERAGE=$(cd go-tdx && go test ./... --tags=test -coverprofile=cover.out | awk '{print $5}' | awk -F. '{print $1}')
+          test_output=$(cd go-tdx && go test ./... --tags=test -coverprofile=cover.out)
+          if [ $? -ne 0 ]; then
+            echo "Unit tests failed for go-tdx"
+            exit 1
+          fi
+          COVERAGE=$(echo \"$test_output\" | awk '{print $5}' | awk -F. '{print $1}')
           echo "Unit test coverage for go-tdx is - $COVERAGE%"
           if [[ $COVERAGE -lt 80 ]]; then
             echo "Unit test coverage must be above 80%"
