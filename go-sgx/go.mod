@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Intel Corporation
+// Copyright (c) 2022-2023 Intel Corporation
 // All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -7,7 +7,7 @@ module github.com/intel/trustauthority-client/go-sgx
 go 1.21
 
 require (
-	github.com/intel/trustauthority-client/go-connector v0.0.0
+	github.com/intel/trustauthority-client/go-connector v1.0.0
 	github.com/pkg/errors v0.9.1
 )
 
