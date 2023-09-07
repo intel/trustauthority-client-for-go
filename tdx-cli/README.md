@@ -110,6 +110,7 @@ trustauthority-cli create-key-pair --key-path <private key file path>
 `token` command requires Intel Trust Authority properties to be passed in json format
 ```json
 {
+    "trustauthority_url": "<trustauthority attestation base url>",
     "trustauthority_api_url": "<trustauthority attestation api url>",
     "trustauthority_api_key": "<trustauthority attestation api key>"
 }
