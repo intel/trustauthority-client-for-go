@@ -102,7 +102,7 @@ trustauthority-cli <command> --help
 ### To create RSA keypair
 
 ```sh
-trustauthority-cli create-key-pair --key-path <private key file path>
+trustauthority-cli create-key-pair --pub-path <public key file path>
 ```
 
 ### To get a Intel Trust Authority signed token
@@ -110,7 +110,6 @@ trustauthority-cli create-key-pair --key-path <private key file path>
 `token` command requires Intel Trust Authority properties to be passed in json format
 ```json
 {
-    "trustauthority_url": "<trustauthority attestation base url>",
     "trustauthority_api_url": "<trustauthority attestation api url>",
     "trustauthority_api_key": "<trustauthority attestation api key>"
 }
@@ -140,10 +139,17 @@ OR
 trustauthority-cli decrypt --key <base64 encoded private key> --in <base64 encoded encrypted blob>
 ```
 
-### To create RSA keypair
+### To verify Intel Trust Authority signed token
 
+`verify` command requires Intel Trust Authority URL to be passed in json format
+```json
+{
+    "trustauthority_url": "<trustauthority url>"
+}
+```
+Save this data in config.json file and invoke `verify` command
 ```sh
-trustauthority-cli create-key-pair --pub-path <public key file path>
+trustauthority-cli verify --config config.json --token <attestation token in JWT format>
 ```
 
 ## License

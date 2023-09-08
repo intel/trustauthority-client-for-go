@@ -260,7 +260,7 @@ func (connector *trustAuthorityConnector) VerifyToken(token string) (*jwt.Token,
 		return pubKey, nil
 	})
 	if err != nil {
-		return nil, errors.Errorf("Failed to parse jwt token: %s", err)
+		return nil, errors.Errorf("Failed to verify jwt token: %s", err)
 	}
 
 	return parsedToken, nil

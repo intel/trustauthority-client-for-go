@@ -95,7 +95,7 @@ func verifyToken(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Could not verify the token")
 	}
 
-	fmt.Fprintln(os.Stdout, parsedToken)
+	fmt.Fprintln(os.Stdout, parsedToken.Claims)
 	return nil
 
 }
