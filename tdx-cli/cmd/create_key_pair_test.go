@@ -44,6 +44,15 @@ func TestCreateKeyPairCmd(t *testing.T) {
 			wantErr:     false,
 			description: "Test with all valid inputs",
 		},
+		{
+			args: []string{
+				constants.CreateKeyPairCmd,
+				"--" + constants.PublicKeyPathOption,
+				"../cmd",
+			},
+			wantErr:     true,
+			description: "Test with directory as public key path",
+		},
 	}
 
 	for _, tc := range tt {

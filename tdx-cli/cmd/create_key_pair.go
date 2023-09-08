@@ -44,6 +44,10 @@ func createKeyPair(cmd *cobra.Command) error {
 		return err
 	}
 
+	if info, err := os.Stat(publicKeyPath); err == nil && info.IsDir() {
+		return errors.Errorf("public key path cannot be directory, please provide file path")
+	}
+
 	km := &tdx.KeyMetadata{
 		KeyLength: constants.RSAKeyBitLength,
 	}
