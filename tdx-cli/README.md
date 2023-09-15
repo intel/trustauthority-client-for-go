@@ -1,9 +1,9 @@
 # Intel® Trust Authority TDX CLI
-An easy-to-use command line interface for attesting TDX TEE(TD) with Intel Trust Authority. The CLI is supposed to run inside a TD.
+An easy-to-use command line interface for attesting TDX TEE(TD) with Intel Trust Authority. The CLI will be installed and run inside the TD.
 
 ## Prerequisites
 
-The CLI has dependency on Intel SGX DCAP. Install TDX Attestation library dev package from Intel SGX DCAP. Instructions follows.
+The defalut TDX CLI has dependency on Intel SGX DCAP. Install TDX Attestation library dev package from Intel SGX DCAP. Instructions follows.
 
 ### For Ubuntu* OS
 Install the Debian package for `libtdx-attest-dev` following these steps:
