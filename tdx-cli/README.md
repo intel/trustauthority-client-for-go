@@ -3,7 +3,7 @@ An easy-to-use command line interface for attesting TDX TEE(TD) with Intel Trust
 
 ## Prerequisites
 
-The defalut TDX CLI has dependency on Intel SGX DCAP. Install TDX Attestation library dev package from Intel SGX DCAP. Instructions follows.
+The default TDX CLI has dependency on Intel SGX DCAP. Install TDX Attestation library dev package from Intel SGX DCAP. Instructions follows.
 
 ### For Ubuntu* OS
 Install the Debian package for `libtdx-attest-dev` following these steps:
