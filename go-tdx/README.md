@@ -1,5 +1,5 @@
 # Intel® Trust Authority Go TDX Adapter
-This is the beta version of Go TDX Adapter for collecting Quote from TDX enabled platform.
+Go module for collecting TDX Quote from TDX enabled platform.
 
 This library leverages Intel SGX DCAP for Quote generation: [https://github.com/intel/SGXDataCenterAttestationPrimitives](https://github.com/intel/SGXDataCenterAttestationPrimitives)
 
@@ -15,14 +15,13 @@ See the example test in `go-tdx/crypto_test.go` for an example of a test.
 
 ## Usage
 
-Create a new Go TDX adapter, then use the adapter to
-collect quote from TDX enabled platform.
+Create a new TDX adapter, then use the adapter to collect quote from TDX enabled platform.
+Optionally collect the eventlog as well for a TD by passing an eventlog parser in second argument.
 
 ```go
 import "github.com/intel/trustauthority-client/go-tdx"
 
-evLogParser := tdx.NewEventLogParser()
-adapter, err := tdx.NewEvidenceAdapter(tdHeldData, evLogParser)
+adapter, err := tdx.NewEvidenceAdapter(tdHeldData, nil)
 if err != nil {
     return err
 }
@@ -33,7 +32,7 @@ if err != nil {
 }
 ```
 
-### To generate a RSA keypair
+### To generate RSA keypair
 
 ```go
 km := &tdx.KeyMetadata{
@@ -61,6 +60,7 @@ if err != nil {
 ```
 
 ### To collect event log from TD
+Note that the TD should have exposed ACPI table for eventlog collection.
 
 ```go
 evLogParser := tdx.NewEventLogParser()
@@ -72,5 +72,5 @@ if err != nil {
 
 ## License
 
-This library is distributed under the BSD-style license found in the [LICENSE](../LICENSE)
+This source is distributed under the BSD-style license found in the [LICENSE](../LICENSE)
 file.

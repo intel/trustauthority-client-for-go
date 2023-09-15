@@ -1,9 +1,9 @@
 # Intel® Trust Authority TDX CLI
-This is the beta version of TDX CLI for attesting TDX TEE with Intel Trust Authority.
+An easy-to-use command line interface for attesting TDX TEE(TD) with Intel Trust Authority. The CLI is supposed to run inside a TD.
 
 ## Prerequisites
 
-The Intel Trust Authority TDX CLI has dependency on Intel SGX DCAP. Install TDX Attestation library devel packages from Intel SGX DCAP.
+The CLI has dependency on Intel SGX DCAP. Install TDX Attestation library dev package from Intel SGX DCAP. Instructions follows.
 
 ### For Ubuntu* OS
 Install the Debian package for `libtdx-attest-dev` following these steps:
@@ -70,7 +70,7 @@ Use <b>go1.19 or newer</b>. Follow https://go.dev/doc/install for installation o
 ## Installation
 
 ### Build
-Compile Intel Trust Authority TDX CLI. This will generate trustauthority-cli binary in current directory:
+Compile Intel Trust Authority TDX CLI. This will generate `trustauthority-cli` binary in current directory:
 
 ```sh
 cd tdx-cli/
@@ -85,7 +85,7 @@ See the example test in `tdx-cli/token_test.go` for an example of a test.
 
 ## Usage
 
-### To get a list of all the available commands
+### To get list of all the available commands
 
 ```sh
 trustauthority-cli --help
@@ -101,9 +101,9 @@ trustauthority-cli <command> --help
 trustauthority-cli create-key-pair --pub-path <public key file path>
 ```
 
-### To get a Intel Trust Authority signed token
+### To get Intel Trust Authority signed token
 
-`token` command requires Intel Trust Authority properties to be passed in json format
+`token` command requires Intel Trust Authority configuration to be passed in json format
 ```json
 {
     "trustauthority_api_url": "<trustauthority attestation api url>",
@@ -119,7 +119,7 @@ OR
 trustauthority-cli token --config config.json --pub-path <public key file path> --policy-ids <comma separated trustauthority attestation policy ids>
 ```
 
-### To get a TD quote with Nonce and UserData
+### To get TD quote with Nonce and UserData
 
 ```sh
 trustauthority-cli quote --nonce <base64 encoded nonce> --user-data <base64 encoded userdata>
@@ -150,5 +150,5 @@ trustauthority-cli verify --config config.json --token <attestation token in JWT
 
 ## License
 
-This connector is distributed under the BSD-style license found in the [LICENSE](../LICENSE)
+This source is distributed under the BSD-style license found in the [LICENSE](../LICENSE)
 file.
