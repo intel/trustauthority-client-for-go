@@ -11,11 +11,12 @@ import (
 	"bytes"
 	"crypto/sha512"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"io"
 	"net/http"
-	"syscall"
-	"unsafe"
+	"os/exec"
+	"strconv"
 
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/pkg/errors"
@@ -43,21 +44,6 @@ type QuoteResponse struct {
 	Quote string `json:"quote"`
 }
 
-func IOC(dir, t, nr, size uintptr) uintptr {
-	return (dir << IocDirshift) |
-		(t << IocTypeShift) |
-		(nr << IocNrShift) |
-		(size << IocSizeShift)
-}
-
-func IOWR(t, nr, size uintptr) uintptr {
-	return IOC(IocRead|IocWrite, t, nr, size)
-}
-
-func TdxCmdGetReportIO() uintptr {
-	return IOWR('T', 1, TdxReportDataLen+TdxReportLen)
-}
-
 // CollectEvidence is used to get TDX quote using Azure Quote Generation service
 func (adapter *azureAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, error) {
 
@@ -72,27 +58,19 @@ func (adapter *azureAdapter) CollectEvidence(nonce []byte) (*connector.Evidence,
 	}
 	reportData := hash.Sum(nil)
 
-	var tdrequest TdxReportRequest
-	copy(tdrequest.ReportData[:], []byte(reportData))
-
-	fd, err := syscall.Open(TdxAttestDevPath, syscall.O_RDWR|syscall.O_SYNC, 0)
+	tdReport, err := getTDReport(reportData)
 	if err != nil {
-		return nil, err
-	}
-	defer syscall.Close(fd)
-
-	cmd := TdxCmdGetReportIO()
-	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, uintptr(fd), cmd, uintptr(unsafe.Pointer(&tdrequest)))
-	if errno != 0 {
-		return nil, syscall.Errno(errno)
+		return nil, errors.Errorf("getTDReport returned err %v", err)
 	}
 
-	report := make([]byte, TdReportSize)
-	copy(report, tdrequest.TdReport[:])
-
-	quote, err := getQuote(report)
+	quote, err := getQuote(tdReport)
 	if err != nil {
-		return nil, errors.Errorf("getQuote return error %v", err)
+		return nil, errors.Errorf("getQuote returned error %v", err)
+	}
+
+	runtimeData, err := getRuntimeData()
+	if err != nil {
+		return nil, errors.Errorf("getRuntimeData returned error %v", err)
 	}
 
 	var eventLog []byte
@@ -111,9 +89,34 @@ func (adapter *azureAdapter) CollectEvidence(nonce []byte) (*connector.Evidence,
 	return &connector.Evidence{
 		Type:     1,
 		Evidence: quote,
-		UserData: adapter.uData,
+		UserData: runtimeData,
 		EventLog: eventLog,
 	}, nil
+}
+
+func getTDReport(reportData []byte) ([]byte, error) {
+
+	cmd := exec.Command("tpm2_nvwrite", "-C", "o", "0x1400002", "-i", "-")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	go func() {
+		defer stdin.Close()
+		io.WriteString(stdin, string(reportData))
+	}()
+
+	_, err = cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	tdReport, err := exec.Command("tpm2_nvread", "-C", "o", "0x01400001", "--offset=32", "-s", "1024").Output()
+	if err != nil {
+		return nil, err
+	}
+	return tdReport, nil
 }
 
 func getQuote(report []byte) ([]byte, error) {
@@ -168,4 +171,19 @@ func getQuote(report []byte) ([]byte, error) {
 		return nil, errors.Wrap(err, "Error decoding Quote from azure")
 	}
 	return quote, nil
+}
+
+func getRuntimeData() ([]byte, error) {
+
+	size, err := exec.Command("tpm2_nvread", "-C", "o", "0x1400001", "--offset=1232", "-s", "4").Output()
+	if err != nil {
+		return nil, err
+	}
+
+	runtimeDataSize := binary.LittleEndian.Uint32(size)
+	runtimeData, err := exec.Command("tpm2_nvread", "-C", "o", "0x01400001", "--offset=1236", "-s", strconv.Itoa(int(runtimeDataSize))).Output()
+	if err != nil {
+		return nil, err
+	}
+	return runtimeData, nil
 }
