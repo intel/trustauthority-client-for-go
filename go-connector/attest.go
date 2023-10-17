@@ -19,12 +19,12 @@ func (connector *trustAuthorityConnector) Attest(args AttestArgs) (AttestRespons
 		return response, errors.Errorf("Failed to collect nonce from Trust Authority: %s", err)
 	}
 
-	evidence, err := args.Adapter.CollectEvidence(append(nonceResponse.Nonce.Val, nonceResponse.Nonce.Iat[:]...))
+	evidence, err := args.Adapter.CollectEvidence(nil)
 	if err != nil {
 		return response, errors.Errorf("Failed to collect evidence from adapter: %s", err)
 	}
 
-	tokenResponse, err := connector.GetToken(GetTokenArgs{nonceResponse.Nonce, evidence, args.PolicyIds, args.RequestId, args.TokenSigningAlg, args.PolicyMustMatch})
+	tokenResponse, err := connector.GetToken(GetTokenArgs{nil, evidence, args.PolicyIds, args.RequestId, args.TokenSigningAlg, args.PolicyMustMatch})
 	response.Token, response.Headers = tokenResponse.Token, tokenResponse.Headers
 	if err != nil {
 		return response, errors.Errorf("Failed to collect token from Trust Authority: %s", err)
