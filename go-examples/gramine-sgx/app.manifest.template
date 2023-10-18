@@ -1,0 +1,31 @@
+# ITA client library integration manifest file example
+
+loader.entrypoint = "file:{{ gramine.libos }}"
+loader.argv = ["--config", "config.json"]
+libos.entrypoint = "/app"
+loader.log_level = "{{ log_level }}"
+
+loader.env.LD_LIBRARY_PATH = "/lib"
+
+fs.mounts = [
+  { path = "/lib", uri = "file:{{ gramine.runtimedir() }}" },
+  { path = "/app", uri = "file:lib-app/app" },
+  { path = "/config.json", uri = "file:lib-app/config.json" },
+]
+
+sgx.remote_attestation = "dcap"
+sgx.ra_client_spid = ""
+
+sgx.enclave_size = "4G"
+sgx.max_threads = 128
+sgx.debug = false
+sgx.edmm_enable = {{ 'true' if env.get('EDMM', '0') == '1' else 'false' }}
+
+sys.enable_extra_runtime_domain_names_conf = true
+
+sgx.trusted_files = [
+  "file:{{ gramine.libos }}",
+  "file:lib-app/app",
+  "file:lib-app/config.json",
+  "file:{{ gramine.runtimedir() }}/",
+]
