@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
@@ -63,6 +64,10 @@ func verifyToken(cmd *cobra.Command) error {
 
 	if config.TrustAuthorityUrl == "" {
 		return errors.New("Trust Authority URL is missing in config")
+	}
+
+	if !strings.HasPrefix(config.TrustAuthorityUrl, "https://") {
+		return errors.New("Invalid Trust Authority URL, must start with 'https://'")
 	}
 
 	_, err = url.ParseRequestURI(config.TrustAuthorityUrl)
