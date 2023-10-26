@@ -3,8 +3,9 @@ last_updated: 16 February 2024
 ---
 
 # Intel® Trust Authority Go TDX Adapter
+Go module for collecting TDX Quote from GCP TDX enabled platform.
 
-The **go-tdx** adapter enables a confidential computing client running in an Intel® Trust Domain Extensions (Intel® TDX) trust domain (TD) to collect a quote for attestation by Intel Trust Authority. The go-tdx adapter is used with the [**go-connector**](../go-connector/) to request an attestation token. 
+This TDX Adadpter is specifically built to work with Google Cloud TDX stack. It refers Google's [go-tdx-guest](https://github.com/google/go-tdx-guest/tree/main) for Quote generation.
 
 ## Requirements
 

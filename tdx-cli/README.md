@@ -49,11 +49,11 @@ The `token` command requires an Intel Trust Authority configuration to be passed
 Save this data in a `config.json` file and then invoke the `token` command.
 
 ```sh
-sudo ./trustauthority-cli token --config config.json --user-data <base64 encoded userdata> --policy-ids <comma separated trustauthority attestation policy ids>
+trustauthority-cli token --config config.json --user-data <base64 encoded userdata> --policy-ids <comma separated trustauthority attestation policy ids> --no-eventlog
 ```
 OR
 ```sh
-sudo ./trustauthority-cli token --config config.json --pub-path <public key file path> --policy-ids <comma separated trustauthority attestation policy ids>
+trustauthority-cli token --config config.json --pub-path <public key file path> --policy-ids <comma separated trustauthority attestation policy ids> --no-eventlog
 ```
 
 ### To get a TD quote with a nonce and user data
