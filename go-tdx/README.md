@@ -1,7 +1,7 @@
 # Intel® Trust Authority Go TDX Adapter
-Go module for collecting TDX Quote from TDX enabled platform.
+Go module for collecting TDX Quote from GCP TDX enabled platform.
 
-This library leverages Intel SGX DCAP for Quote generation: [https://github.com/intel/SGXDataCenterAttestationPrimitives](https://github.com/intel/SGXDataCenterAttestationPrimitives)
+This TDX Adadpter is specifically built to work with Google Cloud TDX stack. It refers Google's [go-tdx-guest](https://github.com/google/go-tdx-guest/tree/main) for Quote generation.
 
 ## Go Requirement
 

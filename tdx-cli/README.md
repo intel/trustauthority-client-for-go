@@ -50,11 +50,11 @@ trustauthority-cli create-key-pair --pub-path <public key file path>
 ```
 Save this data in config.json file and invoke `token` command
 ```sh
-trustauthority-cli token --config config.json --user-data <base64 encoded userdata> --policy-ids <comma separated trustauthority attestation policy ids>
+trustauthority-cli token --config config.json --user-data <base64 encoded userdata> --policy-ids <comma separated trustauthority attestation policy ids> --no-eventlog
 ```
 OR
 ```sh
-trustauthority-cli token --config config.json --pub-path <public key file path> --policy-ids <comma separated trustauthority attestation policy ids>
+trustauthority-cli token --config config.json --pub-path <public key file path> --policy-ids <comma separated trustauthority attestation policy ids> --no-eventlog
 ```
 
 ### To get TD quote with Nonce and UserData
