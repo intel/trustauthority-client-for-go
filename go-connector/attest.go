@@ -13,12 +13,6 @@ import (
 func (connector *trustAuthorityConnector) Attest(args AttestArgs) (AttestResponse, error) {
 
 	var response AttestResponse
-	nonceResponse, err := connector.GetNonce(GetNonceArgs{args.RequestId})
-	response.Headers = nonceResponse.Headers
-	if err != nil {
-		return response, errors.Errorf("Failed to collect nonce from Trust Authority: %s", err)
-	}
-
 	evidence, err := args.Adapter.CollectEvidence(nil)
 	if err != nil {
 		return response, errors.Errorf("Failed to collect evidence from adapter: %s", err)
