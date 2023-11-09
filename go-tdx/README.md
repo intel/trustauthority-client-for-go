@@ -3,13 +3,14 @@ last_updated: 16 February 2024
 ---
 
 # Intel® Trust Authority Go TDX Adapter
+Go module for collecting TDX Quote from MSFT Azure TDX enabled platform.
+This module is specifically built to work with Azure TDX stack only.
 
 The **go-tdx** adapter enables a confidential computing client running in an Intel® Trust Domain Extensions (Intel® TDX) trust domain (TD) to collect a quote for attestation by Intel Trust Authority. The go-tdx adapter is used with the [**go-connector**](../go-connector/) to request an attestation token. 
 
 ## Requirements
 
 - Use **Go 1.19 or newer**. See [https://go.dev/doc/install](https://go.dev/doc/install) for installation of Go.
-- Intel® Software Guard Extensions Data Center Attestation Primitives (Intel® SGX DCAP) is required on the attesting TEE for quote generation.  For Intel SGX DCAP installation, see [https://github.com/intel/SGXDataCenterAttestationPrimitives](https://github.com/intel/SGXDataCenterAttestationPrimitives).
 
 ## Unit Tests
 
@@ -32,49 +33,6 @@ if err != nil {
 }
 
 evidence, err := adapter.CollectEvidence(nonce)
-if err != nil {
-    return err
-}
-```
-
-### To generate an RSA key pair
-
-**GenerateKeyPair()** takes a required **KeyMetadata** argument that specifies the length in bits for the key. If successful, it returns a public and private key.
-
-```go
-km := &tdx.KeyMetadata{
-	KeyLength: 3072,
-}
-privateKeyPem, publicKeyPem, err := tdx.GenerateKeyPair(km)
-if err != nil {
-    fmt.Printf("Something bad happened: %s\n\n", err)
-    return err
-}
-```
-
-### To decrypt an encrypted blob
-
-**Decrypt()** accepts two arguments, **encryptedData** and **EncryptionMetadata**, and returns decrypted binary data. The HashAlgorithm must be one of [SHA256 | SHA384 | SHA512].
-
-```go
-em := &tdx.EncryptionMetadata{
-	PrivateKeyLocation: privateKeyPath,
-	HashAlgorithm:      "SHA256",
-}
-decryptedData, err := tdx.Decrypt(encryptedData, em)
-if err != nil {
-    fmt.Printf("Something bad happened: %s\n\n", err)
-    return err
-}
-```
-
-### To collect event log from TD
-
-Note that the TD must have an exposed ACPI table for event log collection.
-
-```go
-evLogParser := tdx.NewEventLogParser()
-eventLog, err := evLogParser.GetEventLogs()
 if err != nil {
     return err
 }
