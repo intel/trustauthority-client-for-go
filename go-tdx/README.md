@@ -1,5 +1,6 @@
 # Intel® Trust Authority Go TDX Adapter
-Go module for collecting TDX Quote from TDX enabled platform.
+Go module for collecting TDX Quote from MSFT Azure TDX enabled platform.
+This module is specifically built to work with Azure TDX stack only.
 
 ## Go Requirement
 
@@ -25,44 +26,6 @@ if err != nil {
 }
 
 evidence, err := adapter.CollectEvidence(nonce)
-if err != nil {
-    return err
-}
-```
-
-### To generate RSA keypair
-
-```go
-km := &tdx.KeyMetadata{
-	KeyLength: 3072,
-}
-privateKeyPem, publicKeyPem, err := tdx.GenerateKeyPair(km)
-if err != nil {
-    fmt.Printf("Something bad happened: %s\n\n", err)
-    return err
-}
-```
-
-### To decrypt an encrypted blob
-
-```go
-em := &tdx.EncryptionMetadata{
-	PrivateKeyLocation: privateKeyPath,
-	HashAlgorithm:      "SHA256",
-}
-decryptedData, err := tdx.Decrypt(encryptedData, em)
-if err != nil {
-    fmt.Printf("Something bad happened: %s\n\n", err)
-    return err
-}
-```
-
-### To collect event log from TD
-Note that the TD should have exposed ACPI table for eventlog collection.
-
-```go
-evLogParser := tdx.NewEventLogParser()
-eventLog, err := evLogParser.GetEventLogs()
 if err != nil {
     return err
 }
