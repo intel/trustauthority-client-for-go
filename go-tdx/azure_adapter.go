@@ -101,6 +101,14 @@ func (adapter *azureAdapter) CollectEvidence(nonce []byte) (*connector.Evidence,
 
 func getTDReport(reportData []byte) ([]byte, error) {
 
+	// check if index 0x01400002 is defined or not
+	_, err := exec.Command("tpm2_nvreadpublic", "0x01400002").Output()
+	if err != nil {
+		_, err = exec.Command("tpm2_nvdefine", "-C", "o", "0x01400002", "-s", "64").Output()
+		if err != nil {
+			return nil, err
+		}
+	}
 	cmd := exec.Command("tpm2_nvwrite", "-C", "o", "0x1400002", "-i", "-")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
