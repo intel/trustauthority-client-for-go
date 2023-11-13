@@ -1,0 +1,5 @@
+{
+  "trustauthority_url": "https://portal.trustauthority.intel.com",
+  "trustauthority_api_url": "https://api.trustauthority.intel.com",
+  "trustauthority_api_key": "<your_ita_api_key>"
+}
