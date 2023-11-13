@@ -32,33 +32,6 @@ if err != nil {
 }
 ```
 
-### To generate RSA keypair
-
-```go
-km := &tdx.KeyMetadata{
-	KeyLength: 3072,
-}
-privateKeyPem, publicKeyPem, err := tdx.GenerateKeyPair(km)
-if err != nil {
-    fmt.Printf("Something bad happened: %s\n\n", err)
-    return err
-}
-```
-
-### To decrypt an encrypted blob
-
-```go
-em := &tdx.EncryptionMetadata{
-	PrivateKeyLocation: privateKeyPath,
-	HashAlgorithm:      "SHA256",
-}
-decryptedData, err := tdx.Decrypt(encryptedData, em)
-if err != nil {
-    fmt.Printf("Something bad happened: %s\n\n", err)
-    return err
-}
-```
-
 ### To collect event log from TD
 Note that the TD should have exposed ACPI table for eventlog collection.
 
