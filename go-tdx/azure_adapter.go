@@ -12,10 +12,12 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"io"
 	"net/http"
 	"os/exec"
+	"strings"
 
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/pkg/errors"
@@ -53,16 +55,22 @@ type QuoteResponse struct {
 // CollectEvidence is used to get TDX quote using Azure Quote Generation service
 func (adapter *azureAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, error) {
 
-	hash := sha512.New()
-	_, err := hash.Write(nonce)
-	if err != nil {
-		return nil, err
+	var reportData []byte
+	if nonce != nil || adapter.uData != nil {
+		hash := sha512.New()
+		_, err := hash.Write(nonce)
+		if err != nil {
+			return nil, err
+		}
+		_, err = hash.Write(adapter.uData)
+		if err != nil {
+			return nil, err
+		}
+		reportData = hash.Sum(nil)
+	} else {
+		// zeroize the runtime_data.user-data
+		reportData = make([]byte, 64)
 	}
-	_, err = hash.Write(adapter.uData)
-	if err != nil {
-		return nil, err
-	}
-	reportData := hash.Sum(nil)
 
 	tpmReport, err := getTDReport(reportData)
 	if err != nil {
@@ -77,6 +85,24 @@ func (adapter *azureAdapter) CollectEvidence(nonce []byte) (*connector.Evidence,
 
 	runtimeDataSize := binary.LittleEndian.Uint32(tpmReport[RUNTIME_DATA_SIZE_OFFSET : RUNTIME_DATA_SIZE_OFFSET+4])
 	runtimeData := tpmReport[RUNTIME_DATA_OFFSET : RUNTIME_DATA_OFFSET+runtimeDataSize]
+
+	// validate the user-data(hash) in the evidence matches the user-data(hash) provided to the TPM
+	var runtimeDataMap map[string]interface{}
+	err = json.Unmarshal(runtimeData, &runtimeDataMap)
+	if err != nil {
+		return nil, errors.Errorf("invalid runtime_data %v", err)
+	}
+	userData, exists := runtimeDataMap["user-data"]
+	if !exists {
+		return nil, errors.Errorf("runtime_data doesn't include user-data %v", err)
+	}
+	userDataStr, ok := userData.(string)
+	if !ok {
+		return nil, errors.Errorf("user-data string assertion fail")
+	}
+	if !strings.EqualFold(userDataStr, hex.EncodeToString(reportData)) {
+		return nil, errors.Errorf("The collected evidence is invalid")
+	}
 
 	var eventLog []byte
 	if adapter.EvLogParser != nil {
