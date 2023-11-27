@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -79,9 +78,20 @@ func getToken(cmd *cobra.Command) error {
 		return errors.New("Either Trust Authority API URL or Trust Authority API Key is missing in config")
 	}
 
-	_, err = url.ParseRequestURI(config.TrustAuthorityApiUrl)
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: false,
+		MinVersion:         tls.VersionTLS12,
+	}
+
+	cfg := connector.Config{
+		TlsCfg: tlsConfig,
+		ApiUrl: config.TrustAuthorityApiUrl,
+		ApiKey: config.TrustAuthorityApiKey,
+	}
+
+	trustAuthorityConnector, err := connector.New(&cfg)
 	if err != nil {
-		return errors.Wrap(err, "Invalid Trust Authority API URL")
+		return err
 	}
 
 	_, err = base64.URLEncoding.DecodeString(config.TrustAuthorityApiKey)
@@ -150,22 +160,6 @@ func getToken(cmd *cobra.Command) error {
 		if !requestIdRegex.Match([]byte(reqId)) {
 			return errors.Errorf("Request ID should be atmost 128 characters long and should contain only alphanumeric characters, _, space, -, ., / or \\")
 		}
-	}
-
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: false,
-		MinVersion:         tls.VersionTLS12,
-	}
-
-	cfg := connector.Config{
-		TlsCfg: tlsConfig,
-		ApiUrl: config.TrustAuthorityApiUrl,
-		ApiKey: config.TrustAuthorityApiKey,
-	}
-
-	trustAuthorityConnector, err := connector.New(&cfg)
-	if err != nil {
-		return err
 	}
 
 	var evLogParser tdx.EventLogParser

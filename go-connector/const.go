@@ -18,4 +18,6 @@ const (
 	DefaultRetryWaitMinSeconds = 2
 	DefaultRetryWaitMaxSeconds = 10
 	ServiceUnavailableError    = `service unavailable`
+
+	HttpsScheme = "https"
 )

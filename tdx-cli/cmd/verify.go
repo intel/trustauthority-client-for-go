@@ -10,7 +10,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"os"
 
 	"github.com/intel/trustauthority-client/go-connector"
@@ -65,16 +64,6 @@ func verifyToken(cmd *cobra.Command) error {
 		return errors.New("Trust Authority URL is missing in config")
 	}
 
-	_, err = url.ParseRequestURI(config.TrustAuthorityUrl)
-	if err != nil {
-		return errors.Wrap(err, "Invalid Trust Authority URL")
-	}
-
-	token, err := cmd.Flags().GetString(constants.TokenOption)
-	if err != nil {
-		return err
-	}
-
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: false,
 		MinVersion:         tls.VersionTLS12,
@@ -86,6 +75,11 @@ func verifyToken(cmd *cobra.Command) error {
 	}
 
 	trustAuthorityConnector, err := connector.New(&cfg)
+	if err != nil {
+		return err
+	}
+
+	token, err := cmd.Flags().GetString(constants.TokenOption)
 	if err != nil {
 		return err
 	}

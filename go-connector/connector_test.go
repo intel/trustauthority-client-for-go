@@ -9,6 +9,7 @@ import (
 	"crypto/tls"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 )
@@ -27,7 +28,8 @@ func setup() (connector Connector, mux *http.ServeMux, serverURL string, teardow
 	//apiHandler.Handle(baseURLPath+"/", http.StripPrefix(baseURLPath, mux))
 
 	// server is a test HTTP server used to provide mock API responses.
-	server := httptest.NewServer(mux)
+	server := httptest.NewTLSServer(mux)
+	os.Setenv("SSL_CERT_FILE", "./test-resources/tls-cert.pem")
 
 	// connector is the Connector being tested and is
 	// configured to use test server.
@@ -73,6 +75,26 @@ func TestNewWithRetryConfig(t *testing.T) {
 	_, err := New(&cfg)
 	if err != nil {
 		t.Errorf("New returned unexpected error: %v", err)
+	}
+}
+
+func TestNew_HttpBaseURL(t *testing.T) {
+	cfg := Config{
+		BaseUrl: "http://custom-base-url/certs",
+	}
+
+	if _, err := New(&cfg); err == nil {
+		t.Errorf("New returned nil, expected error %v", err)
+	}
+}
+
+func TestNew_HttpApiURL(t *testing.T) {
+	cfg := Config{
+		ApiUrl: "http://custom-api-url/api/v1",
+	}
+
+	if _, err := New(&cfg); err == nil {
+		t.Errorf("New returned nil, expected error %v", err)
 	}
 }
 

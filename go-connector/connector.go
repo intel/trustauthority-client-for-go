@@ -108,14 +108,19 @@ type VerifierNonce struct {
 
 // New returns a new Connector instance
 func New(cfg *Config) (Connector, error) {
-	_, err := url.Parse(cfg.BaseUrl)
-	if err != nil {
-		return nil, err
+	var err error
+	if cfg.BaseUrl != "" {
+		err = validateURLScheme(cfg.BaseUrl)
+		if err != nil {
+			return nil, errors.New("Invalid Trust Authority base URL")
+		}
 	}
 
-	cfg.url, err = url.Parse(cfg.ApiUrl)
-	if err != nil {
-		return nil, err
+	if cfg.ApiUrl != "" {
+		err = validateURLScheme(cfg.ApiUrl)
+		if err != nil {
+			return nil, errors.New("Invalid Trust Authority API URL")
+		}
 	}
 
 	retryableClient := retryablehttp.NewClient()
@@ -191,4 +196,15 @@ func defaultRetryPolicy(ctx context.Context, resp *http.Response, err error) (bo
 		return true, errors.Errorf("unexpected HTTP status %s", resp.Status)
 	}
 	return false, nil
+}
+
+func validateURLScheme(inputUrl string) error {
+	parsedUrl, err := url.Parse(inputUrl)
+	if err != nil {
+		return err
+	}
+	if parsedUrl.Scheme != HttpsScheme {
+		return errors.New("Invalid URL, scheme must be https")
+	}
+	return nil
 }

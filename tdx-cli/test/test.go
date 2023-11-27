@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -57,7 +58,8 @@ func MockTrustAuthorityServer(t *testing.T) *httptest.Server {
 		}
 	}).Methods(http.MethodPost)
 
-	httpServer := httptest.NewServer(r)
+	httpServer := httptest.NewTLSServer(r)
+	os.Setenv("SSL_CERT_FILE", "../../go-connector/test-resources/tls-cert.pem")
 
 	fmt.Println(httpServer.URL)
 	return httpServer
