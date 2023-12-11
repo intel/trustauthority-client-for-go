@@ -2,7 +2,7 @@
 Intel Trust Authority Client provides a set of Go modules and command line interfaces for attesting different TEEs with Intel Trust Authority.
 It is flexible enough that either the users can import the Go modules within their application or they can directly invoke the CLIs from their application.  
 
-**Note: if you're evaluating Azure TDX public preview environment, please checkout this branch instead of main: [azure-tdx-preview](https://github.com/intel/trustauthority-client-for-go/tree/azure-tdx-preview)**
+**Note: If you are participating in Azure Intel Trust Domain Extension (Intel TDX) (DCesv5 and ECesv5-series confidential VMs) public preview environment, please check out this branch instead of main: [azure-tdx-preview](https://github.com/intel/trustauthority-client-for-go/tree/azure-tdx-preview)**
 ```sh
 git clone https://github.com/intel/trustauthority-client-for-go client -b azure-tdx-preview
 ```
