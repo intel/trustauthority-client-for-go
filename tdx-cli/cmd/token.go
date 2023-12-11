@@ -79,6 +79,10 @@ func getToken(cmd *cobra.Command) error {
 		return errors.New("Either Trust Authority API URL or Trust Authority API Key is missing in config")
 	}
 
+	if !strings.HasPrefix(config.TrustAuthorityApiUrl, "https://") {
+		return errors.New("Invalid Trust Authority API URL, must start with 'https://'")
+	}
+
 	_, err = url.ParseRequestURI(config.TrustAuthorityApiUrl)
 	if err != nil {
 		return errors.Wrap(err, "Invalid Trust Authority API URL")
