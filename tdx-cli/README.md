@@ -116,7 +116,7 @@ sudo ./trustauthority-cli token --config config.json --user-data <base64 encoded
 ```
 OR
 ```sh
-trustauthority-cli token --config config.json --pub-path <public key file path> --policy-ids <comma separated trustauthority attestation policy ids>
+sudo ./trustauthority-cli token --config config.json --pub-path <public key file path> --policy-ids <comma separated trustauthority attestation policy ids>
 ```
 
 ### To get TD quote with Nonce and UserData
