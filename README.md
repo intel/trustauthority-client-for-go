@@ -7,7 +7,7 @@ It is flexible enough that either the users can import the Go modules within the
 ```sh
 git clone https://github.com/intel/trustauthority-client-for-go client -b azure-tdx-preview
 ```
-**If you are using GCP TDX environment, please check out this branch instead of main: [gcp-tdx-preview](https://github.com/intel/trustauthority-client-for-go/tree/gcp-tdx-preview)**
+**If you are using Google Cloud Platform (GCP) Intel TDX VM, please check out this branch instead of main: [gcp-tdx-preview](https://github.com/intel/trustauthority-client-for-go/tree/gcp-tdx-preview)**
 ```sh
 git clone https://github.com/intel/trustauthority-client-for-go client -b gcp-tdx-preview
 ```
