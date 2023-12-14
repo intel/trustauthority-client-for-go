@@ -42,7 +42,7 @@ More info about a specific command can be found using
 Save this data in a `config.json` file and then invoke the `token` command.
 
 ```sh
-trustauthority-cli token --config config.json --user-data <base64 encoded userdata>  --no-eventlog
+sudo ./trustauthority-cli token --config config.json --user-data <base64 encoded userdata>  --no-eventlog
 ```
 
 ### To verify Intel Trust Authority signed token
