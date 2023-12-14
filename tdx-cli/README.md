@@ -45,12 +45,12 @@ trustauthority-cli <command> --help
 ```
 Save this data in config.json file and invoke `token` command
 ```sh
-trustauthority-cli token --config config.json --user-data <base64 encoded userdata>  --no-eventlog
+sudo ./trustauthority-cli token --config config.json --user-data <base64 encoded userdata>  --no-eventlog
 ```
 
 ### To verify Intel Trust Authority signed token
 ```sh
-trustauthority-cli verify --config config.json --token <attestation token in JWT format>
+./trustauthority-cli verify --config config.json --token <attestation token in JWT format>
 ```
 
 ## License
