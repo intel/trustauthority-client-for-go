@@ -8,9 +8,11 @@ package cmd
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 
+	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/go-tdx"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
 	"github.com/pkg/errors"
@@ -59,11 +61,17 @@ func getQuote(cmd *cobra.Command) error {
 	}
 
 	var nonceBytes []byte
+	var verifierNonce connector.VerifierNonce
 	if nonce != "" {
 		nonceBytes, err = base64.StdEncoding.DecodeString(nonce)
 		if err != nil {
 			return errors.Wrap(err, "Error while base64 decoding of nonce")
 		}
+		err = json.Unmarshal(nonceBytes, &verifierNonce)
+		if err != nil {
+			fmt.Println("Unmarshall error: ", err.Error())
+		}
+		nonceBytes = append(verifierNonce.Val, verifierNonce.Iat[:]...)
 	}
 
 	adapter, err := tdx.NewEvidenceAdapter(userDataBytes, nil)
@@ -75,6 +83,9 @@ func getQuote(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Failed to collect evidence")
 	}
 
-	fmt.Fprintln(os.Stdout, evidence.Evidence)
+	fmt.Println("Quote:", base64.StdEncoding.EncodeToString(evidence.Evidence))
+	fmt.Println("runtime_data:", base64.StdEncoding.EncodeToString(evidence.UserData))
+	fmt.Println("user_data:", userData)
+
 	return nil
 }
