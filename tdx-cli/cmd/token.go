@@ -13,6 +13,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -39,6 +40,13 @@ var tokenCmd = &cobra.Command{
 	},
 }
 
+var (
+	// max length of file name to be allowed is 255 bytes and characters allowed are a-z, A-Z, 0-9, _, ., -
+	fileNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_. -]{1,255}$`)
+	// in file path, characters allowed are a-z, A-Z, 0-9, _, ., -, \, /, :
+	filePathRegex = regexp.MustCompile(`^[a-zA-Z0-9_. :/\\-]*$`)
+)
+
 type Config struct {
 	TrustAuthorityUrl    string `json:"trustauthority_url"`
 	TrustAuthorityApiUrl string `json:"trustauthority_api_url"`
@@ -63,7 +71,11 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
-	configJson, err := os.ReadFile(configFile)
+	configFilePath, err := ValidateFilePath(configFile)
+	if err != nil {
+		return errors.Wrap(err, "Invalid config file path provided")
+	}
+	configJson, err := os.ReadFile(configFilePath)
 	if err != nil {
 		return errors.Wrapf(err, "Error reading config from file")
 	}
@@ -131,7 +143,11 @@ func getToken(cmd *cobra.Command) error {
 			return errors.Wrap(err, "Error while base64 decoding of userdata")
 		}
 	} else if publicKeyPath != "" {
-		publicKey, err := os.ReadFile(publicKeyPath)
+		keyFilepath, err := ValidateFilePath(publicKeyPath)
+		if err != nil {
+			return errors.Wrap(err, "Invalid public key file path provided")
+		}
+		publicKey, err := os.ReadFile(keyFilepath)
 		if err != nil {
 			return errors.Wrap(err, "Error reading public key from file")
 		}
@@ -184,5 +200,38 @@ func getToken(cmd *cobra.Command) error {
 	}
 
 	fmt.Fprintln(os.Stdout, response.Token)
+	return nil
+}
+
+func ValidateFilePath(path string) (string, error) {
+	if info, err := os.Stat(path); err == nil && info.IsDir() {
+		return "", errors.New("path cannot be directory, please provide file path")
+	}
+	cleanedPath := filepath.Clean(path)
+	if err := checkFilePathForInvalidChars(cleanedPath); err != nil {
+		return "", err
+	}
+	r, err := filepath.EvalSymlinks(cleanedPath)
+	if err != nil && !os.IsNotExist(err) {
+		return cleanedPath, errors.New("Unsafe symlink detected in path")
+	}
+	if r == "" {
+		return cleanedPath, nil
+	}
+	if err = checkFilePathForInvalidChars(r); err != nil {
+		return "", err
+	}
+	return r, nil
+}
+
+func checkFilePathForInvalidChars(path string) error {
+	filePath, fileName := filepath.Split(path)
+	//Max file path length allowed in linux is 4096 characters
+	if len(path) > constants.LinuxFilePathSize || !filePathRegex.MatchString(filePath) {
+		return errors.New("Invalid file path provided")
+	}
+	if !fileNameRegex.MatchString(fileName) {
+		return errors.New("Invalid file name provided")
+	}
 	return nil
 }

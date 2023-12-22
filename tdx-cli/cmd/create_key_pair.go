@@ -44,8 +44,9 @@ func createKeyPair(cmd *cobra.Command) error {
 		return err
 	}
 
-	if info, err := os.Stat(publicKeyPath); err == nil && info.IsDir() {
-		return errors.Errorf("public key path cannot be directory, please provide file path")
+	keyFilepath, err := ValidateFilePath(publicKeyPath)
+	if err != nil {
+		return errors.Wrap(err, "Invalid public key file path provided")
 	}
 
 	km := &tdx.KeyMetadata{
@@ -57,7 +58,7 @@ func createKeyPair(cmd *cobra.Command) error {
 	}
 	defer tdx.ZeroizeByteArray(privateKeyPem)
 
-	err = os.WriteFile(publicKeyPath, publicKeyPem, 0644)
+	err = os.WriteFile(keyFilepath, publicKeyPem, 0644)
 	if err != nil {
 		return errors.Wrap(err, "I/O error while saving public key")
 	}

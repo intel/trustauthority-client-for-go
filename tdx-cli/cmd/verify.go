@@ -49,7 +49,12 @@ func verifyToken(cmd *cobra.Command) error {
 		return err
 	}
 
-	configJson, err := os.ReadFile(configFile)
+	configFilePath, err := ValidateFilePath(configFile)
+	if err != nil {
+		return errors.Wrap(err, "Invalid config file path provided")
+	}
+
+	configJson, err := os.ReadFile(configFilePath)
 	if err != nil {
 		return errors.Wrapf(err, "Error reading config from file")
 	}

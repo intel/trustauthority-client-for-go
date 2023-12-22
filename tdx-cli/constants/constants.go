@@ -8,6 +8,7 @@ package constants
 
 const (
 	RSAKeyBitLength     = 3072
+	LinuxFilePathSize   = 4096
 	CLIShortDescription = "Intel® Trust Authority CLI for TDX"
 )
 

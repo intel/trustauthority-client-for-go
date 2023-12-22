@@ -59,6 +59,11 @@ func decrypt(cmd *cobra.Command) error {
 		return errors.Errorf("One of the --%s or --%s are required", constants.PrivateKeyPathOption, constants.PrivateKeyOption)
 	}
 
+	keyFilepath, err := ValidateFilePath(privateKeyPath)
+	if err != nil {
+		return errors.Wrap(err, "Invalid private key file path provided")
+	}
+
 	b64EncryptedData, err := cmd.Flags().GetString(constants.InputOption)
 	if err != nil {
 		return err
@@ -76,7 +81,7 @@ func decrypt(cmd *cobra.Command) error {
 	defer tdx.ZeroizeByteArray(privateKey)
 
 	em := tdx.EncryptionMetadata{
-		PrivateKeyLocation: privateKeyPath,
+		PrivateKeyLocation: keyFilepath,
 		PrivateKey:         privateKey,
 		HashAlgorithm:      "SHA256",
 	}
