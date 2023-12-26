@@ -4,8 +4,23 @@ on:
   pull_request:
 
 jobs:
+  version-check:
+    runs-on: [ self-hosted ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      
+      - name: version-check
+        run: |
+          /bin/bash version-check.sh
+          if [[ $? -eq 1 ]]; then
+            echo "version check failed"
+            exit 1
+          fi
   build-test-scan:
     runs-on: [ ubuntu-20.04 ]
+    needs: [ "version-check" ]
     env:
       http_proxy: ${{ secrets.HTTP_PROXY }}
       https_proxy: ${{ secrets.HTTPS_PROXY }}
