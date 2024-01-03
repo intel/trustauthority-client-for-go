@@ -118,10 +118,11 @@ func (adapter *azureAdapter) CollectEvidence(nonce []byte) (*connector.Evidence,
 	}
 
 	return &connector.Evidence{
-		Type:     1,
-		Evidence: quote,
-		UserData: runtimeData,
-		EventLog: eventLog,
+		Type:        1,
+		Quote:       quote,
+		UserData:    adapter.uData,
+		EventLog:    eventLog,
+		RuntimeData: runtimeData,
 	}, nil
 }
 

@@ -54,7 +54,7 @@ More info about a specific command can be found using
 ```
 Save this data in config.json file and invoke `token` command
 ```sh
-sudo ./trustauthority-cli token --config config.json --user-data <base64 encoded userdata>  --no-eventlog
+sudo ./trustauthority-cli token --config config.json --user-data <base64 encoded userdata>
 ```
 
 

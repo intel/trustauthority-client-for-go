@@ -83,8 +83,8 @@ func getQuote(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Failed to collect evidence")
 	}
 
-	fmt.Println("Quote:", base64.StdEncoding.EncodeToString(evidence.Evidence))
-	fmt.Println("runtime_data:", base64.StdEncoding.EncodeToString(evidence.UserData))
+	fmt.Println("Quote:", base64.StdEncoding.EncodeToString(evidence.Quote))
+	fmt.Println("runtime_data:", base64.StdEncoding.EncodeToString(evidence.RuntimeData))
 	fmt.Println("user_data:", userData)
 
 	return nil

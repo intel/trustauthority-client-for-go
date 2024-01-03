@@ -53,7 +53,7 @@ func init() {
 	tokenCmd.Flags().StringP(constants.PolicyIdsOption, "p", "", "Trust Authority Policy Ids, comma separated")
 	tokenCmd.Flags().StringP(constants.PublicKeyPathOption, "f", "", "Public key to be used as userdata")
 	tokenCmd.Flags().StringP(constants.RequestIdOption, "r", "", "Request id to be associated with request")
-	tokenCmd.Flags().Bool(constants.NoEventLogOption, false, "Do not collect Event Log")
+	tokenCmd.Flags().Bool(constants.NoEventLogOption, true, "Do not collect Event Log")
 	tokenCmd.MarkFlagRequired(constants.ConfigOption)
 }
 
