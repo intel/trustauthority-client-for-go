@@ -12,20 +12,13 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/binary"
-<<<<<<< HEAD
 	"encoding/hex"
-=======
->>>>>>> b7c198f (Updated Azure adapter per TDX1.4 preview.)
 	"encoding/json"
 	"io"
 	"net/http"
 	"os/exec"
-<<<<<<< HEAD
 	"strings"
 	"time"
-=======
-	"strconv"
->>>>>>> b7c198f (Updated Azure adapter per TDX1.4 preview.)
 
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/pkg/errors"
@@ -126,24 +119,16 @@ func (adapter *azureAdapter) CollectEvidence(nonce []byte) (*connector.Evidence,
 	}
 
 	return &connector.Evidence{
-<<<<<<< HEAD
 		Type:        1,
 		Quote:       quote,
 		UserData:    adapter.uData,
 		EventLog:    eventLog,
 		RuntimeData: runtimeData,
-=======
-		Type:     1,
-		Evidence: quote,
-		UserData: runtimeData,
-		EventLog: eventLog,
->>>>>>> b7c198f (Updated Azure adapter per TDX1.4 preview.)
 	}, nil
 }
 
 func getTDReport(reportData []byte) ([]byte, error) {
 
-<<<<<<< HEAD
 	// check if index 0x01400002 is defined or not
 	_, err := exec.Command("tpm2_nvreadpublic", "0x01400002").Output()
 	if err != nil {
@@ -152,8 +137,6 @@ func getTDReport(reportData []byte) ([]byte, error) {
 			return nil, err
 		}
 	}
-=======
->>>>>>> b7c198f (Updated Azure adapter per TDX1.4 preview.)
 	cmd := exec.Command("tpm2_nvwrite", "-C", "o", "0x1400002", "-i", "-")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -170,14 +153,10 @@ func getTDReport(reportData []byte) ([]byte, error) {
 		return nil, err
 	}
 
-<<<<<<< HEAD
 	// Adding a sleep time of 3s for the user data to be reflected in 0x1400001 nv index
 	time.Sleep(3 * time.Second)
 
 	tdReport, err := exec.Command("tpm2_nvread", "-C", "o", "0x01400001").Output()
-=======
-	tdReport, err := exec.Command("tpm2_nvread", "-C", "o", "0x01400001", "--offset=32", "-s", "1024").Output()
->>>>>>> b7c198f (Updated Azure adapter per TDX1.4 preview.)
 	if err != nil {
 		return nil, err
 	}
@@ -236,19 +215,4 @@ func getQuote(report []byte) ([]byte, error) {
 		return nil, errors.Wrap(err, "Error decoding Quote from azure")
 	}
 	return quote, nil
-}
-
-func getRuntimeData() ([]byte, error) {
-
-	size, err := exec.Command("tpm2_nvread", "-C", "o", "0x1400001", "--offset=1232", "-s", "4").Output()
-	if err != nil {
-		return nil, err
-	}
-
-	runtimeDataSize := binary.LittleEndian.Uint32(size)
-	runtimeData, err := exec.Command("tpm2_nvread", "-C", "o", "0x01400001", "--offset=1236", "-s", strconv.Itoa(int(runtimeDataSize))).Output()
-	if err != nil {
-		return nil, err
-	}
-	return runtimeData, nil
 }
