@@ -7,7 +7,6 @@ package connector
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -16,7 +15,7 @@ import (
 
 // GetNonce is used to get Intel Trust Authority signed nonce
 func (connector *trustAuthorityConnector) GetNonce(args GetNonceArgs) (GetNonceResponse, error) {
-	url := fmt.Sprintf("%s/appraisal/v1/nonce", connector.cfg.ApiUrl)
+	url := connector.cfg.ApiUrl + nonceEndpoint
 
 	newRequest := func() (*http.Request, error) {
 		return http.NewRequest(http.MethodGet, url, nil)

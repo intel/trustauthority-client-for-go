@@ -27,7 +27,7 @@ func (adapter *mockAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, 
 
 	return &connector.Evidence{
 		Type:     1,
-		Evidence: nil,
+		Quote:    nil,
 		UserData: nil,
 		EventLog: nil,
 	}, nil
