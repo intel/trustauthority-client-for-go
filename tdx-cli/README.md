@@ -75,7 +75,7 @@ The `token` command requires an Intel Trust Authority configuration to be passed
 Save this data in a `config.json` file and then invoke the `token` command.
 
 ```sh
-sudo ./trustauthority-cli token --config config.json --user-data <base64 encoded userdata>  --no-eventlog
+sudo ./trustauthority-cli token --config config.json --user-data <base64 encoded userdata>
 ```
 
 

@@ -77,10 +77,11 @@ type AttestResponse struct {
 
 // Evidence is used to store Quote to be sent for Attestation
 type Evidence struct {
-	Type     uint32
-	Evidence []byte
-	UserData []byte
-	EventLog []byte
+	Type        uint32
+	Quote       []byte
+	UserData    []byte
+	EventLog    []byte
+	RuntimeData []byte
 }
 
 // RetryConfig holds the configuration for automatic retries to tolerate minor outages

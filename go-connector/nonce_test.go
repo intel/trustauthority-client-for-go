@@ -22,7 +22,7 @@ func TestGetNonce(t *testing.T) {
 	connector, mux, _, teardown := setup()
 	defer teardown()
 
-	mux.HandleFunc("/appraisal/v1/nonce", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(nonceEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"val":"` + nonceVal + `","iat":"` + nonceIat + `","signature":"` + nonceSig + `"}`))
 	})
@@ -51,7 +51,7 @@ func TestGetNonce_invalidNonce(t *testing.T) {
 	connector, mux, _, teardown := setup()
 	defer teardown()
 
-	mux.HandleFunc("/appraisal/v1/nonce", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(nonceEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`invalid nonce`))
 	})

@@ -31,7 +31,7 @@ type tokenRequest struct {
 	VerifierNonce   *VerifierNonce `json:"verifier_nonce,omitempty"`
 	RuntimeData     []byte         `json:"runtime_data,omitempty"`
 	PolicyIds       []uuid.UUID    `json:"policy_ids,omitempty"`
-	EventLog        []byte         `json:"event_log,omitempty"`
+	UserData        []byte         `json:"user_data,omitempty"`
 	TokenSigningAlg string         `json:"token_signing_alg,omitempty"`
 	PolicyMustMatch bool           `json:"policy_must_match",omitempty"`
 }
@@ -43,15 +43,15 @@ type AttestationTokenResponse struct {
 
 // GetToken is used to get attestation token from Intel Trust Authority
 func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenResponse, error) {
-	url := fmt.Sprintf("%s/appraisal/v1/attest", connector.cfg.ApiUrl)
+	url := connector.cfg.ApiUrl + attestEndpoint
 
 	newRequest := func() (*http.Request, error) {
 		tr := tokenRequest{
-			Quote:           args.Evidence.Evidence,
+			Quote:           args.Evidence.Quote,
 			VerifierNonce:   args.Nonce,
-			RuntimeData:     args.Evidence.UserData,
+			RuntimeData:     args.Evidence.RuntimeData,
 			PolicyIds:       args.PolicyIds,
-			EventLog:        args.Evidence.EventLog,
+			UserData:        args.Evidence.UserData,
 			TokenSigningAlg: args.TokenSigningAlg,
 			PolicyMustMatch: args.PolicyMustMatch,
 		}

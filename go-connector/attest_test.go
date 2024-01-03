@@ -26,7 +26,7 @@ func TestAttest(t *testing.T) {
 	connector, mux, _, teardown := setup()
 	defer teardown()
 
-	mux.HandleFunc("/appraisal/v1/nonce", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(nonceEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"val":"` + nonceVal + `","iat":"` + nonceIat + `","signature":"` + nonceSig + `"}`))
 	})
@@ -35,7 +35,7 @@ func TestAttest(t *testing.T) {
 	evidence := &Evidence{}
 	adapter.On("CollectEvidence", mock.Anything).Return(evidence, nil)
 
-	mux.HandleFunc("/appraisal/v1/attest", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(attestEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
@@ -50,7 +50,7 @@ func TestAttest_nonceFailure(t *testing.T) {
 	connector, mux, _, teardown := setup()
 	defer teardown()
 
-	mux.HandleFunc("/appraisal/v1/nonce", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(nonceEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`invalid nonce`))
 	})
@@ -58,7 +58,7 @@ func TestAttest_nonceFailure(t *testing.T) {
 	adapter := MockAdapter{}
 	adapter.On("CollectEvidence", mock.Anything).Return(mock.Anything, nil)
 
-	mux.HandleFunc("/appraisal/v1/attest", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(attestEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
@@ -96,7 +96,7 @@ func TestAttest_evidenceFailure(t *testing.T) {
 	connector, mux, _, teardown := setup()
 	defer teardown()
 
-	mux.HandleFunc("/appraisal/v1/nonce", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(nonceEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"val":"` + nonceVal + `","iat":"` + nonceIat + `","signature":"` + nonceSig + `"}`))
 	})
@@ -105,7 +105,7 @@ func TestAttest_evidenceFailure(t *testing.T) {
 	evidence := &Evidence{}
 	adapter.On("CollectEvidence", mock.Anything).Return(evidence, errors.New("failed to collect evidence"))
 
-	mux.HandleFunc("/appraisal/v1/attest", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(attestEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
@@ -120,7 +120,7 @@ func TestAttest_tokenFailure(t *testing.T) {
 	connector, mux, _, teardown := setup()
 	defer teardown()
 
-	mux.HandleFunc("/appraisal/v1/nonce", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(nonceEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"val":"` + nonceVal + `","iat":"` + nonceIat + `","signature":"` + nonceSig + `"}`))
 	})
@@ -129,7 +129,7 @@ func TestAttest_tokenFailure(t *testing.T) {
 	evidence := &Evidence{}
 	adapter.On("CollectEvidence", mock.Anything).Return(evidence, nil)
 
-	mux.HandleFunc("/appraisal/v1/attest", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(attestEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`invalid token`))
 	})

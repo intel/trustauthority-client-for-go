@@ -34,7 +34,7 @@ func TestGetToken(t *testing.T) {
 	connector, mux, _, teardown := setup()
 	defer teardown()
 
-	mux.HandleFunc("/appraisal/v1/attest", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(attestEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
@@ -51,7 +51,7 @@ func TestGetToken_invalidToken(t *testing.T) {
 	connector, mux, _, teardown := setup()
 	defer teardown()
 
-	mux.HandleFunc("/appraisal/v1/attest", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(attestEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`invalid token`))
 	})
