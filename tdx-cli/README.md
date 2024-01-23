@@ -2,9 +2,13 @@
 An easy-to-use command line interface for attesting Azure TDX TEE(TD) with Intel Trust Authority. The CLI is specifically built to work with Azure TDX stack and will be installed and run inside the TD.
 
 ## TPM2 Tools
-Tpm2 tools is required to read the TDX report data from vTPM. Install tpm2-tools package, e.g., on Ubuntu:
+TPM2 tools is required to read the TDX report data from vTPM. Install tpm2-tools package, e.g., on Ubuntu:
 ```sh
-sudo apt install tpm2-tools
+sudo apt install tpm2-tools libtss2-tcti-device0
+```
+On SUSE Linux
+```sh
+sudo zypper install tpm2.0-tools libtss2-tcti-device0   
 ```
 
 ## Go Requirement
