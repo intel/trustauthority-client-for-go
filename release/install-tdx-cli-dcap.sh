@@ -26,7 +26,7 @@ print_error_and_exit()
 trap 'installation_intrupted' 1 2 3 6
 
 readonly OS=$(uname)
-readonly REPO_URL="srinics/trustauthority-client-for-go"
+readonly REPO_URL="intel/trustauthority-client-for-go"
 readonly RAW_MAKEFILE="https://raw.githubusercontent.com/${REPO_URL}/main/tdx-cli/Makefile"
 if [ -z "${CLI_VERSION}" ]; then
     CLI_VERSION=$(curl  --silent  https://api.github.com/repos/${REPO_URL}/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
