@@ -1,11 +1,27 @@
 # Intel® Trust Authority TDX CLI
 An easy-to-use command line interface for attesting TDX TEE(TD) with Intel Trust Authority. The CLI will be installed and run inside the TD.
 
-## Prerequisites
+## Install TDX CLI (with DCAP dependencies)
+   ```sh
+   curl -L https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-dcap.sh | sudo bash -
+   ```
+
+## Install TDX CLI for Azure
+   ```sh
+   curl -L https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-azure.sh | sudo bash -
+   ```
+
+## Install TDX CLI for GCP
+   ```sh
+   curl -L https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-gcp.sh | sudo bash -
+   ```
+## Build CLI from Source
+
+### Prerequisites
 
 The default TDX CLI has dependency on Intel SGX DCAP. Install TDX Attestation library dev package from Intel SGX DCAP. Instructions follows.
 
-### For Ubuntu* OS
+#### For Ubuntu* OS
 Install the Debian package for `libtdx-attest-dev` following these steps:
 
 1. Add the following repository to your sources:
@@ -33,7 +49,7 @@ Install the Debian package for `libtdx-attest-dev` following these steps:
     sudo apt-get install libtdx-attest-dev
     ```
 
-### For RHEL* OS
+#### For RHEL* OS
 Install the RPM package for `libtdx-attest-devel` following these steps:
 
 1. Find RPM packages for DCAP libraries and services, which are currently provided in a single TAR archive at
@@ -63,13 +79,39 @@ Install the RPM package for `libtdx-attest-devel` following these steps:
     sudo dnf --nogpgcheck install libtdx-attest-devel
     ```
 
-## Go Requirement
+#### For SUSE* OS
+1. Find RPM packages for DCAP libraries and services, which are currently provided in a single TAR archive at
+    ```sh
+    https://download.01.org/intel-sgx/latest/linux-latest/distro/<distro>/
+    ```
+2. Download the file `sgx_rpm_local_repo.tgz` to a selected folder, for example `/opt/intel`
+    ```sh
+    cd /opt/intel
+    sudo wget https://download.01.org/intel-sgx/latest/linux-latest/distro/<distro>/sgx_rpm_local_repo.tgz
+    ```
+3. Verify the downloaded repo file with the SHA value in this file:
+    https://download.01.org/intel-sgx/latest/dcap-latest/linux/SHA256SUM_dcap_<version>.cfg
+    ```sh
+    sha256sum sgx_rpm_local_repo.tgz
+    ```
+4. Expand the archive:
+    ```sh
+    sudo tar xvf sgx_rpm_local_repo.tgz
+    ```
+5. Add the RPM local repository to your local repository list
+    ```sh
+    sudo zypper addrepo file://PATH_TO_LOCAL_REPO
+    ```
+6. Install all the latest packages using `sudo zypper --no-gpg-check install <package names>`
+    ```sh
+    sudo zypper --no-gpg-checks install libtdx-attest-devel 
+    ```
+
+#### Go Requirement
 
 Use <b>go1.19 or newer</b>. Follow https://go.dev/doc/install for installation of Go.
 
-## Installation
-
-### Build
+### Build CLI
 Compile Intel Trust Authority TDX CLI. This will generate `trustauthority-cli` binary in current directory:
 
 ```sh
@@ -77,7 +119,7 @@ cd tdx-cli/
 make cli
 ```
 
-## Unit Tests
+### Unit Tests
 
 To run the tests, run `cd tdx-cli && make test-coverage`
 
