@@ -47,18 +47,18 @@ installation_intrupted()
 
 if [ "${OS_DISTRO}" == "ubuntu" ]; then
     if [ "${OS_DISTRO_VERSION}" == "20.04" ]; then
-        echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' | tee /etc/apt/sources.list.d/intel-sgx.list || print_error_and_exit
+        echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' | tee /etc/apt/sources.list.d/intel-sgx.list > /dev/null || print_error_and_exit
         pushd /tmp > /dev/null
-        wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add  || print_error_and_exit
+        wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add || print_error_and_exit
         rm -f intel-sgx-deb.key
-        popd
+        popd > /dev/null
     elif [ "${OS_DISTRO_VERSION}" == "22.04" ]; then
-        echo 'deb [signed-by=/etc/apt/keyrings/intel-sgx-keyring.asc arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu jammy main' | tee /etc/apt/sources.list.d/intel-sgx.list || print_error_and_exit
+        echo 'deb [signed-by=/etc/apt/keyrings/intel-sgx-keyring.asc arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu jammy main' | tee /etc/apt/sources.list.d/intel-sgx.list >  /dev/null || print_error_and_exit
         pushd /tmp > /dev/null
-        wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key || print_error_and_exit
+        wget -qo - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key || print_error_and_exit
         cat intel-sgx-deb.key | tee /etc/apt/keyrings/intel-sgx-keyring.asc > /dev/null || print_error_and_exit
         rm -f intel-sgx-deb.key
-        popd
+        popd > /dev/null
     else 
         printf "\n%bUnsupported Linux Distribution - %s-%s %b\n\n" "${CODE_ERROR}" "${OS_DISTRO}" "${OS_DISTRO_VERSION}" "${CODE_NC}"
         print_error_and_exit
@@ -67,18 +67,18 @@ if [ "${OS_DISTRO}" == "ubuntu" ]; then
     apt-get -qq install libtdx-attest -y > /dev/null || print_error_and_exit
 elif [ "${OS_DISTRO}" == "rhel" ] && [ "${OS_DISTRO_VERSION}" = "9.2" ]; then
     pushd /tmp > /dev/null
-    wget -q0 - https://download.01.org/intel-sgx/latest/linux-latest/distro/${OS_DISTRO}${OS_DISTRO_VERSION}-server/sgx_rpm_local_repo.tgz || print_error_and_exit
+    wget -qo - https://download.01.org/intel-sgx/latest/linux-latest/distro/${OS_DISTRO}${OS_DISTRO_VERSION}-server/sgx_rpm_local_repo.tgz || print_error_and_exit
     tar xvf sgx_rpm_local_repo.tgz || print_error_and_exit
     yum-config-manager --add-repo file:/tmp/sgx_rpm_local_repo || print_error_and_exit
     dnf --nogpgcheck install libtdx-attest -y > /dev/null || print_error_and_exit
-    popd
+    popd > /dev/null
 elif ([[ "${OS_DISTRO}" == "opensuse"* ]] || ["${OS_DISTRO}" == "sles" ]] ) && [[ "${OS_DISTRO_VERSION}" = "15.4" ]]; then
     pushd /tmp > /dev/null
-    wget -q0 - https://download.01.org/intel-sgx/latest/linux-latest/distro/suse${OS_DISTRO_VERSION}-server/sgx_rpm_local_repo.tgz || print_error_and_exit
+    wget -qo - https://download.01.org/intel-sgx/latest/linux-latest/distro/suse${OS_DISTRO_VERSION}-server/sgx_rpm_local_repo.tgz || print_error_and_exit
     tar xvf sgx_rpm_local_repo.tgz || print_error_and_exit
     zypper addrepo /opt/intel/sgx_rpm_local_repo /tmp/sgx_rpm_local_repo || print_error_and_exit
     zypper --no-gpg-checks install libtdx-attest -y  > /dev/null || print_error_and_exit
-    popd
+    popd > /dev/null
 else 
     printf "\n%bUnsupported Linux Distribution - %s-%s %b\n\n" "${CODE_ERROR}" "${OS_DISTRO}" "${OS_DISTRO_VERSION}" "${CODE_NC}"
     print_error_and_exit
