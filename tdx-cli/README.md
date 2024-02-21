@@ -15,6 +15,26 @@ An easy-to-use command line interface for attesting TDX TEE(TD) with Intel Trust
    ```sh
    curl -L https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-gcp.sh | sudo bash -
    ```
+
+### Note
+To verify the signature of TDX CLI binary downloaded using above bash scrpt, perform the following steps.
+
+1. Extract public key from the certificate
+```
+openssl x509 -in /usr/bin/trustauthority-cli.cer -pubkey -noout > /tmp/public_key.pem
+```
+
+2. Create a hash of the binary
+```
+openssl dgst -out /tmp/binaryHashOutput -sha512 -binary /usr/bin/trustauthority-cli
+```
+
+3.Verify the signature 
+```
+openssl pkeyutl -verify -pubin -inkey /tmp/public_key.pem -sigfile /usr/bin/trustauthority-cli.sig -in /tmp/binaryHashOutput -pkeyopt digest:sha512 -pkeyopt rsa_padding_mode:pss
+```
+
+
 ## Build CLI from Source
 
 ### Prerequisites
