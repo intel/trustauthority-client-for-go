@@ -1,16 +1,19 @@
+---
+last_updated: 30 January 2024
+---
+
 # Intel® Trust Authority Go SGX Adapter
-Go module for collecting SGX Quote from SGX enabled platform.
 
-This library leverages Intel SGX DCAP for Quote generation: [https://github.com/intel/SGXDataCenterAttestationPrimitives](https://github.com/intel/SGXDataCenterAttestationPrimitives)
+The **go-sgx** adapter enables a confidential computing client running in an Intel® Software Guard Extensions (Intel® SGX) enclave to collect a quote for attestation by Intel Trust Authority. The go-sgx adapter is used with the [**go-connector**](../go-connector/) to request an attestation token. 
 
-## Go Requirement
+## Requirements
 
-Use <b>go1.19 or newer</b>. Follow https://go.dev/doc/install for installation of Go.
+- Use **Go 1.19 or newer**. See [https://go.dev/doc/install](https://go.dev/doc/install) for installation of Go.
+- Intel® Software Guard Extensions Data Center Attestation Primitives (Intel® SGX DCAP) is required on the attesting TEE for quote generation.  For Intel SGX DCAP installation, see [https://github.com/intel/SGXDataCenterAttestationPrimitives](https://github.com/intel/SGXDataCenterAttestationPrimitives).
 
 ## Usage
 
-Create a new Go SGX adapter, then use the adapter to collect quote from SGX enabled platform.
-SGX enclave needs to expose a method for creating enclave report and must use SHA256 hash value as reportdata.
+Create a new Go SGX adapter, then use the adapter to collect quote from SGX enabled platform. The Intel SGX enclave must expose a method for creating an enclave report and must use a SHA256 hash value as REPORTDATA.
 
 ```go
 import "github.com/intel/trustauthority-client/go-sgx"
