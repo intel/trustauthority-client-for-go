@@ -27,11 +27,12 @@ import (
 
 // tokenRequest holds all the data required for attestation
 type tokenRequest struct {
-	Quote         []byte         `json:"quote"`
-	VerifierNonce *VerifierNonce `json:"verifier_nonce,omitempty"`
-	RuntimeData   []byte         `json:"runtime_data,omitempty"`
-	PolicyIds     []uuid.UUID    `json:"policy_ids,omitempty"`
-	EventLog      []byte         `json:"event_log,omitempty"`
+	Quote           []byte         `json:"quote"`
+	VerifierNonce   *VerifierNonce `json:"verifier_nonce,omitempty"`
+	RuntimeData     []byte         `json:"runtime_data,omitempty"`
+	PolicyIds       []uuid.UUID    `json:"policy_ids,omitempty"`
+	EventLog        []byte         `json:"event_log,omitempty"`
+	TokenSigningAlg string         `json:"token_signing_alg,omitempty"`
 }
 
 // AttestationTokenResponse holds the token recieved from Intel Trust Authority
@@ -45,11 +46,12 @@ func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenR
 
 	newRequest := func() (*http.Request, error) {
 		tr := tokenRequest{
-			Quote:         args.Evidence.Evidence,
-			VerifierNonce: args.Nonce,
-			RuntimeData:   args.Evidence.UserData,
-			PolicyIds:     args.PolicyIds,
-			EventLog:      args.Evidence.EventLog,
+			Quote:           args.Evidence.Evidence,
+			VerifierNonce:   args.Nonce,
+			RuntimeData:     args.Evidence.UserData,
+			PolicyIds:       args.PolicyIds,
+			EventLog:        args.Evidence.EventLog,
+			TokenSigningAlg: args.TokenSigningAlg,
 		}
 
 		body, err := json.Marshal(tr)
@@ -169,6 +171,19 @@ func (connector *trustAuthorityConnector) VerifyToken(token string) (*jwt.Token,
 			kid, ok = keyIDValue.(string)
 			if !ok {
 				return nil, errors.Errorf("kid field in jwt header is not a valid string: %v", kid)
+			}
+		}
+
+		algValue, algExists := token.Header["alg"]
+		if !algExists {
+			return nil, errors.New("alg field missing in token header")
+		} else {
+			alg, ok := algValue.(string)
+			if !ok {
+				return nil, errors.Errorf("alg field in jwt header is not a valid string: %v", alg)
+			}
+			if !ValidateTokenSigningAlg(alg) {
+				return nil, fmt.Errorf("unsupported token signing algorithm, has to be RS256 or PS384")
 			}
 		}
 

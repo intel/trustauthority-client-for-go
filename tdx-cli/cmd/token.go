@@ -60,6 +60,7 @@ func init() {
 	tokenCmd.Flags().StringP(constants.PolicyIdsOption, "p", "", "Trust Authority Policy Ids, comma separated")
 	tokenCmd.Flags().StringP(constants.PublicKeyPathOption, "f", "", "Public key to be used as userdata")
 	tokenCmd.Flags().StringP(constants.RequestIdOption, "r", "", "Request id to be associated with request")
+	tokenCmd.Flags().StringP(constants.TokenAlgOption, "a", "", "Token signing algorithm to be used, support PS384 and RS256")
 	tokenCmd.Flags().Bool(constants.NoEventLogOption, false, "Do not collect Event Log")
 	tokenCmd.MarkFlagRequired(constants.ConfigOption)
 }
@@ -131,6 +132,11 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
+	tokenSigningAlg, err := cmd.Flags().GetString(constants.TokenAlgOption)
+	if err != nil {
+		return err
+	}
+
 	noEvLog, err := cmd.Flags().GetBool(constants.NoEventLogOption)
 	if err != nil {
 		return err
@@ -177,6 +183,9 @@ func getToken(cmd *cobra.Command) error {
 			return errors.Errorf("Request ID should be atmost 128 characters long and should contain only alphanumeric characters, _, space, -, ., / or \\")
 		}
 	}
+	if tokenSigningAlg != "" && !connector.ValidateTokenSigningAlg(tokenSigningAlg) {
+		return errors.New("Token Signing Algorithm is unsupported, supported algorithms are PS384/RS256")
+	}
 
 	var evLogParser tdx.EventLogParser
 	if !noEvLog {
@@ -188,7 +197,7 @@ func getToken(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Error while creating tdx adapter")
 	}
 
-	response, err := trustAuthorityConnector.Attest(connector.AttestArgs{Adapter: adapter, PolicyIds: pIds, RequestId: reqId})
+	response, err := trustAuthorityConnector.Attest(connector.AttestArgs{Adapter: adapter, PolicyIds: pIds, RequestId: reqId, TokenSigningAlg: tokenSigningAlg})
 	if response.Headers != nil {
 		fmt.Fprintln(os.Stderr, "Trace Id:", response.Headers.Get(connector.HeaderTraceId))
 		if reqId != "" {

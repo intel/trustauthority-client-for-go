@@ -133,6 +133,51 @@ func TestTokenCmd(t *testing.T) {
 			wantErr:     true,
 			description: "Test with malformed userdata",
 		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOption,
+				confFilePath,
+				"--" + constants.UserDataOption,
+				"dGVzdHVzZXJkYXRh",
+				"--" + constants.PolicyIdsOption,
+				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
+				"--" + constants.TokenAlgOption,
+				"PS384",
+			},
+			wantErr:     false,
+			description: "Test with Valid PS384 alg",
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOption,
+				confFilePath,
+				"--" + constants.UserDataOption,
+				"dGVzdHVzZXJkYXRh",
+				"--" + constants.PolicyIdsOption,
+				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
+				"--" + constants.TokenAlgOption,
+				"RS256",
+			},
+			wantErr:     false,
+			description: "Test with Valid RS256 alg",
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOption,
+				confFilePath,
+				"--" + constants.UserDataOption,
+				"dGVzdHVzZXJkYXRh",
+				"--" + constants.PolicyIdsOption,
+				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
+				"--" + constants.TokenAlgOption,
+				"invalid",
+			},
+			wantErr:     true,
+			description: "Test with invalid alg",
+		},
 	}
 
 	for _, tc := range tt {

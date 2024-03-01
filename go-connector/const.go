@@ -21,3 +21,10 @@ const (
 
 	HttpsScheme = "https"
 )
+
+type JwtAlg string
+
+const (
+	RS256 JwtAlg = "RS256"
+	PS384 JwtAlg = "PS384"
+)

@@ -34,6 +34,7 @@ const (
 	NonceOption          = "nonce"
 	ConfigOption         = "config"
 	RequestIdOption      = "request-id"
+	TokenAlgOption       = "token-signing-alg"
 	NoEventLogOption     = "no-eventlog"
 	TokenOption          = "token"
 )

@@ -40,7 +40,7 @@ func TestAttest(t *testing.T) {
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
 
-	_, err := connector.Attest(AttestArgs{adapter, nil, "req1"})
+	_, err := connector.Attest(AttestArgs{adapter, nil, "req1", ""})
 	if err != nil {
 		t.Errorf("Attest returned unexpcted error: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestAttest_nonceFailure(t *testing.T) {
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
 
-	_, err := connector.Attest(AttestArgs{adapter, nil, "req1"})
+	_, err := connector.Attest(AttestArgs{adapter, nil, "req1", string(PS384)})
 	if err == nil {
 		t.Errorf("Attest returned nil, expected error")
 	}
@@ -87,7 +87,7 @@ func TestAttest_evidenceFailure(t *testing.T) {
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
 
-	_, err := connector.Attest(AttestArgs{adapter, nil, "req1"})
+	_, err := connector.Attest(AttestArgs{adapter, nil, "req1", string(RS256)})
 	if err == nil {
 		t.Errorf("Attest returned nil, expected error")
 	}
@@ -111,7 +111,7 @@ func TestAttest_tokenFailure(t *testing.T) {
 		w.Write([]byte(`invalid token`))
 	})
 
-	_, err := connector.Attest(AttestArgs{adapter, nil, "req1"})
+	_, err := connector.Attest(AttestArgs{adapter, nil, "req1", ""})
 	if err == nil {
 		t.Errorf("Attest returned nil, expected error")
 	}

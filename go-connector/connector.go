@@ -46,10 +46,11 @@ type GetNonceResponse struct {
 
 // GetTokenArgs holds the request parameters needed for getting token from Intel Trust Authority
 type GetTokenArgs struct {
-	Nonce     *VerifierNonce
-	Evidence  *Evidence
-	PolicyIds []uuid.UUID
-	RequestId string
+	Nonce           *VerifierNonce
+	Evidence        *Evidence
+	PolicyIds       []uuid.UUID
+	RequestId       string
+	TokenSigningAlg string
 }
 
 // GetTokenResponse holds the response parameters recieved from attest endpoint
@@ -60,9 +61,10 @@ type GetTokenResponse struct {
 
 // AttestArgs holds the request parameters needed for attestation with Intel Trust Authority
 type AttestArgs struct {
-	Adapter   EvidenceAdapter
-	PolicyIds []uuid.UUID
-	RequestId string
+	Adapter         EvidenceAdapter
+	PolicyIds       []uuid.UUID
+	RequestId       string
+	TokenSigningAlg string
 }
 
 // AttestResponse holds the response parameters recieved during attestation flow
@@ -207,4 +209,14 @@ func validateURLScheme(inputUrl string) error {
 		return errors.New("Invalid URL, scheme must be https")
 	}
 	return nil
+}
+
+func ValidateTokenSigningAlg(input string) bool {
+	validJwtTokenSignAlgs := []JwtAlg{RS256, PS384}
+	for _, alg := range validJwtTokenSignAlgs {
+		if strings.Compare(input, string(alg)) == 0 {
+			return true
+		}
+	}
+	return false
 }

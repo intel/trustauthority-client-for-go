@@ -98,6 +98,7 @@ req := connector.GetTokenArgs{
     Evidence:  evidence,
     PolicyIds: policyIds,
     RequestId: reqId,
+    TokenSigningAlg: alg,
 }
 resp, err := connector.GetToken(req)
 if err != nil {
