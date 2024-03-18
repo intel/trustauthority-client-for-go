@@ -31,7 +31,7 @@ readonly REPO_URL="intel/trustauthority-client-for-go"
 readonly CLI_NAME="Intel Trust Authority Client for Azure"
 readonly RAW_MAKEFILE="https://raw.githubusercontent.com/${REPO_URL}/main/tdx-cli/Makefile"
 if [ -z "${CLI_VERSION}" ]; then
-    CLI_VERSION=$(curl -s  ${RAW_MAKEFILE} | grep '^VERSION :=' | sed -e "s/\(^VERSION.*\)\(v[0-9]\+.*\)/\2/g")
+    CLI_VERSION=$(curl -s  ${RAW_MAKEFILE} | grep '^VERSION :=' | sed -e "s/\(^VERSION.*\)\(v[0-9]\+.[0-9]\+.[0-9]\+\)/\2/g")
 fi
 readonly INSTALL_DIRECTORY=/usr/bin
 readonly TAR_NAME="trustauthority-cli-azure-${CLI_VERSION}.tar.gz"

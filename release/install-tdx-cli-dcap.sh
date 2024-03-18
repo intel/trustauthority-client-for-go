@@ -29,7 +29,7 @@ readonly OS=$(uname)
 readonly REPO_URL="intel/trustauthority-client-for-go"
 readonly RAW_MAKEFILE="https://raw.githubusercontent.com/${REPO_URL}/main/tdx-cli/Makefile"
 if [ -z "${CLI_VERSION}" ]; then
-    CLI_VERSION=$(curl -s  ${RAW_MAKEFILE} | grep '^VERSION :=' | sed -e "s/\(^VERSION.*\)\(v[0-9]\+.*\)/\2/g")
+    CLI_VERSION=$(curl -s  ${RAW_MAKEFILE} | grep '^VERSION :=' | sed -e "s/\(^VERSION.*\)\(v[0-9]\+.[0-9]\+.[0-9]\+\)/\2/g")
 fi
 readonly INSTALL_DIRECTORY=/usr/bin
 readonly OS_DISTRO=$(cat /etc/os-release  | grep "^ID=" | sed -e "s/^ID=\(\s\+\)\?\(.*\)\(\s\+\)\?$/\2/g" -e "s/\"//g")
