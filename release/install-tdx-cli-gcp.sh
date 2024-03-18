@@ -30,7 +30,13 @@ readonly REPO_URL="intel/trustauthority-client-for-go"
 readonly CLI_NAME="Intel Trust Authority Client for GCP"
 readonly RAW_MAKEFILE="https://raw.githubusercontent.com/${REPO_URL}/main/tdx-cli/Makefile"
 if [ -z "${CLI_VERSION}" ]; then
-    CLI_VERSION=$(curl -s  ${RAW_MAKEFILE} | grep '^VERSION :=' | sed -e "s/\(^VERSION.*\)\(v[0-9]\+.[0-9]\+.[0-9]\+\)/\2/g")
+	ret_code=$(curl -s  ${RAW_MAKEFILE} -w '%{http_code}' -o /tmp/cli_version)
+	if [[ $ret_code != 200  ]] ; then
+	    rm -f /tmp/cli_version
+	    print_error_and_exit 'Not able to get cli version'
+	fi
+	CLI_VERSION=$(cat /tmp/cli_version | grep '^VERSION :=' | sed -e "s/\(^VERSION.*\)\(v[0-9]\+.[0-9]\+.[0-9]\+\)/\2/g")
+	rm -f /tmp/cli_version
 fi
 readonly INSTALL_DIRECTORY=/usr/bin
 readonly TAR_NAME="trustauthority-cli-gcp-${CLI_VERSION}.tar.gz"
