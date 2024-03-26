@@ -41,7 +41,7 @@ func TestGetToken(t *testing.T) {
 
 	nonce := &VerifierNonce{}
 	evidence := &Evidence{}
-	_, err := connector.GetToken(GetTokenArgs{nonce, evidence, nil, "req1", string(PS384)})
+	_, err := connector.GetToken(GetTokenArgs{nonce, evidence, nil, "req1", string(PS384), false})
 	if err != nil {
 		t.Errorf("GetToken returned unexpected error: %v", err)
 	}
@@ -58,7 +58,7 @@ func TestGetToken_invalidToken(t *testing.T) {
 
 	nonce := &VerifierNonce{}
 	evidence := &Evidence{}
-	_, err := connector.GetToken(GetTokenArgs{nonce, evidence, nil, "req1", ""})
+	_, err := connector.GetToken(GetTokenArgs{nonce, evidence, nil, "req1", "", false})
 	if err == nil {
 		t.Errorf("GetToken returned nil, expected error")
 	}

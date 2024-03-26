@@ -61,6 +61,7 @@ func init() {
 	tokenCmd.Flags().StringP(constants.PublicKeyPathOption, "f", "", "Public key to be used as userdata")
 	tokenCmd.Flags().StringP(constants.RequestIdOption, "r", "", "Request id to be associated with request")
 	tokenCmd.Flags().StringP(constants.TokenAlgOption, "a", "", "Token signing algorithm to be used, support PS384 and RS256")
+	tokenCmd.Flags().Bool(constants.PolicyMustMatchOption, false, "Enforce policies match during attestation")
 	tokenCmd.Flags().Bool(constants.NoEventLogOption, false, "Do not collect Event Log")
 	tokenCmd.MarkFlagRequired(constants.ConfigOption)
 }
@@ -137,6 +138,11 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
+	policyMustMatch, err := cmd.Flags().GetBool(constants.PolicyMustMatchOption)
+	if err != nil {
+		return err
+	}
+
 	noEvLog, err := cmd.Flags().GetBool(constants.NoEventLogOption)
 	if err != nil {
 		return err
@@ -197,7 +203,7 @@ func getToken(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Error while creating tdx adapter")
 	}
 
-	response, err := trustAuthorityConnector.Attest(connector.AttestArgs{Adapter: adapter, PolicyIds: pIds, RequestId: reqId, TokenSigningAlg: tokenSigningAlg})
+	response, err := trustAuthorityConnector.Attest(connector.AttestArgs{Adapter: adapter, PolicyIds: pIds, RequestId: reqId, TokenSigningAlg: tokenSigningAlg, PolicyMustMatch: policyMustMatch})
 	if response.Headers != nil {
 		fmt.Fprintln(os.Stderr, "Trace Id:", response.Headers.Get(connector.HeaderTraceId))
 		if reqId != "" {

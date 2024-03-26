@@ -99,6 +99,7 @@ req := connector.GetTokenArgs{
     PolicyIds: policyIds,
     RequestId: reqId,
     TokenSigningAlg: alg,
+    PolicyMustMatch: matchFlag,
 }
 resp, err := connector.GetToken(req)
 if err != nil {

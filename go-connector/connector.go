@@ -51,6 +51,7 @@ type GetTokenArgs struct {
 	PolicyIds       []uuid.UUID
 	RequestId       string
 	TokenSigningAlg string
+	PolicyMustMatch bool
 }
 
 // GetTokenResponse holds the response parameters recieved from attest endpoint
@@ -65,6 +66,7 @@ type AttestArgs struct {
 	PolicyIds       []uuid.UUID
 	RequestId       string
 	TokenSigningAlg string
+	PolicyMustMatch bool
 }
 
 // AttestResponse holds the response parameters recieved during attestation flow

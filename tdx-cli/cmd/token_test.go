@@ -159,9 +159,10 @@ func TestTokenCmd(t *testing.T) {
 				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
 				"--" + constants.TokenAlgOption,
 				"RS256",
+				"--" + constants.PolicyMustMatchOption,
 			},
 			wantErr:     false,
-			description: "Test with Valid RS256 alg",
+			description: "Test with Valid RS256 alg with policy must match flag",
 		},
 		{
 			args: []string{

@@ -33,6 +33,7 @@ type tokenRequest struct {
 	PolicyIds       []uuid.UUID    `json:"policy_ids,omitempty"`
 	EventLog        []byte         `json:"event_log,omitempty"`
 	TokenSigningAlg string         `json:"token_signing_alg,omitempty"`
+	PolicyMustMatch bool           `json:"policy_must_match",omitempty"`
 }
 
 // AttestationTokenResponse holds the token recieved from Intel Trust Authority
@@ -52,6 +53,7 @@ func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenR
 			PolicyIds:       args.PolicyIds,
 			EventLog:        args.Evidence.EventLog,
 			TokenSigningAlg: args.TokenSigningAlg,
+			PolicyMustMatch: args.PolicyMustMatch,
 		}
 
 		body, err := json.Marshal(tr)
