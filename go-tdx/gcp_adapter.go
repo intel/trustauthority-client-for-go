@@ -17,6 +17,7 @@ import (
 	"github.com/google/go-configfs-tsm/report"
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 // GCPAdapter manages TDX Quote collection from GCP TDX platform
@@ -139,6 +140,7 @@ func getQuoteFromConfigFS(reportData []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Infof("provider is %s", resp.Provider)
 	tdReport := resp.OutBlob
 	return tdReport, nil
 }
@@ -170,7 +172,6 @@ func (adapter *gcpAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, e
 		return nil, err
 	}
 
-	// --------------------------------------------------------------
 	var eventLog []byte
 	if adapter.EvLogParser != nil {
 		rtmrEventLogs, err := adapter.EvLogParser.GetEventLogs()
