@@ -141,8 +141,8 @@ func getQuoteFromConfigFS(reportData []byte) ([]byte, error) {
 		return nil, err
 	}
 	log.Infof("provider is %s", resp.Provider)
-	tdReport := resp.OutBlob
-	return tdReport, nil
+	tdQuote := resp.OutBlob
+	return tdQuote, nil
 }
 
 // CollectEvidence is used to get TDX quote using GCP Quote Generation service
