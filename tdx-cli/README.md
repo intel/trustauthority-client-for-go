@@ -1,36 +1,47 @@
 # Intel® Trust Authority TDX CLI
 An easy-to-use command line interface for attesting TDX TEE(TD) with Intel Trust Authority. The CLI will be installed and run inside the TD.
 
-## Go Requirement
-
-Use <b>go1.19 or newer</b>. Follow https://go.dev/doc/install for installation of Go.
-
 ## Installation
+### Before you begin
+Make sure you have build essential and dependencies installed.
+#### Ubuntu
+```sh
+sudo apt install build-essential
+sudo snap install go --classic
+```
+#### SLES
+```sh
+sudo zypper install git make go
+```
+
+Note: make sure go is 1.19 or newer. 
+```sh
+go version
+```
+### Get the code
+Checkout the code
+```sh
+git clone https://github.com/intel/trustauthority-client -b gcp-tdx-preview
+```
 
 ### Build
 Compile Intel Trust Authority TDX CLI. This will generate `trustauthority-cli` binary in current directory:
 
 ```sh
-cd tdx-cli/
+cd trustauthority-client/tdx-cli/
 make cli
 ```
-
-## Unit Tests
-
-To run the tests, run `cd tdx-cli && make test-coverage`
-
-See the example test in `tdx-cli/token_test.go` for an example of a test.
 
 ## Usage
 
 ### To get list of all the available commands
 
 ```sh
-trustauthority-cli --help
+./trustauthority-cli --help
 ```
 More info about a specific command can be found using
 ```sh
-trustauthority-cli <command> --help
+./trustauthority-cli <command> --help
 ```
 
 ### To get Intel Trust Authority signed token
