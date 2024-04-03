@@ -13,6 +13,8 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/google/go-configfs-tsm/configfs/linuxtsm"
+	"github.com/google/go-configfs-tsm/report"
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/pkg/errors"
 )
@@ -78,22 +80,9 @@ func TdxCmdGetQuoteIO() uintptr {
 	return IOWR('T', 2, unsafe.Sizeof(TdxQuoteReqABI{}))
 }
 
-// CollectEvidence is used to get TDX quote using GCP Quote Generation service
-func (adapter *gcpAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, error) {
-
-	hash := sha512.New()
-	_, err := hash.Write(nonce)
-	if err != nil {
-		return nil, err
-	}
-	_, err = hash.Write(adapter.uData)
-	if err != nil {
-		return nil, err
-	}
-	reportData := hash.Sum(nil)
-
+func getQuoteFromIoctl(reportData []byte) ([]byte, error) {
 	var tdrequest TdxReportRequest
-	copy(tdrequest.ReportData[:], []byte(reportData))
+	copy(tdrequest.ReportData[:], reportData)
 
 	fd, err := syscall.Open(TdxAttestDevPath, syscall.O_RDWR|syscall.O_SYNC, 0)
 	if err != nil {
@@ -136,6 +125,51 @@ func (adapter *gcpAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, e
 
 	quote := make([]byte, tdxQuoteHdr.OutLen)
 	copy(quote, tdxQuoteHdr.Data[:])
+
+	return quote, nil
+}
+
+func getQuoteFromConfigFS(reportData []byte) ([]byte, error) {
+
+	req := &report.Request{
+		InBlob:     reportData[:],
+		GetAuxBlob: false,
+	}
+	resp, err := linuxtsm.GetReport(req)
+	if err != nil {
+		return nil, err
+	}
+
+	tdQuote := resp.OutBlob
+	return tdQuote, nil
+}
+
+// CollectEvidence is used to get TDX quote using GCP Quote Generation service
+func (adapter *gcpAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, error) {
+
+	hash := sha512.New()
+	_, err := hash.Write(nonce)
+	if err != nil {
+		return nil, err
+	}
+	_, err = hash.Write(adapter.uData)
+	if err != nil {
+		return nil, err
+	}
+	reportData := hash.Sum(nil)
+
+	var quote []byte
+	_, err = linuxtsm.MakeClient()
+	if err != nil {
+		// get quote via iotcl
+		quote, err = getQuoteFromIoctl(reportData)
+	} else {
+		// get quote via configfs tsm
+		quote, err = getQuoteFromConfigFS(reportData)
+	}
+	if err != nil {
+		return nil, err
+	}
 
 	var eventLog []byte
 	if adapter.EvLogParser != nil {
