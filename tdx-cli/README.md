@@ -10,17 +10,17 @@ For more information, see [Intel Trust Authority CLI for Intel TDX](https://docs
 
 ## Install TDX CLI (with DCAP dependencies)
    ```sh
-   curl -L https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-dcap.sh | sudo bash -
+   curl -sL https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-dcap.sh | sudo bash -
    ```
 
 ## Install TDX CLI for Azure
    ```sh
-   curl -L https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-azure.sh | sudo bash -
+   curl -sL https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-azure.sh | sudo bash -
    ```
 
 ## Install TDX CLI for GCP
    ```sh
-   curl -L https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-gcp.sh | sudo bash -
+   curl -sL https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-gcp.sh | sudo bash -
    ```
 
 ### Note
