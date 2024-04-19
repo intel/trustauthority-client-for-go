@@ -4,9 +4,14 @@
 # All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 # 
-# Script used to  install Intel Trust Authority Client for GCP ( GCP Confidential VM). This script will run in Ubuntu/RHEL/SUSE 
-# Linux Distribution (not supported in other OS flavours). Run the below command in Linux terminal to install this CLI.
-# curl https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-gcp.sh | sudo bash -
+# Script to install Intel Trust Authority Client TDX CLI for GCP Confidential VMs. This script will run in Ubuntu/RHEL/SUSE
+# Linux Distribution (not supported in other OS flavours). Run the below command in Linux terminal to install the CLI.
+# curl -L https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-gcp.sh | sudo bash -
+#
+# The script fetches the latest Intel Trust Authority Client release candidate and untars it.
+# You can pass variables on the command line to download a specific version. For example, to download
+# Intel Trust Authority Client 1.2.0, run
+# curl -L https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-gcp.sh | sudo CLI_VERSION=v1.2.0 bash -
 
 set -e
 readonly CODE_ERROR='\033[0;31m' #RED_COLOR
@@ -28,26 +33,30 @@ trap 'installation_intrupted' 1 2 3 6
 readonly OS=$(uname)
 readonly REPO_URL="intel/trustauthority-client-for-go"
 readonly CLI_NAME="Intel Trust Authority Client for GCP"
-readonly RAW_MAKEFILE="https://raw.githubusercontent.com/${REPO_URL}/main/tdx-cli/Makefile"
-if [ -z "${CLI_VERSION}" ]; then
-    ret_code=$(curl -s  ${RAW_MAKEFILE} -w '%{http_code}' -o /tmp/cli_version)
-    if [[ $ret_code != 200  ]] ; then
-	rm -f /tmp/cli_version
-	print_error_and_exit 'Not able to get cli version'
-    fi
-    CLI_VERSION=$(cat /tmp/cli_version | grep '^VERSION :=' | sed -e "s/\(^VERSION.*\)\(v[0-9]\+.[0-9]\+.[0-9]\+\)/\2/g")
-    rm -f /tmp/cli_version
-fi
 readonly INSTALL_DIRECTORY=/usr/bin
-readonly TAR_NAME="trustauthority-cli-gcp-${CLI_VERSION}.tar.gz"
 readonly README_LINK="https://github.com/${REPO_URL}/tree/gcp-tdx-preview/tdx-cli#usage"
-readonly CLI_BIN=$(curl -s ${RAW_MAKEFILE}  | grep "^APPNAME.*=" | sed -e "s/APPNAME.*=\(\s\+\)\?//g")
-readonly URL="https://github.com/${REPO_URL}/releases/download/${CLI_VERSION}/${TAR_NAME}"
+readonly CLI_BINARY_NAME=trustauthority-cli
 
 installation_intrupted()
 {
     printf "\n%b%s installation interrupted by signal !!%b\n\n" "${CODE_ERROR}" "${CLI_NAME}" "${CODE_NC}"
 }
+
+# Determine the latest Client version by version number ignoring alpha, beta, and rc versions.
+if [ "${CLI_VERSION}" = "" ] ; then
+    CLI_VERSION="$(curl -sL https://github.com/intel/trustauthority-client-for-go/releases | \
+                    grep -o 'releases/tag/v[0-9]*.[0-9]*.[0-9]*' | sort -V | \
+                    tail -1 | awk -F'/' '{ print $3}')"
+    CLI_VERSION="${CLI_VERSION##*/}"
+fi
+
+if [ "${CLI_VERSION}" = "" ] ; then
+    printf "Unable to get latest Client version. Set CLI_VERSION env var and re-run. For example: export CLI_VERSION=1.2.0"
+    print_error_and_exit
+fi
+
+readonly TAR_NAME="trustauthority-cli-gcp-${CLI_VERSION}.tar.gz"
+readonly URL="https://github.com/${REPO_URL}/releases/download/${CLI_VERSION}/${TAR_NAME}"
 
 if [ "${OS}" != "Linux" ]; then
     printf "\n%bUnsupported OS Distribution - %s %b\n\n" "${CODE_ERROR}" "${OS}" "${CODE_NC}"
@@ -63,7 +72,7 @@ if ! curl -sIf "${URL}" > /dev/null; then
 fi
 
 pushd /tmp > /dev/null
-#If already cli tar available, removing it
+# If client tar already exists, remove it
 if [ -f ${TAR_NAME} ]; then
     rm -r ${TAR_NAME} 
 fi
@@ -72,7 +81,7 @@ tar xvf "${TAR_NAME}" -C "${INSTALL_DIRECTORY}" > /dev/null || print_error_and_e
 rm -rf "${TAR_NAME}"
 popd > /dev/null
 
-printf "\n%s installed in %s%s\n\n" "${CLI_NAME}" "${INSTALL_DIRECTORY}/${CLI_BIN}"
+printf "\n%s installed in %s%s\n\n" "${CLI_NAME}" "${INSTALL_DIRECTORY}/${CLI_BINARY_NAME}"
 printf "\n%b%s installation successful !!%b\n\n" "${CODE_OK}" "${CLI_NAME}" "${CODE_NC}"
-printf "\nFor usage %s please refer %s\n\n" "${CLI_NAME}" "${README_LINK}"
+printf "\nFor %s usage, please refer %s\n\n" "${CLI_NAME}" "${README_LINK}"
 exit 0
