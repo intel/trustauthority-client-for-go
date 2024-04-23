@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // Connector is an interface which exposes methods for calling Intel Trust Authority REST APIs
@@ -26,6 +27,10 @@ type Connector interface {
 	GetToken(GetTokenArgs) (GetTokenResponse, error)
 	Attest(AttestArgs) (AttestResponse, error)
 	VerifyToken(string) (*jwt.Token, error)
+
+	// NewVerifier creates a new Verifier instance that facilitates
+	// composite attestation with the /appraisal/v2/attest endpoint
+	NewVerifier(options ...VerifierOption) (Verifier, error)
 }
 
 // EvidenceAdapter is an interface which exposes methods for collecting Quote from Platform
@@ -161,6 +166,92 @@ func New(cfg *Config) (Connector, error) {
 		rclient: retryableClient,
 	}, nil
 }
+
+// Options for configuring a Connector
+type ConnectorOption func(*Config) error
+
+// NewFromOptions returns a new Connector instance with the provided options.
+func NewFromOptions(opts ...ConnectorOption) (Connector, error) {
+	cfg := &Config{
+		ApiKey:  "",
+		ApiUrl:  DefaultApiUrl,
+		BaseUrl: DefaultBaseUrl,
+		TlsCfg: &tls.Config{
+			InsecureSkipVerify: false,
+			MinVersion:         tls.VersionTLS12,
+		},
+		RetryConfig: &RetryConfig{
+			CheckRetry: defaultRetryPolicy,
+		},
+	}
+
+	for _, option := range opts {
+		if err := option(cfg); err != nil {
+			return nil, err
+		}
+	}
+
+	return New(cfg)
+}
+
+// WithApiKey provides the API key for the Trust Authority
+func WithApiKey(apiKey string) ConnectorOption {
+	return func(cfg *Config) error {
+		cfg.ApiKey = apiKey
+		return nil
+	}
+}
+
+// WithApiUrl option configures the connector's API URL for the Trust Authority.
+// If not provided, the default value https://api.trustauthority.intel.com is used.
+func WithApiUrl(apiUrl string) ConnectorOption {
+	return func(cfg *Config) error {
+		u, err := url.Parse(apiUrl)
+		if err != nil {
+			return err
+		}
+
+		cfg.ApiUrl = u.String()
+		return nil
+	}
+}
+
+// WithBaseUrl option configures the connector's base URL for the Trust Authority.
+// If not provided, the default value https://trustauthority.intel.com is used.
+func WithBaseUrl(baseUrl string) ConnectorOption {
+	return func(cfg *Config) error {
+		u, err := url.Parse(baseUrl)
+		if err != nil {
+			return err
+		}
+
+		cfg.BaseUrl = u.String()
+		return nil
+	}
+}
+
+// WithRetryConfig option configures the connector's TLS connection.
+// If not provided, TLS 1.2 is enabled and used.
+func WithTlsConfig(tlsCfg *tls.Config) ConnectorOption {
+	return func(cfg *Config) error {
+		if tlsCfg == nil {
+			return errors.New("TLS config cannot be nil")
+		}
+
+		if tlsCfg.InsecureSkipVerify {
+			logrus.Warn("TLS verification is disabled")
+		}
+
+		if tlsCfg.MinVersion < tls.VersionTLS12 {
+			return errors.New("Minimum TLS version must be 1.2 or higher")
+		}
+
+		cfg.TlsCfg = tlsCfg
+		return nil
+	}
+}
+
+// TODO:  Retry config (ex. WithRetryMax())
 
 // trustAuthorityConnector manages communication with Intel Trust Authority
 type trustAuthorityConnector struct {

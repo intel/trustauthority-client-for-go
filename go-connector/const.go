@@ -31,3 +31,8 @@ const (
 	RS256 JwtAlg = "RS256"
 	PS384 JwtAlg = "PS384"
 )
+
+const (
+	DefaultApiUrl  = "https://trustauthority.intel.com"
+	DefaultBaseUrl = "https://api.trustauthority.intel.com"
+)
