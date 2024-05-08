@@ -1,5 +1,5 @@
 ---
-last_updated: 16 February 2024
+last_updated: 8 May 2024
 ---
 
 # Intel® Trust Authority Client
@@ -16,12 +16,6 @@ For more information about the Client for Go and CLI for Intel TDX, see [Client 
 > git clone https://github.com/intel/trustauthority-client-for-go client -b azure-tdx-preview
 > ```
 
-> [!NOTE]
-> If you are using **Google Cloud Platform (GCP) Intel TDX VM**, check out [**gcp-tdx-preview**](https://github.com/intel/trustauthority-client-for-go/tree/gcp-tdx-preview).
-> ```sh
-> git clone https://github.com/intel/trustauthority-client-for-go client -b gcp-tdx-preview
-> ```
-
 ## Methods of Integration
 
 The Client provides the following modules that can be imported by an application to attest Intel® SGX and Intel® TDX TEEs by using Intel Trust Authority. 
@@ -30,7 +24,7 @@ The Client provides the following modules that can be imported by an application
 1. [go-sgx](./go-sgx): Implements an adapter interface to Intel® SGX DCAP to collect evidence from an Intel SGX enclave for attestation by Intel Trust Authority. 
 1. [go-tdx](./go-tdx): Implements an adapter interface to collect evidence from an Intel TDX trust domain (TD) for attestation by Intel Trust Authority. The go-tdx adapter also implements utility functions to decrypt a blob or create a new RSA key pair. 
 
-Intel Trust Authority CLI for Intel TDX [tdx-cli](./tdx-cli) provides a CLI to attest an Intel TDX TD with Intel Trust Authority. tdx-cli requires go-connector, go-tdx, and Intel SGX DCAP (only for the Intel TDX stack). See the [README](./tdx-cli/README.md) for details.
+Intel Trust Authority CLI for Intel TDX [tdx-cli](./tdx-cli) provides a CLI to attest an Intel TDX TD with Intel Trust Authority. tdx-cli requires go-connector and go-tdx. See the [README](./tdx-cli/README.md) for details.
 
 ## Go Requirement
 

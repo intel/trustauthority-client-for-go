@@ -4,14 +4,14 @@
 # All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 # 
-# Script to install Intel Trust Authority Client TDX CLI for GCP Confidential VMs. This script will run in Ubuntu/RHEL/SUSE
+# Script to install Intel® Trust Authority Client TDX CLI for Intel® TDX Confidential VMs. This script will run in Ubuntu/RHEL/SUSE
 # Linux Distribution (not supported in other OS flavours). Run the below command in Linux terminal to install the CLI.
-# curl -L https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-gcp.sh | sudo bash -
+# curl -sL https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli.sh | sudo bash -
 #
 # The script fetches the latest Intel Trust Authority Client release candidate and untars it.
 # You can pass variables on the command line to download a specific version. For example, to download
-# Intel Trust Authority Client 1.2.0, run
-# curl -L https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-gcp.sh | sudo CLI_VERSION=v1.2.0 bash -
+# Intel Trust Authority Client 1.5.0, run
+# curl -sL https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli.sh | sudo CLI_VERSION=v1.5.0 bash -
 
 set -e
 readonly CODE_ERROR='\033[0;31m' #RED_COLOR
@@ -32,9 +32,9 @@ trap 'installation_intrupted' 1 2 3 6
 
 readonly OS=$(uname)
 readonly REPO_URL="intel/trustauthority-client-for-go"
-readonly CLI_NAME="Intel Trust Authority Client for GCP"
+readonly CLI_NAME="Intel Trust Authority Client for TDX"
 readonly INSTALL_DIRECTORY=/usr/bin
-readonly README_LINK="https://github.com/${REPO_URL}/tree/gcp-tdx-preview/tdx-cli#usage"
+readonly README_LINK="https://github.com/${REPO_URL}/tree/main/tdx-cli#usage"
 readonly CLI_BINARY_NAME=trustauthority-cli
 
 installation_intrupted()
@@ -51,11 +51,11 @@ if [ "${CLI_VERSION}" = "" ] ; then
 fi
 
 if [ "${CLI_VERSION}" = "" ] ; then
-    printf "Unable to get latest Client version. Set CLI_VERSION env var and re-run. For example: export CLI_VERSION=1.2.0"
+    printf "Unable to get latest Client version. Set CLI_VERSION env var and re-run. For example: export CLI_VERSION=1.4.0"
     print_error_and_exit
 fi
 
-readonly TAR_NAME="trustauthority-cli-gcp-${CLI_VERSION}.tar.gz"
+readonly TAR_NAME="trustauthority-cli-${CLI_VERSION}.tar.gz"
 readonly URL="https://github.com/${REPO_URL}/releases/download/${CLI_VERSION}/${TAR_NAME}"
 
 if [ "${OS}" != "Linux" ]; then
