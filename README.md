@@ -34,7 +34,7 @@ Intel Trust Authority CLI for Intel TDX [tdx-cli](./tdx-cli) provides a CLI to a
 
 ## Go Requirement
 
-Requires **Go 1.19 or newer**. See https://go.dev/doc/install for installation of Go.
+Requires **Go 1.22 or newer**. See https://go.dev/doc/install for installation of Go.
 
 ## License
 

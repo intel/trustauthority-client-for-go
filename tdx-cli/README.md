@@ -46,7 +46,7 @@ openssl pkeyutl -verify -pubin -inkey /tmp/public_key.pem -sigfile /usr/bin/trus
 
 ### Prerequisites
 
-- Use **Go 1.19 or newer**. Follow https://go.dev/doc/install for installation of Go.
+- Use **Go 1.22 or newer**. Follow https://go.dev/doc/install for installation of Go.
 - The default TDX CLI has dependency on Intel SGX DCAP. Install the Intel TDX attestation library dev package from Intel SGX DCAP. Instruction follows.
 
 #### For Ubuntu* OS
@@ -139,7 +139,7 @@ Install the RPM package for `libtdx-attest-devel` following these steps.
 
 ### Go Requirement
 
-Use <b>go1.19 or newer</b>. Follow https://go.dev/doc/install for installation of Go.
+Use <b>go1.22 or newer</b>. Follow https://go.dev/doc/install for installation of Go.
 
 ### Build CLI
 Compile Intel Trust Authority TDX CLI. This will generate `trustauthority-cli` binary in current directory:
