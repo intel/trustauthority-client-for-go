@@ -32,11 +32,12 @@ func (a *azureTdxAdapter) GetEvidenceIdentifier() string {
 	return "tdx"
 }
 
-func (a *azureTdxAdapter) GetEvidence(verifierNonce []byte, userData []byte) (interface{}, error) {
+func (a *azureTdxAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, userData []byte) (interface{}, error) {
 
 	reportData := [][]byte{}
-	if len(verifierNonce) != 0 {
-		reportData = append(reportData, verifierNonce)
+	if verifierNonce != nil {
+		reportData = append(reportData, verifierNonce.Val)
+		reportData = append(reportData, verifierNonce.Iat)
 	}
 
 	if len(userData) != 0 {
@@ -59,10 +60,10 @@ func (a *azureTdxAdapter) GetEvidence(verifierNonce []byte, userData []byte) (in
 	}
 
 	tdxEvidence := struct {
-		R []byte `json:"runtime_data"`
-		Q []byte `json:"quote"`
-		U []byte `json:"user_data,omitempty"`
-		V []byte `json:"verifier_nonce,omitempty"`
+		R []byte                   `json:"runtime_data"`
+		Q []byte                   `json:"quote"`
+		U []byte                   `json:"user_data,omitempty"`
+		V *connector.VerifierNonce `json:"verifier_nonce,omitempty"`
 	}{
 		R: azRuntimeData.runtimeJsonBytes,
 		Q: quote,

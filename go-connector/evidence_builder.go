@@ -15,7 +15,7 @@ import (
 // for remote attestation.
 type CompositeAdapter interface {
 	GetEvidenceIdentifier() string
-	GetEvidence(verifierNonce []byte, userData []byte) (interface{}, error)
+	GetEvidence(verifierNonce *VerifierNonce, userData []byte) (interface{}, error)
 }
 
 type EvidenceBuilder interface {
@@ -82,28 +82,8 @@ func WithUserData(userData []byte) EvidenceBuilderOption {
 func (eb *evidenceBuilder) Build() (interface{}, error) {
 	evidence := map[string]interface{}{}
 
-	// Assume there are four possible combinations of verifier-nonce and user-data:
-	// - None: no verifier-nonce or user-data (empty array)
-	// - Just verifier-nonce (no user-data)
-	// - Just user-data (no verifier-nonce)
-	// - Both verifier-nonce and user-data
-	//
-	// The order will always be "verifier-nonce.Val" followed by "user-data".
-	//
-	// Meaning, this logic is coupled between the clients and the server.
-	// A better solution would allow the clients to apply any number of "user-data"
-	// elements (i.e., in any order).  As long as the server builds the hash in the
-	// same order, the verification will succeed.
-	//
-	// This is a limitation of the current implementation.
-	verifierNonce := []byte{}
-	if eb.verifierNonce != nil {
-		verifierNonce = eb.verifierNonce.Val
-		evidence["verifier-nonce"] = eb.verifierNonce
-	}
-
 	for _, adapter := range eb.adapters {
-		e, err := adapter.GetEvidence(verifierNonce, eb.userData)
+		e, err := adapter.GetEvidence(eb.verifierNonce, eb.userData)
 		if err != nil {
 			return nil, err
 		}

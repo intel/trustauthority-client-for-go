@@ -66,7 +66,7 @@ and --az-tdx options.`,
 				return err
 			}
 
-			if userData != nil {
+			if len(userData) != 0 {
 				builderOptions = append(builderOptions, connector.WithUserData(userData))
 			}
 

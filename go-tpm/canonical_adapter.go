@@ -81,20 +81,19 @@ func (tca *tpmCompositeAdapter) GetEvidenceIdentifier() string {
 	return "tpm"
 }
 
-func (tca *tpmCompositeAdapter) GetEvidence(verifierNonce []byte, userData []byte) (interface{}, error) {
+func (tca *tpmCompositeAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, userData []byte) (interface{}, error) {
 	tpm, err := New(
 		WithTpmDeviceType(tca.deviceType),
 		WithTpmOwnerAuth(tca.ownerAuth),
 	)
 
-	// The TPM has a limitation on the size of the nonce. Create a sha256 hash of the verifier-nonce
-	// and user-data.
-	nonce, err := createNonceHash(verifierNonce, userData)
+	// Create a sha256 hash of the verifier-nonce and user-data.
+	nonceHash, err := createNonceHash(verifierNonce, userData)
 	if err != nil {
 		return nil, err
 	}
 
-	quote, signature, err := tpm.GetQuote(tca.akHandle, nonce, tca.pcrSelections...)
+	quote, signature, err := tpm.GetQuote(tca.akHandle, nonceHash, tca.pcrSelections...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to get quote using AK handle %x", tca.akHandle)
 	}
@@ -105,32 +104,49 @@ func (tca *tpmCompositeAdapter) GetEvidence(verifierNonce []byte, userData []byt
 	}
 
 	tpmEvidence := struct {
-		Q []byte `json:"quote"`
-		S []byte `json:"signature"`
-		P []byte `json:"pcrs"`
-		N []byte `json:"nonce,omitempty"`
+		Q []byte                   `json:"quote"`
+		S []byte                   `json:"signature"`
+		P []byte                   `json:"pcrs"`
+		N []byte                   `json:"nonce,omitempty"`
+		V *connector.VerifierNonce `json:"verifier_nonce,omitempty"`
 	}{
 		Q: quote,
 		S: signature,
 		P: pcrs,
-		N: nonce,
+		N: userData,
+		V: verifierNonce,
 	}
 
 	return &tpmEvidence, nil
 }
 
-func createNonceHash(nonceData ...[]byte) ([]byte, error) {
-	hash := sha256.New()
-
-	if len(nonceData) == 0 {
-		return make([]byte, 64), nil // write zero's to nv-ram
+func createNonceHash(verifierNonce *connector.VerifierNonce, userData []byte) ([]byte, error) {
+	if verifierNonce == nil && len(userData) == 0 {
+		return nil, nil
 	}
 
-	for _, data := range nonceData {
-		_, err := hash.Write(data)
-		if err != nil {
-			return nil, err
-		}
+	// Assume there are four possible combinations of verifier-nonce and user-data:
+	// - None: no verifier-nonce or user-data (empty array)
+	// - Just verifier-nonce (no user-data)
+	// - Just user-data (no verifier-nonce)
+	// - Both verifier-nonce and user-data
+	//
+	// The order will always be "verifier-nonce.Val" followed by "user-data".
+	nonceBytes := []byte{}
+	if verifierNonce != nil {
+		nonceBytes = append(nonceBytes, verifierNonce.Val...)
+		nonceBytes = append(nonceBytes, verifierNonce.Iat...)
 	}
-	return hash.Sum(nil), nil
+
+	if len(userData) > 0 {
+		nonceBytes = append(nonceBytes, userData...)
+	}
+
+	h := sha256.New()
+	_, err := h.Write(nonceBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return h.Sum(nil), nil
 }
