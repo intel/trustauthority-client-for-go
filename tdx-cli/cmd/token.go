@@ -62,7 +62,7 @@ func init() {
 	tokenCmd.Flags().StringP(constants.RequestIdOption, "r", "", "Request id to be associated with request")
 	tokenCmd.Flags().StringP(constants.TokenAlgOption, "a", "", "Token signing algorithm to be used, support PS384 and RS256")
 	tokenCmd.Flags().Bool(constants.PolicyMustMatchOption, false, "Enforce policies match during attestation")
-	tokenCmd.Flags().Bool(constants.NoEventLogOption, false, "Do not collect Event Log")
+	tokenCmd.Flags().Bool(constants.NoEventLogOption, true, "Do not collect Event Log")
 	tokenCmd.MarkFlagRequired(constants.ConfigOption)
 }
 
