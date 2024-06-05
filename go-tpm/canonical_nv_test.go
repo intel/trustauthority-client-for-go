@@ -63,15 +63,21 @@ func TestEmptyEkHandle(t *testing.T) {
 }
 
 func TestNvWrite(t *testing.T) {
+	len := 4096
 	testNvHandle := 0x01000899
+
 	tpm, err := New()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer tpm.Close()
 
-	d := make([]byte, 4096)
+	err = tpm.NVDefine(testNvHandle, len)
+	if err != nil {
+		t.Fatal(err)
+	}
 
+	d := make([]byte, len)
 	err = tpm.NVWrite(testNvHandle, d)
 	if err != nil {
 		t.Fatal(err)

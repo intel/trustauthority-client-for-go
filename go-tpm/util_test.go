@@ -7,6 +7,7 @@ package tpm
 
 import (
 	"crypto"
+	"reflect"
 	"testing"
 )
 
@@ -30,7 +31,7 @@ func TestSimple(t *testing.T) {
 
 func TestDefault(t *testing.T) {
 	pcrSelection := []PcrSelection{}
-	s, err := toTpm2PcrSelectionList(pcrSelection...)
+	_, err := toTpm2PcrSelectionList(pcrSelection...)
 	if err != nil {
 		t.Fatal(err)
 	}

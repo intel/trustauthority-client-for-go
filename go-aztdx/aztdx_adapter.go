@@ -9,9 +9,11 @@ import (
 	"bytes"
 	"crypto/sha512"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/tpm"
@@ -52,6 +54,16 @@ func (a *azureTdxAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, us
 	azRuntimeData, err := getAzRuntimeData(reportDataHash, azRuntimeReadIdx, azRuntimeWriteIdx)
 	if err != nil {
 		return nil, err
+	}
+
+	// make sure the Azure rt-data's user-data field matches the report data
+	rt, err := azRuntimeData.RuntimeData()
+	if err != nil {
+		return nil, err
+	}
+
+	if strings.ToLower(hex.EncodeToString(reportDataHash)) != strings.ToLower(rt.UserData) {
+		return nil, errors.New("The Azure runtime data's 'userdata' field does not match the report data.")
 	}
 
 	quote, err := getTdxQuote(azRuntimeData.tdReportBytes)
