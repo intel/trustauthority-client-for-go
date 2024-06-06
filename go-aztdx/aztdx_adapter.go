@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/tpm"
@@ -123,6 +124,10 @@ func getAzRuntimeData(reportDataHash []byte, nvReadIdx int, nvWriteIdx int) (*az
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to write report data to index 0x%x", nvWriteIdx)
 	}
+
+	// TODO:  Remove this after the Azure bug is fixed...
+	logrus.Info("Sleeping for 3 seconds to allow Azure to read the runtime data")
+	time.Sleep(3 * time.Second)
 
 	runtimeDataBytes, err := t.NVRead(nvReadIdx)
 	if err != nil {
