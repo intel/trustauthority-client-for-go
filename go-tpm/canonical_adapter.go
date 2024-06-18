@@ -107,13 +107,13 @@ func (tca *tpmCompositeAdapter) GetEvidence(verifierNonce *connector.VerifierNon
 		Q []byte                   `json:"quote"`
 		S []byte                   `json:"signature"`
 		P []byte                   `json:"pcrs"`
-		N []byte                   `json:"nonce,omitempty"`
+		U []byte                   `json:"user_data,omitempty"`
 		V *connector.VerifierNonce `json:"verifier_nonce,omitempty"`
 	}{
 		Q: quote,
 		S: signature,
 		P: pcrs,
-		N: userData,
+		U: userData,
 		V: verifierNonce,
 	}
 
