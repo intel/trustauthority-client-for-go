@@ -25,9 +25,11 @@ func newEvidenceCommand() *cobra.Command {
 	var withAzTdx bool
 	var akHandle int
 	var pcrArgs string
+	var tokenSigningAlg string
 	var excludeVerifierNonce bool
 	var logLevel string
 	var configPath string
+	var policiesMustMatch bool
 	var builderOptions []connector.EvidenceBuilderOption
 	var ctr connector.Connector
 
@@ -84,6 +86,10 @@ and --az-tdx options.`,
 				builderOptions = append(builderOptions, connector.WithPolicyIds(policyIds))
 			}
 
+			if policiesMustMatch {
+				builderOptions = append(builderOptions, connector.WithPolicyMustMatch(policiesMustMatch))
+			}
+
 			if withTpm {
 				// cmd line parameter takes precedence, then fallback to cfg
 				if akHandle == 0 {
@@ -128,6 +134,15 @@ and --az-tdx options.`,
 				builderOptions = append(builderOptions, connector.WithVerifierNonce(ctr))
 			}
 
+			if tokenSigningAlg != "" {
+				if !connector.ValidateTokenSigningAlg(tokenSigningAlg) {
+					return errors.Errorf("%q is not a valid token signing algorithm", tokenSigningAlg)
+				}
+
+				signingAlg := connector.JwtAlg(tokenSigningAlg)
+				builderOptions = append(builderOptions, connector.WithTokenSigningAlgorithm(signingAlg))
+			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -160,6 +175,8 @@ and --az-tdx options.`,
 	cmd.Flags().StringP(constants.PolicyIdsOption, "p", "", "Trust Authority Policy Ids, comma separated")
 	cmd.Flags().StringVarP(&pcrArgs, constants.PcrSelectionsOption, "s", "", "tpm2-tools style PCR selections, e.g. sha1:1,2,3+sha256:1,2,3")
 	cmd.Flags().IntVarP(&akHandle, constants.AkHandleOption, "k", 0, "The AK handle to use when generating TPM quotes")
+	cmd.Flags().StringVarP(&tokenSigningAlg, constants.TokenAlgOption, "a", "", "Token signing algorithm to be used, support PS384 and RS256")
+	cmd.Flags().BoolVar(&policiesMustMatch, constants.PolicyMustMatchOption, false, "When true, all policies must match for a token to be created")
 
 	return &cmd
 }

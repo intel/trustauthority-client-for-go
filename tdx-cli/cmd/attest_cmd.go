@@ -31,6 +31,7 @@ func newAttestCommand() *cobra.Command {
 	var excludeVerifierNonce bool
 	var logLevel string
 	var configPath string
+	var policiesMustMatch bool
 	var builderOptions []connector.EvidenceBuilderOption
 	var verifierOptions []connector.VerifierOption
 	var ctr connector.Connector
@@ -67,7 +68,7 @@ func newAttestCommand() *cobra.Command {
 				return err
 			}
 
-			if userData != nil {
+			if len(userData) != 0 {
 				builderOptions = append(builderOptions, connector.WithUserData(userData))
 			}
 
@@ -83,6 +84,10 @@ func newAttestCommand() *cobra.Command {
 
 			if policyIds != nil {
 				builderOptions = append(builderOptions, connector.WithPolicyIds(policyIds))
+			}
+
+			if policiesMustMatch {
+				builderOptions = append(builderOptions, connector.WithPolicyMustMatch(policiesMustMatch))
 			}
 
 			if withTpm {
@@ -129,6 +134,15 @@ func newAttestCommand() *cobra.Command {
 				builderOptions = append(builderOptions, connector.WithVerifierNonce(ctr))
 			}
 
+			if tokenSigningAlg != "" {
+				if !connector.ValidateTokenSigningAlg(tokenSigningAlg) {
+					return errors.Errorf("%q is not a valid token signing algorithm", tokenSigningAlg)
+				}
+
+				signingAlg := connector.JwtAlg(tokenSigningAlg)
+				builderOptions = append(builderOptions, connector.WithTokenSigningAlgorithm(signingAlg))
+			}
+
 			var reqId uuid.UUID
 			if requestId == "" {
 				reqId = uuid.New()
@@ -139,19 +153,6 @@ func newAttestCommand() *cobra.Command {
 				}
 			}
 			verifierOptions = append(verifierOptions, connector.WithRequestId(reqId))
-
-			var signingAlg connector.JwtAlg
-			if tokenSigningAlg == "" {
-				signingAlg = connector.PS384
-			} else {
-				if !connector.ValidateTokenSigningAlg(tokenSigningAlg) {
-					return errors.Errorf("%q is not a valid token signing algorithm", tokenSigningAlg)
-				}
-
-				signingAlg = connector.JwtAlg(tokenSigningAlg)
-			}
-
-			verifierOptions = append(verifierOptions, connector.WithTokenSigningAlgorithm(signingAlg))
 
 			return nil
 		},
@@ -191,8 +192,9 @@ func newAttestCommand() *cobra.Command {
 	cmd.Flags().StringP(constants.PolicyIdsOption, "p", "", "Trust Authority Policy Ids, comma separated")
 	cmd.Flags().StringVarP(&pcrArgs, constants.PcrSelectionsOption, "s", "", "tpm2-tools style PCR selections, e.g. sha1:1,2,3+sha256:1,2,3")
 	cmd.Flags().IntVarP(&akHandle, constants.AkHandleOption, "k", 0, "The AK handle to use when generating TPM quotes")
-	cmd.Flags().StringVarP(&requestId, constants.RequestIdOption, "r", "", "Request id to be associated with request")
 	cmd.Flags().StringVarP(&tokenSigningAlg, constants.TokenAlgOption, "a", "", "Token signing algorithm to be used, support PS384 and RS256")
+	cmd.Flags().BoolVar(&policiesMustMatch, constants.PolicyMustMatchOption, false, "When true, all policies must match for a token to be created")
+	cmd.Flags().StringVarP(&requestId, constants.RequestIdOption, "r", "", "Request id to be associated with request")
 
 	return &cmd
 }

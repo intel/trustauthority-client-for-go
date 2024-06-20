@@ -23,16 +23,22 @@ type EvidenceBuilder interface {
 }
 
 type evidenceBuilder struct {
-	adapters      []CompositeAdapter
-	verifierNonce *VerifierNonce
-	userData      []byte
-	policyIds     []uuid.UUID
+	adapters          []CompositeAdapter
+	verifierNonce     *VerifierNonce
+	userData          []byte
+	policyIds         []uuid.UUID
+	tokenSigningAlg   JwtAlg
+	policiesMustMatch bool
 }
 
 type EvidenceBuilderOption func(*evidenceBuilder) error
 
 func NewEvidenceBuilder(opts ...EvidenceBuilderOption) (EvidenceBuilder, error) {
-	eb := &evidenceBuilder{}
+	eb := &evidenceBuilder{
+		tokenSigningAlg:   "",
+		policiesMustMatch: false,
+	}
+
 	for _, opt := range opts {
 		if err := opt(eb); err != nil {
 			return nil, err
@@ -79,6 +85,22 @@ func WithUserData(userData []byte) EvidenceBuilderOption {
 	}
 }
 
+func WithPolicyMustMatch(policiesMustMatch bool) EvidenceBuilderOption {
+	return func(eb *evidenceBuilder) error {
+		eb.policiesMustMatch = policiesMustMatch
+		return nil
+	}
+}
+
+// WithTokenSigningAlgorithm determines which signing algorithm will
+// be applied when ITA creates an attestation token.
+func WithTokenSigningAlgorithm(tokenSigningAlg JwtAlg) EvidenceBuilderOption {
+	return func(eb *evidenceBuilder) error {
+		eb.tokenSigningAlg = tokenSigningAlg
+		return nil
+	}
+}
+
 func (eb *evidenceBuilder) Build() (interface{}, error) {
 	evidence := map[string]interface{}{}
 
@@ -89,6 +111,19 @@ func (eb *evidenceBuilder) Build() (interface{}, error) {
 		}
 
 		evidence[adapter.GetEvidenceIdentifier()] = e
+	}
+
+	// add common, top level request parameters (when present)
+	if len(eb.policyIds) > 0 {
+		evidence["policy_ids"] = eb.policyIds
+	}
+
+	if eb.policiesMustMatch {
+		evidence["policy_must_match"] = eb.policiesMustMatch
+	}
+
+	if eb.tokenSigningAlg != "" {
+		evidence["token_signing_alg"] = eb.tokenSigningAlg
 	}
 
 	return evidence, nil

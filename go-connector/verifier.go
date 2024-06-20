@@ -33,17 +33,15 @@ type Verifier interface {
 type VerifierOption func(*verifier) error
 
 type verifier struct {
-	ctr             *trustAuthorityConnector
-	requestId       uuid.UUID
-	tokenSigningAlg JwtAlg
+	ctr       *trustAuthorityConnector
+	requestId uuid.UUID
 }
 
 // NewVerifier creates a Verfier with the supplied options.
 func (ctr *trustAuthorityConnector) NewVerifier(options ...VerifierOption) (Verifier, error) {
 
 	v := &verifier{
-		ctr:             ctr,
-		tokenSigningAlg: PS384,
+		ctr: ctr,
 	}
 
 	for _, option := range options {
@@ -63,15 +61,6 @@ func (ctr *trustAuthorityConnector) NewVerifier(options ...VerifierOption) (Veri
 func WithRequestId(requestId uuid.UUID) VerifierOption {
 	return func(v *verifier) error {
 		v.requestId = requestId
-		return nil
-	}
-}
-
-// WithTokenSigningAlgorithm determines which signing algorithm will
-// be applied when ITA creates an attestation token.
-func WithTokenSigningAlgorithm(tokenSigningAlg JwtAlg) VerifierOption {
-	return func(v *verifier) error {
-		v.tokenSigningAlg = tokenSigningAlg
 		return nil
 	}
 }
