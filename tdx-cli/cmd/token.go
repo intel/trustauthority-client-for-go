@@ -9,13 +9,11 @@ package cmd
 import (
 	"crypto/tls"
 	"encoding/base64"
-	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/intel/trustauthority-client/aztdx"
@@ -85,24 +83,9 @@ func getToken(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-
-	configFilePath, err := ValidateFilePath(configFile)
+	config, err := loadConfig(configFile)
 	if err != nil {
-		return errors.Wrap(err, "Invalid config file path provided")
-	}
-	configJson, err := os.ReadFile(configFilePath)
-	if err != nil {
-		return errors.Wrapf(err, "Error reading config from file")
-	}
-
-	var config Config
-	err = json.Unmarshal(configJson, &config)
-	if err != nil {
-		return errors.Wrap(err, "Error unmarshalling JSON from config")
-	}
-
-	if config.TrustAuthorityApiUrl == "" || config.TrustAuthorityApiKey == "" {
-		return errors.New("Either Trust Authority API URL or Trust Authority API Key is missing in config")
+		return err
 	}
 
 	tlsConfig := &tls.Config{
@@ -208,16 +191,9 @@ func getToken(cmd *cobra.Command) error {
 		builderOptions = append(builderOptions, connector.WithUserData(userDataBytes))
 	}
 
-	var pIds []uuid.UUID
-	if len(policyIds) != 0 {
-		Ids := strings.Split(policyIds, ",")
-		for _, id := range Ids {
-			if uid, err := uuid.Parse(id); err != nil {
-				return errors.Errorf("Policy Id:%s is not a valid UUID", id)
-			} else {
-				pIds = append(pIds, uid)
-			}
-		}
+	pIds, err := parsePolicyIds(policyIds)
+	if err != nil {
+		return err
 	}
 	if len(pIds) != 0 {
 		builderOptions = append(builderOptions, connector.WithPolicyIds(pIds))

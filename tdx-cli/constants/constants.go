@@ -21,6 +21,7 @@ const (
 	RootCmd          = "trustauthority-cli"
 	VersionCmd       = "version"
 	VerifyCmd        = "verify"
+	EvidenceCmd      = "evidence"
 )
 
 // Options Names
