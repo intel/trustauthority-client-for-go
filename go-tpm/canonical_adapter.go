@@ -16,8 +16,22 @@ import (
 // TpmAdapterOptions for creating an evidence adapter using the host's TPM.
 type TpmAdapterOptions func(*tpmCompositeAdapter) error
 
-// NewCompositeAdapter creates a new composite adapter for the host's TPM.
-func NewCompositeAdapter(opts ...TpmAdapterOptions) (connector.CompositeAdapter, error) {
+// NewEvidenceAdapter creates a new composite adapter for the host's TPM.
+func NewEvidenceAdapter(akHandle int, pcrSelections string, ownerAuth string) (connector.EvidenceAdapter2, error) {
+	selections, err := parsePcrSelections(pcrSelections)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tpmCompositeAdapter{
+		akHandle:      akHandle,
+		pcrSelections: selections,
+		ownerAuth:     ownerAuth,
+	}, nil
+}
+
+// NewEvidenceAdapterWithOptions creates a new composite adapter for the host's TPM.
+func NewEvidenceAdapterWithOptions(opts ...TpmAdapterOptions) (connector.EvidenceAdapter2, error) {
 	// Provide default values for the adapter
 	tca := &tpmCompositeAdapter{
 		akHandle:      DefaultAkHandle,
@@ -70,9 +84,13 @@ func WithAkHandle(akHandle int) TpmAdapterOptions {
 }
 
 // WithPcrSelections configures which PCRs to include during TPM quote generation.
-func WithPcrSelections(selections []PcrSelection) TpmAdapterOptions {
+func WithPcrSelections(selections string) TpmAdapterOptions {
 	return func(tca *tpmCompositeAdapter) error {
-		tca.pcrSelections = selections
+		pcrSelections, err := parsePcrSelections(selections)
+		if err != nil {
+			return err
+		}
+		tca.pcrSelections = pcrSelections
 		return nil
 	}
 }

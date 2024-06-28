@@ -10,20 +10,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CompositeAdapter is an interface which exposes methods for building
-// a (composite) evidence object that can be submitted to /appraisal/v2/attest
-// for remote attestation.
-type CompositeAdapter interface {
-	GetEvidenceIdentifier() string
-	GetEvidence(verifierNonce *VerifierNonce, userData []byte) (interface{}, error)
-}
-
+// EvidenceBuilder is a utility for creating attestation evidence
+// request payloads.
 type EvidenceBuilder interface {
 	Build() (interface{}, error)
 }
 
 type evidenceBuilder struct {
-	adapters          []CompositeAdapter
+	adapters          []EvidenceAdapter2
 	verifierNonce     *VerifierNonce
 	userData          []byte
 	policyIds         []uuid.UUID
@@ -33,6 +27,8 @@ type evidenceBuilder struct {
 
 type EvidenceBuilderOption func(*evidenceBuilder) error
 
+// NewEvidenceBuilder creates a new EvidenceBuilder instance with the
+// specified options.
 func NewEvidenceBuilder(opts ...EvidenceBuilderOption) (EvidenceBuilder, error) {
 	eb := &evidenceBuilder{
 		tokenSigningAlg:   "",
@@ -52,7 +48,7 @@ func NewEvidenceBuilder(opts ...EvidenceBuilderOption) (EvidenceBuilder, error) 
 	return eb, nil
 }
 
-func WithEvidenceAdapter(adapter CompositeAdapter) EvidenceBuilderOption {
+func WithEvidenceAdapter(adapter EvidenceAdapter2) EvidenceBuilderOption {
 	return func(eb *evidenceBuilder) error {
 		eb.adapters = append(eb.adapters, adapter)
 		return nil

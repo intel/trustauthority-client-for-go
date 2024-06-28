@@ -25,7 +25,7 @@ import (
 
 // NewAzureTdxAdapter returns an evidence adapter that uses Azure's
 // vTPM/paravisor implementation to collect TDX evidence.
-func NewAzureTdxAdapter() (connector.CompositeAdapter, error) {
+func NewAzureTdxAdapter() (connector.EvidenceAdapter2, error) {
 	return &azureTdxAdapter{}, nil
 }
 

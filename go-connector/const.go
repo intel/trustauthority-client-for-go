@@ -13,7 +13,7 @@ const (
 	HeaderTraceId     = "trace-id"
 
 	nonceEndpoint  = "/appraisal/v1/nonce"
-	attestEndpoint = "/appraisal/v1/attest/azure/tdxvm"
+	attestEndpoint = "/appraisal/v2/attest/azure"
 
 	mimeApplicationJson        = "application/json"
 	AtsCertChainMaxLen         = 10
@@ -30,9 +30,4 @@ type JwtAlg string
 const (
 	RS256 JwtAlg = "RS256"
 	PS384 JwtAlg = "PS384"
-)
-
-const (
-	DefaultApiUrl  = "https://trustauthority.intel.com"
-	DefaultBaseUrl = "https://api.trustauthority.intel.com"
 )

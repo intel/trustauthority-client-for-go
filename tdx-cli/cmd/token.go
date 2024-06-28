@@ -18,9 +18,10 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/intel/trustauthority-client/aztdx"
 	"github.com/intel/trustauthority-client/go-connector"
-	"github.com/intel/trustauthority-client/go-tdx"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
+	"github.com/intel/trustauthority-client/tpm"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -48,9 +49,16 @@ var (
 )
 
 type Config struct {
-	TrustAuthorityUrl    string `json:"trustauthority_url"`
-	TrustAuthorityApiUrl string `json:"trustauthority_api_url"`
-	TrustAuthorityApiKey string `json:"trustauthority_api_key"`
+	TrustAuthorityUrl    string     `json:"trustauthority_url"`
+	TrustAuthorityApiUrl string     `json:"trustauthority_api_url"`
+	TrustAuthorityApiKey string     `json:"trustauthority_api_key"`
+	Tpm                  *TpmConfig `json:"tpm,omitempty"`
+}
+
+type TpmConfig struct {
+	AkHandle      HexInt `json:"ak_handle"`
+	OwnerAuth     string `json:"owner_auth"`
+	PcrSelections string `json:"pcr_selections"`
 }
 
 func init() {
@@ -63,10 +71,15 @@ func init() {
 	tokenCmd.Flags().StringP(constants.TokenAlgOption, "a", "", "Token signing algorithm to be used, support PS384 and RS256")
 	tokenCmd.Flags().Bool(constants.PolicyMustMatchOption, false, "Enforce policies match during attestation")
 	tokenCmd.Flags().Bool(constants.NoEventLogOption, true, "Do not collect Event Log")
+	tokenCmd.Flags().Bool(constants.WithTdxOption, false, "Include TDX evidence")
+	tokenCmd.Flags().Bool(constants.WithTpmOption, false, "Include TPM evidence")
+	tokenCmd.Flags().Bool(constants.NoVerifierNonceOption, false, "Do not include an ITA verifier-nonce in evidence")
+
 	tokenCmd.MarkFlagRequired(constants.ConfigOption)
 }
 
 func getToken(cmd *cobra.Command) error {
+	var builderOptions []connector.EvidenceBuilderOption
 
 	configFile, err := cmd.Flags().GetString(constants.ConfigOption)
 	if err != nil {
@@ -138,14 +151,35 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
-	policyMustMatch, err := cmd.Flags().GetBool(constants.PolicyMustMatchOption)
+	noVerifierNonce, err := cmd.Flags().GetBool(constants.NoVerifierNonceOption)
 	if err != nil {
 		return err
 	}
 
-	noEvLog, err := cmd.Flags().GetBool(constants.NoEventLogOption)
+	if !noVerifierNonce {
+		builderOptions = append(builderOptions, connector.WithVerifierNonce(trustAuthorityConnector))
+	}
+
+	policyMustMatch, err := cmd.Flags().GetBool(constants.PolicyMustMatchOption)
 	if err != nil {
 		return err
+	}
+	builderOptions = append(builderOptions, connector.WithPolicyMustMatch(policyMustMatch))
+
+	withTdx, err := cmd.Flags().GetBool(constants.WithTdxOption)
+	if err != nil {
+		return err
+	}
+
+	withTpm, err := cmd.Flags().GetBool(constants.WithTpmOption)
+	if err != nil {
+		return err
+	}
+
+	// backward compatibility cli options: if the user did not specify "--tdx" or "--tpm" options,
+	// include TDX evidence by default
+	if !withTdx && !withTpm {
+		withTdx = true
 	}
 
 	var userDataBytes []byte
@@ -170,6 +204,9 @@ func getToken(cmd *cobra.Command) error {
 		}
 		userDataBytes = publicKeyBlock.Bytes
 	}
+	if len(userDataBytes) != 0 {
+		builderOptions = append(builderOptions, connector.WithUserData(userDataBytes))
+	}
 
 	var pIds []uuid.UUID
 	if len(policyIds) != 0 {
@@ -182,28 +219,57 @@ func getToken(cmd *cobra.Command) error {
 			}
 		}
 	}
+	if len(pIds) != 0 {
+		builderOptions = append(builderOptions, connector.WithPolicyIds(pIds))
+	}
 
 	if reqId != "" {
 		requestIdRegex := regexp.MustCompile(`^[a-zA-Z0-9_ \/.-]{1,128}$`)
 		if !requestIdRegex.Match([]byte(reqId)) {
 			return errors.Errorf("Request ID should be atmost 128 characters long and should contain only alphanumeric characters, _, space, -, ., / or \\")
 		}
-	}
-	if tokenSigningAlg != "" && !connector.ValidateTokenSigningAlg(tokenSigningAlg) {
-		return errors.New("Token Signing Algorithm is unsupported, supported algorithms are PS384/RS256")
-	}
-
-	var evLogParser tdx.EventLogParser
-	if !noEvLog {
-		evLogParser = tdx.NewEventLogParser()
+	} else {
+		reqId = uuid.New().String()
 	}
 
-	adapter, err := tdx.NewEvidenceAdapter(userDataBytes, evLogParser)
+	if tokenSigningAlg != "" {
+		if !connector.ValidateTokenSigningAlg(tokenSigningAlg) {
+			return errors.Errorf("%q is not a valid token signing algorithm", tokenSigningAlg)
+		}
+
+		signingAlg := connector.JwtAlg(tokenSigningAlg)
+		builderOptions = append(builderOptions, connector.WithTokenSigningAlgorithm(signingAlg))
+	}
+
+	if withTdx {
+		tdxAdapter, err := aztdx.NewAzureTdxAdapter()
+		if err != nil {
+			return errors.Wrap(err, "Error while creating tdx adapter")
+		}
+
+		builderOptions = append(builderOptions, connector.WithEvidenceAdapter(tdxAdapter))
+	}
+
+	if withTpm {
+		tpmAdapter, err := tpm.NewEvidenceAdapter(int(config.Tpm.AkHandle), config.Tpm.PcrSelections, config.Tpm.OwnerAuth)
+		if err != nil {
+			return err
+		}
+
+		builderOptions = append(builderOptions, connector.WithEvidenceAdapter(tpmAdapter))
+	}
+
+	evidenceBuilder, err := connector.NewEvidenceBuilder(builderOptions...)
 	if err != nil {
-		return errors.Wrap(err, "Error while creating tdx adapter")
+		return err
 	}
 
-	response, err := trustAuthorityConnector.Attest(connector.AttestArgs{Adapter: adapter, PolicyIds: pIds, RequestId: reqId, TokenSigningAlg: tokenSigningAlg, PolicyMustMatch: policyMustMatch})
+	evidence, err := evidenceBuilder.Build()
+	if err != nil {
+		return err
+	}
+
+	response, err := trustAuthorityConnector.AttestEvidence(evidence, reqId)
 	if response.Headers != nil {
 		fmt.Fprintln(os.Stderr, "Trace Id:", response.Headers.Get(connector.HeaderTraceId))
 		if reqId != "" {

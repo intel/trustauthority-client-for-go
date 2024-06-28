@@ -17,7 +17,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 )
 
 // Connector is an interface which exposes methods for calling Intel Trust Authority REST APIs
@@ -28,14 +27,46 @@ type Connector interface {
 	Attest(AttestArgs) (AttestResponse, error)
 	VerifyToken(string) (*jwt.Token, error)
 
-	// NewVerifier creates a new Verifier instance that facilitates
-	// composite attestation with the /appraisal/v2/attest endpoint
-	NewVerifier(options ...VerifierOption) (Verifier, error)
+	// AttestEvidence sends evidence to the Trust Authority for attestation
+	AttestEvidence(evidence interface{}, reqId string) (AttestResponse, error)
 }
 
 // EvidenceAdapter is an interface which exposes methods for collecting Quote from Platform
 type EvidenceAdapter interface {
 	CollectEvidence(nonce []byte) (*Evidence, error)
+}
+
+// EvidenceAdapter2 is an interface that facilitates the collection of composite
+// attestation requests (i.e., that have multiple evidence types like TDX+TPM).
+// It abstracts the collection of a host's evidence in conjunction with EvidenceBuilder.
+type EvidenceAdapter2 interface {
+	// GetEvidenceIdentifier returns a unique string identifier for the evidence type.
+	// For example, "tdx" or "tpm".  This identifier is when constructing the attestation
+	// request's payload (ex. { "tpm": { evidence...}, "tdx": { evidence...}})
+	GetEvidenceIdentifier() string
+
+	// The implementor of EvidenceAdapter must implement this method and return
+	// a JSON serializable interface{} of the attestation request.
+	//
+	// When not nil, the 'veriferNonce' must be included in resulting interface and be
+	// cryptographically bound to the evidence (i.e. hashed into the TDX quote's report
+	// data).
+	//
+	// When not nil, the 'userData' must also be included in the resulting interface
+	// and hashed in the evidence.  User data is often used for including data such
+	// as a public encrypt key to a relying party.
+	//
+	// The hashing algorithm for the verifier-nonce and user-data is evidence type specific
+	// and verified by the Trust Authority.  For example, some evidence types may only
+	// provide 32 bytes for the hash (in which case SHA256 should be used). When possible,
+	// 64 bytes (SHA512) is recommended.
+	//
+	// Assuming hash 'h', the verifier-nonce and user-data should be hashed as follows:
+	// - if neither verifier-nonce or user-data is provided:  an array of zero's "h.Size()"
+	// - if only verifier-nonce is provided:  h(verifier-nonce.Val|verifier-nonce.Iat)
+	// - if only user-data is provided:  h(user-data)
+	// - if both verifier-nonce and user-data are provided:  h(verifier-nonce.Val|verifier-nonce.Iat|user-data)
+	GetEvidence(verifierNonce *VerifierNonce, userData []byte) (interface{}, error)
 }
 
 // GetNonceArgs holds the request parameters needed for getting nonce from Intel Trust Authority
@@ -166,92 +197,6 @@ func New(cfg *Config) (Connector, error) {
 		rclient: retryableClient,
 	}, nil
 }
-
-// Options for configuring a Connector
-type ConnectorOption func(*Config) error
-
-// NewFromOptions returns a new Connector instance with the provided options.
-func NewFromOptions(opts ...ConnectorOption) (Connector, error) {
-	cfg := &Config{
-		ApiKey:  "",
-		ApiUrl:  DefaultApiUrl,
-		BaseUrl: DefaultBaseUrl,
-		TlsCfg: &tls.Config{
-			InsecureSkipVerify: false,
-			MinVersion:         tls.VersionTLS12,
-		},
-		RetryConfig: &RetryConfig{
-			CheckRetry: defaultRetryPolicy,
-		},
-	}
-
-	for _, option := range opts {
-		if err := option(cfg); err != nil {
-			return nil, err
-		}
-	}
-
-	return New(cfg)
-}
-
-// WithApiKey provides the API key for the Trust Authority
-func WithApiKey(apiKey string) ConnectorOption {
-	return func(cfg *Config) error {
-		cfg.ApiKey = apiKey
-		return nil
-	}
-}
-
-// WithApiUrl option configures the connector's API URL for the Trust Authority.
-// If not provided, the default value https://api.trustauthority.intel.com is used.
-func WithApiUrl(apiUrl string) ConnectorOption {
-	return func(cfg *Config) error {
-		u, err := url.Parse(apiUrl)
-		if err != nil {
-			return err
-		}
-
-		cfg.ApiUrl = u.String()
-		return nil
-	}
-}
-
-// WithBaseUrl option configures the connector's base URL for the Trust Authority.
-// If not provided, the default value https://trustauthority.intel.com is used.
-func WithBaseUrl(baseUrl string) ConnectorOption {
-	return func(cfg *Config) error {
-		u, err := url.Parse(baseUrl)
-		if err != nil {
-			return err
-		}
-
-		cfg.BaseUrl = u.String()
-		return nil
-	}
-}
-
-// WithRetryConfig option configures the connector's TLS connection.
-// If not provided, TLS 1.2 is enabled and used.
-func WithTlsConfig(tlsCfg *tls.Config) ConnectorOption {
-	return func(cfg *Config) error {
-		if tlsCfg == nil {
-			return errors.New("TLS config cannot be nil")
-		}
-
-		if tlsCfg.InsecureSkipVerify {
-			logrus.Warn("TLS verification is disabled")
-		}
-
-		if tlsCfg.MinVersion < tls.VersionTLS12 {
-			return errors.New("Minimum TLS version must be 1.2 or higher")
-		}
-
-		cfg.TlsCfg = tlsCfg
-		return nil
-	}
-}
-
-// TODO:  Retry config (ex. WithRetryMax())
 
 // trustAuthorityConnector manages communication with Intel Trust Authority
 type trustAuthorityConnector struct {
