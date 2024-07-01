@@ -22,7 +22,6 @@ import (
 func newEvidenceCommand() *cobra.Command {
 	var withTpm bool
 	var withTdx bool
-	var withAzTdx bool
 	var tokenSigningAlg string
 	var noVerifierNonce bool
 	var configPath string
@@ -106,11 +105,6 @@ func newEvidenceCommand() *cobra.Command {
 			}
 
 			if withTdx {
-				return errors.New("TDX adapter not implemented (requires dcap)")
-				// builderOptions = append(builderOptions, connector.WithEvidenceAdapter(tdx.NewTdxAdapter())
-			}
-
-			if withAzTdx {
 				azTdxAdapter, err := aztdx.NewAzureTdxAdapter()
 				if err != nil {
 					return err
