@@ -104,6 +104,9 @@ func (tca *tpmCompositeAdapter) GetEvidence(verifierNonce *connector.VerifierNon
 		WithTpmDeviceType(tca.deviceType),
 		WithTpmOwnerAuth(tca.ownerAuth),
 	)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to open TPM")
+	}
 
 	// Create a sha256 hash of the verifier-nonce and user-data.
 	nonceHash, err := createNonceHash(verifierNonce, userData)
