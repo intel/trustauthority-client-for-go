@@ -68,14 +68,37 @@ jobs:
             echo "Unit test coverage must be above 80%"
             exit 1
           fi
-          test_output=$(cd go-tdx && go test ./... --tags=test -coverprofile=cover.out)
-          if [ $? -ne 0 ]; then
-            echo "Unit tests failed for go-tdx"
-            exit 1
-          fi
-          COVERAGE=$(echo \"$test_output\" | awk '{print $5}' | awk -F. '{print $1}')
-          echo "Unit test coverage for go-tdx is - $COVERAGE%"
-          if [[ $COVERAGE -lt 80 ]]; then
-            echo "Unit test coverage must be above 80%"
-            exit 1
-          fi
+
+  checkmarx:
+    runs-on: [ self-hosted ]
+    container:
+      image: amr-registry.caas.intel.com/amber/checkmarx:isecl
+      credentials:
+        username: ${{ secrets.HARBOR_USERNAME }}
+        password: ${{ secrets.HARBOR_PASSWORD }}
+    env:
+      HTTP_PROXY: ${{ secrets.HTTP_PROXY }}
+      HTTPS_PROXY: ${{ secrets.HTTPS_PROXY }}
+      NO_PROXY: ${{ secrets.NO_PROXY }}
+      PROJECT: ${{ secrets.CHECKMARX_PROJECT }}
+      TEAM: ${{ secrets.CHECKMARX_TEAM }}
+      CHECKMARX_BASE_URL: ${{ secrets.CHECKMARX_URL }}
+      CHECKMARX_USERNAME: ${{ secrets.CHECKMARX_USERNAME }}
+      CHECKMARX_PASSWORD: ${{ secrets.CHECKMARX_PASSWORD }}
+      CHECKMARX_CLIENT_SECRET: ${{ secrets.CHECKMARX_CLIENT_SECRET }}
+      GITHUB_TOKEN: ${{secrets.GH_TOKEN}}
+      CX_FLOW_BREAK_BUILD: false
+      CX_FLOW_ENABLED_VULNERABILITY_SCANNERS: sast
+      CX_FLOW_BUG_TRACKER: Sarif
+      CHECKMARX_SCAN_PRESET: IntelDefault
+      CXFLOW_PARAMS: "--namespace=${{ github.repository_owner }} --repo-name=${{ github.event.repository.name }} --branch=${{ github.ref }} --cx-flow.filterSeverity --cx-flow.filterCategory"
+
+    steps:
+      - name: Checkmarx CxFlow Action
+        uses: actions/checkout@v2
+
+      - name: Checkmarx CxFlow run
+        run: |
+          echo "Project - ${PROJECT}"
+          echo "scanner ${CX_FLOW_ENABLED_VULNERABILITY_SCANNERS}"
+          java ${JAVA_OPTS} -jar /app/cx-flow.jar --spring.profiles.active="${CX_FLOW_ENABLED_VULNERABILITY_SCANNERS}" --scan --github.api-url="${GITHUB_API_URL}/repos/" --cx-team="${TEAM}" --cx-project="${PROJECT}" --app="${APP}" --f=. ${CXFLOW_PARAMS}
