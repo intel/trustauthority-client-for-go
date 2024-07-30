@@ -4,6 +4,10 @@ last_updated: 8 May 2024
 
 # Intel® Trust Authority CLI for Intel TDX
 
+**tdx-cli under this branch may conflict with the sevsnp-cli. The user is advised to choose the official tdx-cli from main branch to test the tdx-cli features.**
+
+**This branch contains a preview feature of sevsnp-cli. The sevsnp-cli requires the go-connector and may conflict with the tdx-cli. The user is advised to choose the official tdx-cli from the main branch to test the tdx-cli features.**
+
 Intel® Trust Authority CLI for Intel® Trust Domain Extensions (Intel® TDX) [**tdx-cli**](./tdx-cli) provides a CLI to attest an Intel TDX trust domain (TD) with Intel Trust Authority. **tdx-cli** requires **go-connector** and **go-tdx**. See the [README](./tdx-cli/README.md) for details.
 
 For more information, see [Intel Trust Authority CLI for Intel TDX](https://docs.trustauthority.intel.com/main/articles/integrate-go-tdx-cli.html) in the Intel Trust Authority documentation.
