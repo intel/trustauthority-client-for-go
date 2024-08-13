@@ -14,6 +14,8 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/google/go-configfs-tsm/configfs/linuxtsm"
+	"github.com/google/go-configfs-tsm/report"
 	"github.com/intel/trustauthority-client/go-connector"
 )
 
@@ -36,11 +38,47 @@ func SevSnpCmdGetReportIO() uintptr {
 func (adapter *sevsnpAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, error) {
 
 	messageHash512 := sha512.Sum512(append(nonce, adapter.uData[:]...))
+
+	_, err := linuxtsm.MakeClient()
+	if err != nil {
+		return nil, err
+	}
+
+	report, err := getReportFromConfigFS(messageHash512[:])
+	if err != nil {
+		report, err = getReportFromIoctl(messageHash512[:])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &connector.Evidence{
+		Type:     1,
+		Evidence: report,
+		UserData: adapter.uData,
+	}, nil
+}
+
+func getReportFromConfigFS(reportData []byte) ([]byte, error) {
+
+	req := &report.Request{
+		InBlob:     reportData[:],
+		GetAuxBlob: true,
+	}
+	resp, err := linuxtsm.GetReport(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.OutBlob, nil
+}
+
+func getReportFromIoctl(reportData []byte) ([]byte, error) {
 	var sevsnpRequest SevSnpReportRequest
 	var sevsnpResponse SevSnpReportResponse
 
 	var sevsnpRequestIoctl SevSnpGuestRequestIoctl
-	copy(sevsnpRequest.UserData[:], []byte(messageHash512[:]))
+	copy(sevsnpRequest.UserData[:], []byte(reportData[:]))
 	sevsnpRequest.Vmpl = 0
 
 	sevsnpRequestIoctl.MsgVersion = 1
@@ -63,9 +101,5 @@ func (adapter *sevsnpAdapter) CollectEvidence(nonce []byte) (*connector.Evidence
 	data := sevsnpRequestIoctl.RespData.Data[32:SevSnpMsgReportSize]
 	fmt.Println(base64.StdEncoding.EncodeToString(data))
 
-	return &connector.Evidence{
-		Type:     1,
-		Evidence: data,
-		UserData: adapter.uData,
-	}, nil
+	return data, nil
 }
