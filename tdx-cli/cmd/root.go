@@ -33,6 +33,7 @@ func init() {
 	logrus.SetFormatter(&simpleFormatter{})
 
 	rootCmd.AddCommand(newEvidenceCommand())
+	rootCmd.AddCommand(newProvisionAkCommand())
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

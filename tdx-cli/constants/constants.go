@@ -22,6 +22,7 @@ const (
 	VersionCmd       = "version"
 	VerifyCmd        = "verify"
 	EvidenceCmd      = "evidence"
+	ProvisionAkCmd   = "provision-ak"
 )
 
 // Options Names

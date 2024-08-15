@@ -62,6 +62,9 @@ type TpmConfig struct {
 	OwnerAuth string `json:"owner_auth"`
 	// PcrSelections is the list of PCR banks and indices that are included in TPM quotes
 	PcrSelections string `json:"pcr_selections"`
+	// AkCertificateUri is the URI of the AK certificate.  Currently, "file://{full path}" and
+	// "nvram://{index in hex}" are supported.
+	AkCertificateUri string `json:"ak_certificate"`
 }
 
 func init() {

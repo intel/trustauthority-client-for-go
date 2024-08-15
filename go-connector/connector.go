@@ -7,7 +7,9 @@ package connector
 
 import (
 	"context"
+	"crypto/rsa"
 	"crypto/tls"
+	"crypto/x509"
 	"net/http"
 	"net/url"
 	"strings"
@@ -26,6 +28,11 @@ type Connector interface {
 	GetToken(GetTokenArgs) (GetTokenResponse, error)
 	Attest(AttestArgs) (AttestResponse, error)
 	VerifyToken(string) (*jwt.Token, error)
+
+	// GetAkCertificate sends the TPM's EK certificate, the AK's public key, and the AK's name
+	// to Intel Trust Authority and returns an encrypted AK certificate, a secret, and credential blob
+	// that can be decrypted by the TPM (ActivateCredential command).
+	GetAKCertificate(ekCert *x509.Certificate, akPublic *rsa.PublicKey, akName []byte) ([]byte, []byte, []byte, error)
 
 	// AttestEvidence sends evidence to the Trust Authority for attestation
 	AttestEvidence(evidence interface{}, reqId string) (AttestResponse, error)

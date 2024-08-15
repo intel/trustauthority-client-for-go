@@ -11,6 +11,25 @@ import (
 )
 
 type TrustedPlatformModule interface {
+	// CreateEK persists a new Endorsement Key in the endorsement hierarchy at the specified
+	// handle. It fails if the handle is not within range of persistent handles or, if the
+	// handle already exists (it should be deleted using tpm2-evictcontrol -c {handle}).
+	//
+	// The EK is used to perform decryption when interacting ITA during AK provisioning.
+	CreateEK(ekHandle int) error
+
+	// CreateAK persists an AK in the owner hierarchy at the specified handle ('akHandle').
+	// It requires the handle of the EK ('ekHandle').  It fails if akHandle is not within
+	// the range of a persistent handle, if 'akHandle' already exists, or if the EK at
+	// 'ekHandle' does not exist.
+	//
+	// The AK is used to sign quotes during remote attestation and is rooted through the
+	// EK to the endorsement hierachy (root of trust).
+	CreateAK(akHandle int, ekHandle int) error
+
+	// ActivateCredential decrypts a credential blob using the secret and the AK at 'akHandle'.
+	ActivateCredential(ekHandle int, akHandle int, credentialBlob []byte, secret []byte) ([]byte, error)
+
 	// NVRead reads the bytes from the specified nv index/handle.  It returns an
 	// error if the handle is not within the range of valid nv ram or if the index
 	// does not exist.

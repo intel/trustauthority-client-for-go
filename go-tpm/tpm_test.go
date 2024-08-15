@@ -12,6 +12,11 @@ import (
 // TODO [CASSINI-17044]: Current unit tests are for debugging phyical TPMs and will be
 // be updated at a later date.
 
+var (
+	testEkHandle = 0x81000F00
+	testAkHandle = 0x81000F01
+)
+
 func init() {
 	logrus.SetLevel(logrus.DebugLevel)
 	logrus.SetReportCaller(true)
