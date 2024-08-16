@@ -7,11 +7,8 @@ package connector
 
 import (
 	"bytes"
-	"crypto/rsa"
 	"crypto/x509"
-	"encoding/hex"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,9 +18,8 @@ import (
 )
 
 type akCertificateRequest struct {
-	AkName           string `json:"ak_name"`
-	AkPublicKeyPem   []byte `json:"ak_public_key_pem"`
 	EkCertificateDer []byte `json:"ek_certificate_der"`
+	AKTpmtPublic     []byte `json:"ak_tpmt_public"`
 }
 
 type akCertificateRequestResponse struct {
@@ -32,24 +28,12 @@ type akCertificateRequestResponse struct {
 	EncryptedAkCertDer []byte `json:"encrypted_ak_cert_der"`
 }
 
-func (connector *trustAuthorityConnector) GetAKCertificate(ekCert *x509.Certificate, akPublic *rsa.PublicKey, akName []byte) ([]byte, []byte, []byte, error) {
+func (connector *trustAuthorityConnector) GetAKCertificate(ekCert *x509.Certificate, akTpmtPublic []byte) ([]byte, []byte, []byte, error) {
 	url := fmt.Sprintf("%s/ak-provisioning/v1/ak-cert", connector.cfg.ApiUrl)
 
-	pubBytes, err := x509.MarshalPKIXPublicKey(akPublic)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	// Create a PEM block for the public key
-	akPemBlock := &pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: pubBytes,
-	}
-
 	akCertRequest := akCertificateRequest{
-		AkName:           hex.EncodeToString(akName),
+		AKTpmtPublic:     akTpmtPublic,
 		EkCertificateDer: ekCert.Raw,
-		AkPublicKeyPem:   pem.EncodeToMemory(akPemBlock),
 	}
 
 	requestBody, err := json.Marshal(akCertRequest)

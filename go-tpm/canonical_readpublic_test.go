@@ -13,5 +13,14 @@ import (
 // be updated at a later date.
 
 func TestReadPublic(t *testing.T) {
+	tpm, err := New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tpm.Close()
 
+	_, _, _, err = tpm.ReadPublic(DefaultAkHandle)
+	if err != nil {
+		t.Fatal(err)
+	}
 }

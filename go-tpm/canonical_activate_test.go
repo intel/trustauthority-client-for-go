@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/canonical/go-tpm2"
+	"github.com/canonical/go-tpm2/mu"
 	"github.com/canonical/go-tpm2/objectutil"
 )
 
@@ -23,7 +24,7 @@ func TestPhysicalActivateCredential(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, akName, _, err := tpm.ReadPublic(testAkHandle)
+	_, tpmtPublic, _, err := tpm.ReadPublic(testAkHandle)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +41,7 @@ func TestPhysicalActivateCredential(t *testing.T) {
 		t.Fatal(errors.New("Failed to cast the ek public to rsa.PublicKey"))
 	}
 
-	credentialBlob, secret, err := makeCredential(rsaPub, akName)
+	credentialBlob, secret, err := makeCredential(rsaPub, tpmtPublic)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +63,8 @@ func TestPhysicalActivateCredential(t *testing.T) {
 	}
 }
 
-func makeCredential(rsaPub *rsa.PublicKey, akName []byte) ([]byte, []byte, error) {
+// This simulates the Trust Authority's GetAKCertificate method
+func makeCredential(rsaPub *rsa.PublicKey, tpmtPublic []byte) ([]byte, []byte, error) {
 	tpm2Key := &tpm2.Public{
 		Type:    tpm2.ObjectTypeRSA,
 		NameAlg: tpm2.HashAlgorithmSHA256,
@@ -97,7 +99,18 @@ func makeCredential(rsaPub *rsa.PublicKey, akName []byte) ([]byte, []byte, error
 		},
 	}
 
-	credentialBlob, secret, err := objectutil.MakeCredential(rand.Reader, tpm2Key, []byte(fakeAesKey), tpm2.Name(akName))
+	var tp tpm2.Public
+	_, err := mu.UnmarshalFromBytes(tpmtPublic, &tp)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	akName, err := tp.ComputeName()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	credentialBlob, secret, err := objectutil.MakeCredential(rand.Reader, tpm2Key, []byte(fakeAesKey), akName)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -8,7 +8,6 @@ package cmd
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
@@ -112,14 +111,9 @@ func provisionAk(ekHandle int, akHandle int, ctr connector.Connector, t tpm.Trus
 	}
 	logrus.Debugf("Successfully created AK at handle %x\n", akHandle)
 
-	akPublic, akName, _, err := t.ReadPublic(akHandle)
+	_, akTpmtPublic, _, err := t.ReadPublic(akHandle)
 	if err != nil {
 		return nil, err
-	}
-
-	rsaAkPub, ok := akPublic.(*rsa.PublicKey)
-	if !ok {
-		return nil, errors.New("Failed to convert the AK public to RSA public key")
 	}
 
 	// Get the EK certificate
@@ -128,7 +122,7 @@ func provisionAk(ekHandle int, akHandle int, ctr connector.Connector, t tpm.Trus
 		return nil, err
 	}
 
-	credentialBlob, secret, payload, err := ctr.GetAKCertificate(ekCert, rsaAkPub, akName)
+	credentialBlob, secret, payload, err := ctr.GetAKCertificate(ekCert, akTpmtPublic)
 	if err != nil {
 		return nil, err
 	}
