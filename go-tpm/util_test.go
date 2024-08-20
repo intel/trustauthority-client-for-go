@@ -44,15 +44,15 @@ func TestDefault(t *testing.T) {
 // TODO [CASSINI-17044]: Current unit tests are for debugging phyical TPMs and will be
 // be updated at a later date.
 
-var testPcrSelections = map[string][]tpm.PcrSelection{
-	"": []tpm.PcrSelection{},
-	"sha1:1,2,3": []tpm.PcrSelection{
+var testPcrSelections = map[string][]PcrSelection{
+	"": []PcrSelection{},
+	"sha1:1,2,3": []PcrSelection{
 		{
 			Hash: crypto.SHA1,
 			Pcrs: []int{1, 2, 3},
 		},
 	},
-	"sha1:1,2,3+sha256:1,2,3": []tpm.PcrSelection{
+	"sha1:1,2,3+sha256:1,2,3": []PcrSelection{
 		{
 			Hash: crypto.SHA1,
 			Pcrs: []int{1, 2, 3},
