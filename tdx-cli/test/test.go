@@ -32,7 +32,7 @@ var attestationToken = `
 
 func MockTrustAuthorityServer(t *testing.T) *httptest.Server {
 	nonceApi := "/appraisal/v1/nonce"
-	attestApi := "/appraisal/v2/attest/azure"
+	attestApi := "/appraisal/v2/attest"
 
 	r := mux.NewRouter()
 
