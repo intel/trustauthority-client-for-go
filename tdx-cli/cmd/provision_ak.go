@@ -6,8 +6,6 @@
 package cmd
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
@@ -122,7 +120,7 @@ func provisionAk(ekHandle int, akHandle int, ctr connector.Connector, t tpm.Trus
 		return nil, err
 	}
 
-	credentialBlob, secret, payload, err := ctr.GetAKCertificate(ekCert, akTpmtPublic)
+	credentialBlob, secret, cipherText, err := ctr.GetAKCertificate(ekCert, akTpmtPublic)
 	if err != nil {
 		return nil, err
 	}
@@ -134,9 +132,14 @@ func provisionAk(ekHandle int, akHandle int, ctr connector.Connector, t tpm.Trus
 	}
 
 	// decrypt the ak certificate in the payload
-	akDer, err := aesDecrypt(payload, aesKey)
+	akDer, err := tpm.AesDecrypt(cipherText, aesKey)
 	if err != nil {
 		return nil, err
+	}
+
+	// zeroize aes key
+	for i := range aesKey {
+		aesKey[i] = 0
 	}
 
 	// verify certificate
@@ -146,30 +149,4 @@ func provisionAk(ekHandle int, akHandle int, ctr connector.Connector, t tpm.Trus
 	}
 
 	return akCert, nil
-}
-
-func aesDecrypt(cipherText, key []byte) ([]byte, error) {
-	if len(key) == 0 {
-		return nil, errors.New("invalid parameter. length of key is zero")
-	}
-	// generate a new aes cipher using key
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, err
-	}
-
-	nonceSize := gcm.NonceSize()
-
-	// here we decrypt data using the Open function
-	plaintext, err := gcm.Open(nil, cipherText[:nonceSize], cipherText[nonceSize:], nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return plaintext, nil
 }

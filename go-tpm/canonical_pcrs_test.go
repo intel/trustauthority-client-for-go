@@ -13,11 +13,16 @@ import (
 // be updated at a later date.
 
 func TestGetPcrs(t *testing.T) {
-	tpm, err := New()
+	tpm, err := newTestTpm()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer tpm.Close()
+
+	err = resetTestTpm(tpm)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	pcrs, err := tpm.GetPcrs()
 	if err != nil {

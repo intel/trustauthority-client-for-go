@@ -7,6 +7,8 @@ package tpm
 
 import (
 	"crypto"
+	"crypto/aes"
+	"crypto/cipher"
 	"sort"
 	"strconv"
 	"strings"
@@ -14,6 +16,33 @@ import (
 	"github.com/canonical/go-tpm2"
 	"github.com/pkg/errors"
 )
+
+// AesDecrypt uses GCM to decrypt the cipherText using the key.
+// The caller is responsible for zeroing out the key after use.
+func AesDecrypt(cipherText, key []byte) ([]byte, error) {
+	if len(key) == 0 {
+		return nil, errors.New("invalid parameter. length of key is zero")
+	}
+
+	// generate a new aes cipher using key
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	nonceSize := gcm.NonceSize()
+	plaintext, err := gcm.Open(nil, cipherText[:nonceSize], cipherText[nonceSize:], nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
+}
 
 // toTpm2PcrSelectionList takes in an array of PcrSelection structs and converts them to a
 // tpm2.PCRSelectionList.  If no selection is provided, the defaultPcrSelections is used.

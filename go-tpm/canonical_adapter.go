@@ -7,6 +7,12 @@ package tpm
 
 import (
 	"crypto/sha256"
+	"crypto/x509"
+	"encoding/pem"
+	"net/url"
+	"os"
+	"strconv"
+	"strings"
 
 	"github.com/intel/trustauthority-client/go-connector"
 
@@ -106,6 +112,36 @@ func WithPcrSelections(selections string) TpmAdapterOptions {
 	}
 }
 
+// WithAkCertificateUri specifies the full path to an AK certificate file
+// in PEM format that will be used by ITA to verify the TPM quotes.
+func WithAkCertificateUri(uriString string) TpmAdapterOptions {
+	return func(tca *tpmCompositeAdapter) error {
+		uri, err := url.Parse(uriString)
+		if err != nil {
+			return errors.Wrapf(err, "Failed to parse AK certificate URI %s", uriString)
+		}
+
+		if uri.Scheme == "file" {
+			_, err := os.Stat(uri.Path)
+			if err != nil {
+				return errors.Wrapf(err, "Failed to read AK certificate file path %s", uri.Path)
+			}
+		} else if uri.Scheme == "nvram" {
+			// just verify that it is a valid hex string (don't attempt to read from the TPM)
+			hexString := strings.TrimPrefix(uri.Path, "0x")
+			_, err := strconv.ParseInt(hexString, 16, 64)
+			if err != nil {
+				return errors.Wrapf(err, "Failed to parse NV index %s", uri.Path)
+			}
+		} else {
+			return errors.Errorf("Unsupported URI scheme %s", uri.Scheme)
+		}
+
+		tca.akCertificateUri = uri
+		return nil
+	}
+}
+
 func (tca *tpmCompositeAdapter) GetEvidenceIdentifier() string {
 	return "tpm"
 }
@@ -135,18 +171,30 @@ func (tca *tpmCompositeAdapter) GetEvidence(verifierNonce *connector.VerifierNon
 		return nil, err
 	}
 
+	// When specified by WithAkCertificatePath, read the AK certificate from the
+	// file system, convert it to der format so that it is included in the evidence.
+	var akDer []byte
+	if tca.akCertificateUri != nil {
+		akDer, err = readAkCertificate(tca.akCertificateUri, tpm)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	tpmEvidence := struct {
 		Q []byte                   `json:"quote"`
 		S []byte                   `json:"signature"`
 		P []byte                   `json:"pcrs"`
 		U []byte                   `json:"user_data,omitempty"`
 		V *connector.VerifierNonce `json:"verifier_nonce,omitempty"`
+		A []byte                   `json:"ak_certificate_der,omitempty"`
 	}{
 		Q: quote,
 		S: signature,
 		P: pcrs,
 		U: userData,
 		V: verifierNonce,
+		A: akDer,
 	}
 
 	return &tpmEvidence, nil
@@ -181,4 +229,43 @@ func createNonceHash(verifierNonce *connector.VerifierNonce, userData []byte) ([
 	}
 
 	return h.Sum(nil), nil
+}
+
+func readAkCertificate(akUri *url.URL, tpm TrustedPlatformModule) ([]byte, error) {
+	var akPemBytes []byte
+	var err error
+
+	if akUri.Scheme == "file" {
+		akPemBytes, err = os.ReadFile(akUri.Path)
+		if err != nil {
+			return nil, errors.Wrapf(err, "Failed to read AK certificate PEM from file %s", akUri.Path)
+		}
+	} else if akUri.Scheme == "nvram" {
+		hexString := strings.TrimPrefix(akUri.Path, "0x")
+		nvIdx, err := strconv.ParseInt(hexString, 16, 64)
+		if err != nil {
+			return nil, errors.Wrapf(err, "Failed to parse NV index %s", akUri.Path)
+		}
+
+		akPemBytes, err = tpm.NVRead(int(nvIdx))
+		if err != nil {
+			return nil, errors.Wrapf(err, "Failed to read AK certificate from NV index %x", nvIdx)
+		}
+	}
+
+	block, _ := pem.Decode(akPemBytes)
+	if block == nil {
+		return nil, errors.New("Failed to decode the AK certificate's PEM block")
+	}
+
+	if block.Type != "CERTIFICATE" {
+		return nil, errors.Errorf("Expected PEM type 'CERTIFICATE' but got %s", block.Type)
+	}
+
+	akCert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to parse AK certificate")
+	}
+
+	return akCert.Raw, nil
 }

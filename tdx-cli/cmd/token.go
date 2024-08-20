@@ -239,7 +239,14 @@ func getToken(cmd *cobra.Command) error {
 			return errors.Errorf("TPM configuration not found in config file %q", configFile)
 		}
 
-		tpmAdapter, err := tpm.NewEvidenceAdapter(int(config.Tpm.AkHandle), config.Tpm.PcrSelections, config.Tpm.OwnerAuth)
+		tpmOptions := []tpm.TpmAdapterOptions{
+			tpm.WithAkHandle(int(config.Tpm.AkHandle)),
+			tpm.WithOwnerAuth(config.Tpm.OwnerAuth),
+			tpm.WithPcrSelections(config.Tpm.PcrSelections),
+			tpm.WithAkCertificateUri(config.Tpm.AkCertificateUri),
+		}
+
+		tpmAdapter, err := tpm.NewEvidenceAdapterWithOptions(tpmOptions...)
 		if err != nil {
 			return err
 		}
