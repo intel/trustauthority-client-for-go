@@ -148,8 +148,8 @@ func (m *MockConnector) VerifyToken(s string) (*jwt.Token, error) {
 	return args.Get(0).(*jwt.Token), args.Error(1)
 }
 
-func (m *MockConnector) GetAKCertificate(ekCert *x509.Certificate, akPublic *rsa.PublicKey, akName []byte) ([]byte, []byte, []byte, error) {
-	args := m.Called(ekCert, akPublic, akName)
+func (m *MockConnector) GetAKCertificate(ekCert *x509.Certificate, tpmtPublic []byte) ([]byte, []byte, []byte, error) {
+	args := m.Called(ekCert, tpmtPublic)
 	return args.Get(0).([]byte), args.Get(1).([]byte), args.Get(2).([]byte), args.Error(3)
 }
 

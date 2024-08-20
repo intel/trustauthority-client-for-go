@@ -22,7 +22,7 @@ func TestAkProvisioningPositive(t *testing.T) {
 	mockTpm.On("ActivateCredential", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(testAesKey, nil)
 
 	mockConnector := &MockConnector{}
-	mockConnector.On("GetAKCertificate", mock.Anything, mock.Anything, mock.Anything).Return([]byte{}, []byte{}, testEncryptedAkCert, nil)
+	mockConnector.On("GetAKCertificate", mock.Anything, mock.Anything).Return([]byte{}, []byte{}, testEncryptedAkCert, nil)
 
 	_, err := provisionAk(testEkHandle, testAkHandle, mockConnector, mockTpm)
 	if err != nil {
