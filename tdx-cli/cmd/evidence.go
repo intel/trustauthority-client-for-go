@@ -100,7 +100,8 @@ func newEvidenceCommand() *cobra.Command {
 				tpmAdapter, err := tpm.NewEvidenceAdapterWithOptions(
 					tpm.WithOwnerAuth(cfg.Tpm.OwnerAuth),
 					tpm.WithAkHandle(int(cfg.Tpm.AkHandle)),
-					tpm.WithPcrSelections(cfg.Tpm.PcrSelections))
+					tpm.WithPcrSelections(cfg.Tpm.PcrSelections),
+					tpm.WithAkCertificateUri(cfg.Tpm.AkCertificateUri))
 				if err != nil {
 					return err
 				}
