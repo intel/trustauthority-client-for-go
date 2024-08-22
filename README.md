@@ -1,42 +1,50 @@
----
-last_updated: 16 February 2024
----
+# Intel® Trust Authority Client for Go
 
-# Intel® Trust Authority Client
+<p style="font-size: 0.875em;">· 08/21/2024 ·</p>
 
-[Intel® Trust Authority](https://www.intel.com/content/www/us/en/security/trust-authority.html) Client for Go ("the Client") provides a set of Go modules and command line interfaces (CLI) for attesting different TEEs with Intel Trust Authority. The Client can be used by both attesters and relying parties, in either Passport or Background-check attestation mode. You can import the Go modules into your application, or you can directly invoke the CLI for Intel® TDX attestation from your application or workflow.
+[Intel® Trust Authority](https://www.intel.com/content/www/us/en/security/trust-authority.html) [Client for Go](https://docs.trustauthority.intel.com/main/articles/integrate-go-client.html) ("the client") provides a set of Go modules and a command line interfaces (CLI) for attesting different TEEs with Intel Trust Authority. The client can be used by both attesters and relying parties, in either Passport or Background-check attestation mode. You can import the Go modules into your application, or you can directly invoke the [attestation client CLI](https://docs.trustauthority.intel.com/main/articles/integrate-go-tdx-cli.html) from your application or workflow.
 
-Supported TEEs include [Intel® Software Guard Extensions](https://www.intel.com/content/www/us/en/products/docs/accelerator-engines/software-guard-extensions.html) (Intel® SGX) and [Intel® Trust Domain Extensions](https://www.intel.com/content/www/us/en/developer/tools/trust-domain-extensions/overview.html) (Intel® TDX), [Azure confidential VMs with Intel TDX](https://azure.microsoft.com/en-us/updates/confidential-vms-with-intel-tdx-dcesv5-ecesv5-public-preview/) (Preview), and Google Cloud Platform (GCP) [Confidential VMs on Intel CPUs with Intel TDX](https://cloud.google.com/blog/products/identity-security/confidential-vms-on-intel-cpus-your-datas-new-intelligent-defense) (Preview). Eventually, other platforms may be added. 
+The Intel Trust Authority Client for Go works with the following TEEs and platforms:
 
-For more information about the Client for Go and CLI for Intel TDX, see [Client integration reference](https://docs.trustauthority.intel.com/main/articles/integrate-overview.html) in the Intel Trust Authority documentation.
+| TEE or Platform | Status | Repo Branch | Notes |
+| --- | --- | --- | --- |
+| Intel® Software Guard Extensions (Intel® SGX) | GA | [**main**](https://github.com/intel/trustauthority-client-for-go/tree/main) | Bare metal host/on-premises |
+| Intel® Trust Domain Extensions (Intel® TDX) | GA | [**main**](https://github.com/intel/trustauthority-client-for-go/tree/main) | Bare metal host/on-premises |
+| Azure\* confidential VMs with Intel TDX | Preview | [**azure-tdx-preview**](https://github.com/intel/trustauthority-client-for-go/tree/azure-tdx-preview) | Pilot environment only |
+| Azure\* confidential VMs with Intel TDX and vTPM | Preview | [**tpm-preview**](https://github.com/intel/trustauthority-client-for-go/tree/tpm-preview) | Pilot environment only |
+| Google Cloud Platform\* (GCP) confidential VMs on Intel CPUs with Intel TDX | Preview | [**gcp-tdx-preview**](https://github.com/intel/trustauthority-client-for-go/tree/gcp-tdx-preview) | Pilot environment only |
+| AMD Secure Encrypted Virtualization - Secure Nested Paging\* (AMD SEV-SNP\*) | Preview | [**sevsnp-preview**](https://github.com/intel/trustauthority-client-for-go/tree/sevsnp-preview) | Pilot environment only |
 
-> [!NOTE]  
-> If you are participating in the **Azure confidential VMs with Intel TDX** (DCesv5 and ECesv5-series confidential VMs) public preview, check out [**azure-tdx-preview**](https://github.com/intel/trustauthority-client-for-go/tree/azure-tdx-preview) instead of **main**. You can use the following command to clone the repo & branch:
-> ```sh
-> git clone https://github.com/intel/trustauthority-client-for-go client -b azure-tdx-preview
-> ```
+Platforms with status **GA** are available and supported in the US and EU production environments. **Preview** TEEs and platforms are in limited-access preview status in the pilot environments only. Details of implementation and usage may change before general availability. The corresponding Intel Trust Authority attestation services for preview features are not available in the production environment. Contact your Intel representative for more information about the pilot program.
 
-> [!NOTE]
-> If you are using **Google Cloud Platform (GCP) Intel TDX VM**, check out [**gcp-tdx-preview**](https://github.com/intel/trustauthority-client-for-go/tree/gcp-tdx-preview).
-> ```sh
-> git clone https://github.com/intel/trustauthority-client-for-go client -b gcp-tdx-preview
-> ```
+You can use the clients to collect the reference values needed for attestation policies. For example, you can create a known-good state for your TEE, use the client CLI to collect evidence, and then use the collected evidence values to create an [attestation policy](https://docs.trustauthority.intel.com/main/articles/concept-policy-v2.html) for Intel Trust Authority. 
 
-## Methods of Integration
+Client libraries require **Go 1.22 or newer**. See https://go.dev/doc/install for installation of Go.
 
-The Client provides the following modules that can be imported by an application to attest Intel® SGX and Intel® TDX TEEs by using Intel Trust Authority. 
+## Repo Structure
 
-1. [go-connector](./go-connector): Provides an HTTPClient interface to communicate with Intel Trust Authority via REST APIs for remote attestations services, and functions to verify an attestation token and download the JWKS of token signing certificates. The Connector can be used by attesters or relying parties.
-1. [go-sgx](./go-sgx): Implements an adapter interface to Intel® SGX DCAP to collect evidence from an Intel SGX enclave for attestation by Intel Trust Authority. 
-1. [go-tdx](./go-tdx): Implements an adapter interface to collect evidence from an Intel TDX trust domain (TD) for attestation by Intel Trust Authority. The go-tdx adapter also implements utility functions to decrypt a blob or create a new RSA key pair. 
+The repository **main** branch contains the following principal directories:
 
-Intel Trust Authority CLI for Intel TDX [tdx-cli](./tdx-cli) provides a CLI to attest an Intel TDX TD with Intel Trust Authority. tdx-cli requires go-connector, go-tdx, and Intel SGX DCAP (only for the Intel TDX stack). See the [README](./tdx-cli/README.md) for details.
+- **go-connector**: Go modules for connecting to Intel Trust Authority services. This is the core library.
+- **go-aztdx**: Go modules for attesting Azure confidential VMs with Intel TDX and vTPM. This feature is in limited preview status. 
+- **go-sgx**: Go modules for attesting an Intel SGX enclave. 
+- **go-tdx**: Go modules for attesting Intel TDX trust domains. Every Intel TDX-enabled host platform has its own go-tdx adapter. 
+- **go-tpm**: Go modules for attesting a TPM. This feature is in limited preview status. **go-tpm** currently supports Azure confidential VMs with Intel TDX and vTPM.
+- **tdx-cli**: Attestation client command line interface (CLI). The GA version supports singular attestation of Intel TDX platforms. The preview version supports composite attestation of Azure confidential VMs with Intel TDX and vTPM. 
+- **release**: Scripts for installing the client CLI for different platforms. Usage is described in the README files for the platform.
 
-## Go Requirement
+The **trustauthority-client-for-go** repository contains branches for preview versions of the client CLI that support additional TEEs and platforms (see the table above). The preview branches are named for the TEE or platform they support. Preview branches are based on main, with modifications as required. The README files in each branch describe the prerequisites and installation for the platform. The primary documentation for all of the client adapters including preview versions is available in the Intel Trust Authority documentation [Client integration reference](https://docs.trustauthority.intel.com/main/articles/integrate-overview.html).
 
-Requires **Go 1.19 or newer**. See https://go.dev/doc/install for installation of Go.
+
+## Code of Conduct and Contributing
+
+See the [CONTRIBUTING](./CONTRIBUTING.md) file for information on how to contribute to this project. The project follows the [ Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ## License
 
 This library is distributed under the BSD-style license found in the [LICENSE](./LICENSE)
 file.
+
+<br><br>
+---
+**\*** Other names and brands may be claimed as the property of others.
