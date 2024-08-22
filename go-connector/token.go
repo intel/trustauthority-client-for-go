@@ -25,15 +25,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-// tokenRequest holds all the data required for attestation
-type tokenRequest struct {
-	Quote           []byte         `json:"quote"`
-	VerifierNonce   *VerifierNonce `json:"verifier_nonce,omitempty"`
-	RuntimeData     []byte         `json:"runtime_data,omitempty"`
-	PolicyIds       []uuid.UUID    `json:"policy_ids,omitempty"`
-	UserData        []byte         `json:"user_data,omitempty"`
-	TokenSigningAlg string         `json:"token_signing_alg,omitempty"`
-	PolicyMustMatch bool           `json:"policy_must_match",omitempty"`
+type SevSnpRequest struct {
+	Report        []byte         `json:"report"`
+	VerifierNonce *VerifierNonce `json:"verifier_nonce,omitempty"`
+	RuntimeData   []byte         `json:"runtime_data,omitempty"`
+	UserData      []byte         `json:"user_data,omitempty"`
+}
+
+// TokenRequest hols sevsnp data required for attestation
+type TokenRequest struct {
+	PolicyIds       []uuid.UUID   `json:"policy_ids,omitempty"`
+	TokenSigningAlg string        `json:"token_signing_alg,omitempty"`
+	PolicyMustMatch bool          `json:"policy_must_match",omitempty"`
+	SevsnpRequest   SevSnpRequest `json:"sevsnp"`
 }
 
 // AttestationTokenResponse holds the token recieved from Intel Trust Authority
@@ -46,14 +50,18 @@ func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenR
 	url := connector.cfg.ApiUrl + attestEndpoint
 
 	newRequest := func() (*http.Request, error) {
-		tr := tokenRequest{
-			Quote:           args.Evidence.Quote,
-			VerifierNonce:   args.Nonce,
-			RuntimeData:     args.Evidence.RuntimeData,
+		sr := SevSnpRequest{
+			Report:        args.SevSnpEvidence.Report,
+			VerifierNonce: args.Nonce,
+			RuntimeData:   args.SevSnpEvidence.RuntimeData,
+			UserData:      args.SevSnpEvidence.UserData,
+		}
+
+		tr := TokenRequest{
 			PolicyIds:       args.PolicyIds,
-			UserData:        args.Evidence.UserData,
 			TokenSigningAlg: args.TokenSigningAlg,
 			PolicyMustMatch: args.PolicyMustMatch,
+			SevsnpRequest:   sr,
 		}
 
 		body, err := json.Marshal(tr)
@@ -61,6 +69,7 @@ func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenR
 			return nil, err
 		}
 
+		fmt.Println(string(body))
 		return http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
 	}
 

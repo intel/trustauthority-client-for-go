@@ -33,6 +33,10 @@ type EvidenceAdapter interface {
 	CollectEvidence(nonce []byte) (*Evidence, error)
 }
 
+type SevSnpEvidenceAdapter interface {
+	CollectEvidence(nonce []byte) (*SevSnpEvidence, error)
+}
+
 // GetNonceArgs holds the request parameters needed for getting nonce from Intel Trust Authority
 type GetNonceArgs struct {
 	RequestId string
@@ -47,7 +51,7 @@ type GetNonceResponse struct {
 // GetTokenArgs holds the request parameters needed for getting token from Intel Trust Authority
 type GetTokenArgs struct {
 	Nonce           *VerifierNonce
-	Evidence        *Evidence
+	SevSnpEvidence  *SevSnpEvidence
 	PolicyIds       []uuid.UUID
 	RequestId       string
 	TokenSigningAlg string
@@ -62,7 +66,7 @@ type GetTokenResponse struct {
 
 // AttestArgs holds the request parameters needed for attestation with Intel Trust Authority
 type AttestArgs struct {
-	Adapter         EvidenceAdapter
+	Adapter         SevSnpEvidenceAdapter
 	PolicyIds       []uuid.UUID
 	RequestId       string
 	TokenSigningAlg string
@@ -81,6 +85,13 @@ type Evidence struct {
 	Quote       []byte
 	UserData    []byte
 	EventLog    []byte
+	RuntimeData []byte
+}
+
+// SevSnpEvidence is used to store SEVSNP report to be sent for Attestation
+type SevSnpEvidence struct {
+	Report      []byte
+	UserData    []byte
 	RuntimeData []byte
 }
 

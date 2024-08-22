@@ -12,8 +12,8 @@ const (
 	HeaderRequestId   = "request-id"
 	HeaderTraceId     = "trace-id"
 
-	nonceEndpoint  = "/appraisal/v1/nonce"
-	attestEndpoint = "/appraisal/v1/attest/azure/tdxvm"
+	nonceEndpoint  = "/appraisal/v2/nonce"
+	attestEndpoint = "/appraisal/v2/attest/azure"
 
 	mimeApplicationJson        = "application/json"
 	AtsCertChainMaxLen         = 10
