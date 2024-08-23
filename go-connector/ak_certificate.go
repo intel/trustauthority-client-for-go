@@ -29,9 +29,7 @@ type akCertificateRequestResponse struct {
 }
 
 func (connector *trustAuthorityConnector) GetAKCertificate(ekCert *x509.Certificate, akTpmtPublic []byte) ([]byte, []byte, []byte, error) {
-	// TODO:  The API-GW endpoint is not yet available.  The following is a placeholder.
-	//url := fmt.Sprintf("%s/ak-provisioning/v1/ak-cert", connector.cfg.ApiUrl)
-	url := fmt.Sprintf("%s/azure-attestation/attest/OpenEnclave", connector.cfg.ApiUrl)
+	url := fmt.Sprintf("%s/ak-provisioning/v1/ak-certs", connector.cfg.ApiUrl)
 
 	akCertRequest := akCertificateRequest{
 		AKTpmtPublic:     akTpmtPublic,
