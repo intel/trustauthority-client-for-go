@@ -26,7 +26,7 @@ func (tpm *canonicalTpm) ActivateCredential(ekHandle int, akHandle int, credenti
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to create resource context for handle %x", akHandle)
 	}
-	akContext.SetAuthValue([]byte{}) // KWT:  Support customer defined AK passwords in config
+	akContext.SetAuthValue(tpm.ownerAuth)
 
 	// verify the ek handle and create an "ekContext" needed for ActivateCredential
 	ek := tpm2.Handle(ekHandle)

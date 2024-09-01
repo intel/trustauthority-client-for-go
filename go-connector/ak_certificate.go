@@ -13,6 +13,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -51,7 +52,7 @@ func (connector *trustAuthorityConnector) GetAKCertificate(ekCert *x509.Certific
 		headerXApiKey:     connector.cfg.ApiKey,
 		headerAccept:      mimeApplicationJson,
 		headerContentType: mimeApplicationJson,
-		// KWT TODO: HeaderRequestId: args.RequestId,
+		HeaderRequestId:   uuid.New().String(),
 	}
 
 	var response akCertificateRequestResponse

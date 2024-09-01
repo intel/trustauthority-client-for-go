@@ -12,9 +12,7 @@ const (
 	HeaderRequestId   = "request-id"
 	HeaderTraceId     = "trace-id"
 
-	nonceEndpoint = "/appraisal/v1/nonce"
-	// TODO:  "tpm only" attestation should be directed to /azure.
-	//	attestEndpoint = "/appraisal/v2/attest/azure"
+	nonceEndpoint  = "/appraisal/v1/nonce"
 	attestEndpoint = "/appraisal/v2/attest"
 
 	mimeApplicationJson        = "application/json"

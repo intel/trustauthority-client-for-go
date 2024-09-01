@@ -57,7 +57,7 @@ func (tpm *canonicalTpm) CreateAK(akHandle int, ekHandle int) error {
 	}
 
 	// create a public key template and key
-	options := []objectutil.PublicTemplateOption{objectutil.WithoutDictionaryAttackProtection()} // KWT:  dictionary remove?
+	options := []objectutil.PublicTemplateOption{objectutil.WithoutDictionaryAttackProtection()}
 	akTemplate := objectutil.NewRSAAttestationKeyTemplate(options...)
 	private, public, _, _, _, err := tpm.ctx.Create(ekContext, nil, akTemplate, nil, nil, session)
 	if err != nil {
