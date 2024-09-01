@@ -10,7 +10,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"os"
 
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
@@ -48,6 +47,22 @@ func newProvisionAkCommand() *cobra.Command {
 				return errors.Wrap(err, "Failed to create connector")
 			}
 
+			if cfg.Tpm == nil {
+				return errors.Errorf("TPM configuration not found in config file %q", configPath)
+			}
+
+			ekHandle := cfg.Tpm.EkHandle
+			if ekHandle == 0 {
+				logrus.Infof("Using default EK handle: 0x%x", tpm.DefaultEkHandle)
+				ekHandle = tpm.DefaultEkHandle
+			}
+
+			akHandle := cfg.Tpm.AkHandle
+			if akHandle == 0 {
+				logrus.Infof("Using default AK handle: 0x%x", tpm.DefaultAkHandle)
+				akHandle = tpm.DefaultAkHandle
+			}
+
 			// create and open an instance of a TrustedPlatformModule that will be
 			// used to allocate keys, etc. on the TPM device
 			tpm, err := tpm.New(tpm.WithTpmOwnerAuth(cfg.Tpm.OwnerAuth))
@@ -56,9 +71,8 @@ func newProvisionAkCommand() *cobra.Command {
 			}
 			defer tpm.Close()
 
-			akCert, err := provisionAk(int(cfg.Tpm.EkHandle), int(cfg.Tpm.AkHandle), ctr, tpm)
+			akCert, err := provisionAk(int(ekHandle), int(akHandle), ctr, tpm)
 			if err != nil {
-				fmt.Fprintln(os.Stderr, err.Error())
 				return err
 			}
 

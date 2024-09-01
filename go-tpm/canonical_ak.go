@@ -12,10 +12,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// TODO:  debug the scenario when owner and endorsement passwords are set on the TPM
 func (tpm *canonicalTpm) CreateAK(akHandle int, ekHandle int) error {
 
-	// make sure the akHandle is a valid persistant handle and it DOES NOT exist
+	// make sure the akHandle is within range, a valid persistant handle and it DOES NOT exist
+	if akHandle < minPersistentHandle || akHandle > maxPersistentHandle {
+		return ErroHandleOutOfRange
+	}
+
 	ak := tpm2.Handle(akHandle)
 	if ak.Type() != tpm2.HandleTypePersistent {
 		return ErrInvalidHandle

@@ -2,6 +2,7 @@
 SHELL := /bin/bash
 TPM_SIMULATOR_IMAGE_NAME := tpm-simulator
 TPM_SIMULATOR_IMAGE_EXISTS := $(shell docker images -q $(TPM_SIMULATOR_IMAGE_NAME))
+SIMULATOR_TEST_TARGETS := 'TestEndToEnd|TestAdapter'
 
 default: test
 
@@ -31,7 +32,7 @@ stop-simulator:
 
 run-unit-tests:
 	@echo "Running unit tests..."
-	go test -v -run TestEndToEnd -coverprofile=cover.out -- -tpm-device=mssim
+	go test -v -run $(SIMULATOR_TEST_TARGETS) -coverprofile=cover.out -- -tpm-device=mssim
 	go tool cover -func=cover.out && go tool cover -html=cover.out -o cover.html || exit 1
 
 # default, wrapper target that starts the simulator, runs the unit tests, and stops the simulator

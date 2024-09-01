@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/intel/trustauthority-client/go-connector"
+	"github.com/sirupsen/logrus"
 
 	"github.com/pkg/errors"
 )
@@ -23,10 +24,11 @@ import (
 type TpmAdapterOptions func(*tpmCompositeAdapter) error
 
 type tpmCompositeAdapter struct {
-	akHandle      int
-	pcrSelections []PcrSelection
-	deviceType    TpmDeviceType
-	ownerAuth     string
+	akHandle         int
+	pcrSelections    []PcrSelection
+	deviceType       TpmDeviceType
+	ownerAuth        string
+	akCertificateUri *url.URL
 }
 
 var defaultAdapter = tpmCompositeAdapter{
@@ -116,6 +118,12 @@ func WithPcrSelections(selections string) TpmAdapterOptions {
 // in PEM format that will be used by ITA to verify the TPM quotes.
 func WithAkCertificateUri(uriString string) TpmAdapterOptions {
 	return func(tca *tpmCompositeAdapter) error {
+		// Azure vTPM does not require an AK certificate -- an empty string is allowed
+		if uriString == "" {
+			logrus.Warn("The ak_certifiate configuration is not defined will not be included in TPM evidence.")
+			return nil
+		}
+
 		uri, err := url.Parse(uriString)
 		if err != nil {
 			return errors.Wrapf(err, "Failed to parse AK certificate URI %s", uriString)

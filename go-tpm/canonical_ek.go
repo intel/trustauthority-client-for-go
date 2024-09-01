@@ -13,7 +13,11 @@ import (
 
 func (tpm *canonicalTpm) CreateEK(ekHandle int) error {
 
-	// Verify the type and handle and make sure it doesn't already exist
+	// make sure the ekHandle is within range, a valid persistant handle and it DOES NOT exist
+	if ekHandle < minPersistentHandle || ekHandle > maxPersistentHandle {
+		return ErroHandleOutOfRange
+	}
+
 	handle := tpm2.Handle(ekHandle)
 	if handle.Type() != tpm2.HandleTypePersistent {
 		return ErrInvalidHandle
