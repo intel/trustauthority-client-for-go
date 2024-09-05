@@ -69,7 +69,7 @@ func getQuote(cmd *cobra.Command) error {
 		}
 		err = json.Unmarshal(nonceBytes, &verifierNonce)
 		if err != nil {
-			fmt.Println("Unmarshall error: ", err.Error())
+			return errors.Errorf("Unmarshall error: %s", err.Error())
 		}
 		nonceBytes = append(verifierNonce.Val, verifierNonce.Iat[:]...)
 	}
