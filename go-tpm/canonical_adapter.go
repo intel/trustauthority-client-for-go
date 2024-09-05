@@ -120,7 +120,7 @@ func WithAkCertificateUri(uriString string) TpmAdapterOptions {
 	return func(tca *tpmCompositeAdapter) error {
 		// Azure vTPM does not require an AK certificate -- an empty string is allowed
 		if uriString == "" {
-			logrus.Warn("The ak_certifiate configuration is not defined will not be included in TPM evidence.")
+			logrus.Warn("The ak_certificate configuration is not defined will not be included in TPM evidence.")
 			return nil
 		}
 
