@@ -90,6 +90,15 @@ func parsePcrSelections(args string) ([]PcrSelection, error) {
 		intsStr := parts[1]
 		banks := strings.Split(intsStr, ",")
 		for _, str := range banks {
+
+			// ex. "sha1:all" (add all 24 banks)
+			if str == "all" {
+				for i := 0; i < 24; i++ {
+					pcrSelection.Pcrs = append(pcrSelection.Pcrs, i)
+				}
+				continue
+			}
+
 			bank, err := strconv.Atoi(str)
 			if err != nil {
 				return nil, errors.Errorf("Failed to parse PCR bank %q", str)

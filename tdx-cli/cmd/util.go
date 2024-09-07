@@ -7,6 +7,7 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -28,8 +29,15 @@ func loadConfig(configFile string) (*Config, error) {
 		return nil, errors.Wrapf(err, "Error reading config from file")
 	}
 
+	return newConfig(configJson)
+}
+
+func newConfig(configJson []byte) (*Config, error) {
+
 	var config Config
-	err = json.Unmarshal(configJson, &config)
+	dec := json.NewDecoder(bytes.NewReader(configJson))
+	dec.DisallowUnknownFields()
+	err := dec.Decode(&config)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error unmarshalling JSON from config")
 	}

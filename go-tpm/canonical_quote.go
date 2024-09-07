@@ -12,9 +12,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// GetQuote returns a TPM quote for the given nonce using the specified AK handle.  Rturns
-// an error if the akHandle is invalid or does not exist.    If 'selection'
-// is not provided, then all sha1 and sha256 banks will be included in the quote.
 func (tpm *canonicalTpm) GetQuote(akHandle int, nonce []byte, selection ...PcrSelection) ([]byte, []byte, error) {
 	logrus.Debugf("Collecting TPM quote using AK handle %x", akHandle)
 

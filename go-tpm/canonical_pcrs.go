@@ -12,10 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// GetPcrs returns the "flattened", concatenated, contiguous PCR measurements
-// for SHA-256 banks 0-23 (in index order).  This is similar to the pcr values
-// returned in tpm2_quote when '-F values' options are provided.  If 'selection'
-// is not provided, then all sha1 and sha256 banks are included in the results.
 func (tpm *canonicalTpm) GetPcrs(selection ...PcrSelection) ([]byte, error) {
 	pcrSelection, err := toTpm2PcrSelectionList(selection...)
 	if err != nil {

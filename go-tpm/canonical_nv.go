@@ -11,10 +11,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// NVRead reads the bytes from the specified nv index/handle.  It returns an
-// error if the handle is not within the range of valid nv ram or if the index
-// does not exist.
 func (tpm *canonicalTpm) NVRead(nvHandle int) ([]byte, error) {
+
+	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
+		return nil, ErroHandleOutOfRange
+	}
 
 	// Verify that the provided handle is within the range of nv space
 	handle := tpm2.Handle(nvHandle)
@@ -46,10 +47,11 @@ func (tpm *canonicalTpm) NVRead(nvHandle int) ([]byte, error) {
 	return data, nil
 }
 
-// NVWRite writes bytes to the specified nv handle/index.  It returns an
-// error if the handle is not within the range of valid nv ram or if the index
-// does not exist.
 func (tpm *canonicalTpm) NVWrite(nvHandle int, data []byte) error {
+
+	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
+		return ErroHandleOutOfRange
+	}
 
 	if len(data) > maxNvSize {
 		return errors.Wrapf(ErrNvSizeExceeded, "Size %d exceeds max %d", len(data), maxNvSize)
@@ -88,9 +90,11 @@ func (tpm *canonicalTpm) NVWrite(nvHandle int, data []byte) error {
 	return nil
 }
 
-// NVDelete deletes the specified nv handle/index.  It returns an error if the
-// handle is not within the range of valid nv ram or if the index does not exist.
 func (tpm *canonicalTpm) NVDelete(nvHandle int) error {
+
+	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
+		return ErroHandleOutOfRange
+	}
 
 	// Verify that the provided handle is within the range of nv space
 	handle := tpm2.Handle(nvHandle)
@@ -116,9 +120,12 @@ func (tpm *canonicalTpm) NVDelete(nvHandle int) error {
 	return nil
 }
 
-// NVDefine creates a new nv index with the specified handle and size.  It returns
-// an error if the handle is not within the range of valid nv ram or if the index.
 func (tpm *canonicalTpm) NVDefine(nvHandle int, len int) error {
+
+	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
+		return ErroHandleOutOfRange
+	}
+
 	// Verify that the provided handle is within the range of nv space
 	handle := tpm2.Handle(nvHandle)
 	if handle.Type() != tpm2.HandleTypeNVIndex {
@@ -148,9 +155,13 @@ func (tpm *canonicalTpm) NVDefine(nvHandle int, len int) error {
 	return nil
 }
 
-// NVExists checks if the specified nv handle/index exists. It returns false if
-// the handle is not within the range of valid nv ram or if the index does not exist.
 func (tpm *canonicalTpm) NVExists(nvHandle int) bool {
+
+	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
+		logrus.Errorf("NV handle %x is out of range", nvHandle)
+		return false
+	}
+
 	handle := tpm2.Handle(nvHandle)
 	if handle.Type() != tpm2.HandleTypeNVIndex {
 		logrus.Errorf("Cannot determine if nv ram exists at invalid handle %x", nvHandle)

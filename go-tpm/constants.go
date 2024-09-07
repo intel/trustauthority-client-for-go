@@ -12,14 +12,20 @@ const (
 	DefaultEkNvIndex = 0x01c00002
 	DefaultEkHandle  = 0x81000800
 	DefaultAkHandle  = 0x81000801
+
+	// min/max "persistent" handles
+	// see "Registry of Reserved TPM 2.0 Handles and Localities" section 2.3.1
+	minPersistentHandle = 0x81000000
+	maxPersistentHandle = 0x817FFFFF
+
+	// min/max "owner" nv handles
+	// see "Registry of Reserved TPM 2.0 Handles and Localities" section 2.2.2
+	minNvHandle = 0x01000000
+	maxNvHandle = 0x01C2FFFF
 )
 
 var (
 	defaultPcrSelections = []PcrSelection{
-		{
-			Hash: crypto.SHA1,
-			Pcrs: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23},
-		},
 		{
 			Hash: crypto.SHA256,
 			Pcrs: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23},
