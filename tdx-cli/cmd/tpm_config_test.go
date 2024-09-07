@@ -12,10 +12,8 @@ import (
 )
 
 const (
-	testUrl      = "https://notused.com"
-	testApiKey   = "AAAAAA=="
-	testEkHandle = 0x81000F00
-	testAkHandle = 0x81000F01
+	testUrl    = "https://notused.com"
+	testApiKey = "AAAAAA=="
 	testAkCert = "file:///path/to/ak_cert.pem"
 )
 
@@ -27,16 +25,10 @@ var (
 	}
 
 	defaultTpmConfig = TpmConfig{
-<<<<<<< HEAD
-		OwnerAuth: "",
-		EkHandle:  HexInt(0),
-		AkHandle:  HexInt(0),
-=======
 		OwnerAuth:        "",
 		EkHandle:         HexInt(0),
 		AkHandle:         HexInt(0),
 		AkCertificateUri: "",
->>>>>>> 707d940 (Address CASSINI-22273 and other miscellaneous changes.)
 	}
 
 	defaultEmptyTpmConfig = Config{
@@ -60,17 +52,10 @@ func TestConfig(t *testing.T) {
 			// should be any errors with this config unless TPM is initiated (lazily).
 			testName: "Nil TPM Config",
 			cfgJson: `{
-<<<<<<< HEAD
-				 "trustauthority_url": "https://notused.com",
-				 "trustauthority_api_url": "https://notused.com",
-				 "trustauthority_api_key": "AAAAAA=="
-			 }`,
-=======
 				"trustauthority_url": "https://notused.com",
 				"trustauthority_api_url": "https://notused.com",
 				"trustauthority_api_key": "AAAAAA=="
 			}`,
->>>>>>> 707d940 (Address CASSINI-22273 and other miscellaneous changes.)
 			expectedConfig: &defaultConfig,
 			expectError:    false,
 		},
@@ -81,19 +66,11 @@ func TestConfig(t *testing.T) {
 			//  the go-tpm library (i.e., via code).
 			testName: "Empty TPM Config",
 			cfgJson: `{
-<<<<<<< HEAD
 				 "trustauthority_url": "https://notused.com",
 				 "trustauthority_api_url": "https://notused.com",
 				 "trustauthority_api_key": "AAAAAA==",
 				 "tpm": {}
 			 }`,
-=======
-				"trustauthority_url": "https://notused.com",
-				"trustauthority_api_url": "https://notused.com",
-				"trustauthority_api_key": "AAAAAA==",
-				"tpm": {}
-			}`,
->>>>>>> 707d940 (Address CASSINI-22273 and other miscellaneous changes.)
 			expectedConfig: &defaultEmptyTpmConfig,
 			expectError:    false,
 		},
@@ -104,17 +81,6 @@ func TestConfig(t *testing.T) {
 			//  the go-tpm library (i.e., via code).
 			testName: "Valid TPM Config with empty strings",
 			cfgJson: `{
-<<<<<<< HEAD
-				 "trustauthority_url": "https://notused.com",
-				 "trustauthority_api_url": "https://notused.com",
-				 "trustauthority_api_key": "AAAAAA==",
-				 "tpm": {
-					 "owner_auth": "",
-					 "ek_handle": "",
-					 "ak_handle": ""
-				 }
-			 }`,
-=======
 				"trustauthority_url": "https://notused.com",
 				"trustauthority_api_url": "https://notused.com",
 				"trustauthority_api_key": "AAAAAA==",
@@ -125,7 +91,6 @@ func TestConfig(t *testing.T) {
 					"ak_certificate": ""
 				}
 			}`,
->>>>>>> 707d940 (Address CASSINI-22273 and other miscellaneous changes.)
 			expectedConfig: &defaultEmptyTpmConfig,
 			expectError:    false,
 		},
@@ -133,17 +98,6 @@ func TestConfig(t *testing.T) {
 			// User provides all valid values for TPM config.
 			testName: "Valid, user specified TPM Config",
 			cfgJson: `{
-<<<<<<< HEAD
-				 "trustauthority_url": "https://notused.com",
-				 "trustauthority_api_url": "https://notused.com",
-				 "trustauthority_api_key": "AAAAAA==",
-				 "tpm": {
-					 "owner_auth": "testpassword",
-					 "ek_handle": "0x81000F00",
-					 "ak_handle": "0x81000F01"
-				 }
-			 }`,
-=======
 				"trustauthority_url": "https://notused.com",
 				"trustauthority_api_url": "https://notused.com",
 				"trustauthority_api_key": "AAAAAA==",
@@ -154,22 +108,15 @@ func TestConfig(t *testing.T) {
 					"ak_certificate": "file:///path/to/ak_cert.pem"
 				}
 			}`,
->>>>>>> 707d940 (Address CASSINI-22273 and other miscellaneous changes.)
 			expectedConfig: &Config{
 				TrustAuthorityUrl:    testUrl,
 				TrustAuthorityApiUrl: testUrl,
 				TrustAuthorityApiKey: testApiKey,
 				Tpm: &TpmConfig{
-<<<<<<< HEAD
-					OwnerAuth: "testpassword",
-					EkHandle:  HexInt(testEkHandle),
-					AkHandle:  HexInt(testAkHandle),
-=======
 					OwnerAuth:        "testpassword",
 					EkHandle:         HexInt(testEkHandle),
 					AkHandle:         HexInt(testAkHandle),
 					AkCertificateUri: testAkCert,
->>>>>>> 707d940 (Address CASSINI-22273 and other miscellaneous changes.)
 				},
 			},
 			expectError: false,
@@ -178,17 +125,6 @@ func TestConfig(t *testing.T) {
 			// Ommitted AK Certificate URI, applicable to Azure TDX+vTPM
 			testName: "Valid, user omitted AK Certificate URI",
 			cfgJson: `{
-<<<<<<< HEAD
-				 "trustauthority_url": "https://notused.com",
-				 "trustauthority_api_url": "https://notused.com",
-				 "trustauthority_api_key": "AAAAAA==",
-				 "tpm": {
-					 "owner_auth": "",
-					 "ek_handle": "",
-					 "ak_handle": ""
-				 }
-			 }`,
-=======
 				"trustauthority_url": "https://notused.com",
 				"trustauthority_api_url": "https://notused.com",
 				"trustauthority_api_key": "AAAAAA==",
@@ -198,7 +134,6 @@ func TestConfig(t *testing.T) {
 					"ak_handle": ""
 				}
 			}`,
->>>>>>> 707d940 (Address CASSINI-22273 and other miscellaneous changes.)
 			expectedConfig: &defaultEmptyTpmConfig,
 			expectError:    false,
 		},
@@ -206,17 +141,6 @@ func TestConfig(t *testing.T) {
 			// User provides invalid hex string for ek_handle
 			testName: "Invalid hex string",
 			cfgJson: `{
-<<<<<<< HEAD
-				 "trustauthority_url": "https://notused.com",
-				 "trustauthority_api_url": "https://notused.com",
-				 "trustauthority_api_key": "AAAAAA==",
-				 "tpm": {
-					 "owner_auth": "",
-					 "ek_handle": "not-hex",
-					 "ak_handle": ""
-				 }
-			 }`,
-=======
 				"trustauthority_url": "https://notused.com",
 				"trustauthority_api_url": "https://notused.com",
 				"trustauthority_api_key": "AAAAAA==",
@@ -227,7 +151,6 @@ func TestConfig(t *testing.T) {
 					"ak_certificate": ""
 				}
 			}`,
->>>>>>> 707d940 (Address CASSINI-22273 and other miscellaneous changes.)
 			expectedConfig: nil,
 			expectError:    true,
 		},
