@@ -7,7 +7,6 @@ package tpm
 
 import (
 	"crypto/sha256"
-	"net/url"
 
 	"github.com/intel/trustauthority-client/go-connector"
 
@@ -18,11 +17,10 @@ import (
 type TpmAdapterOptions func(*tpmCompositeAdapter) error
 
 type tpmCompositeAdapter struct {
-	akHandle         int
-	pcrSelections    []PcrSelection
-	deviceType       TpmDeviceType
-	ownerAuth        string
-	akCertificateUri *url.URL
+	akHandle      int
+	pcrSelections []PcrSelection
+	deviceType    TpmDeviceType
+	ownerAuth     string
 }
 
 var defaultAdapter = tpmCompositeAdapter{
