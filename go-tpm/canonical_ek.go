@@ -15,7 +15,7 @@ func (tpm *canonicalTpm) CreateEK(ekHandle int) error {
 
 	// make sure the ekHandle is within range, a valid persistant handle and it DOES NOT exist
 	if ekHandle < minPersistentHandle || ekHandle > maxPersistentHandle {
-		return ErroHandleOutOfRange
+		return ErrHandleOutOfRange
 	}
 
 	handle := tpm2.Handle(ekHandle)

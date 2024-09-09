@@ -16,7 +16,7 @@ func (tpm *canonicalTpm) CreateAK(akHandle int, ekHandle int) error {
 
 	// make sure the akHandle is within range, a valid persistant handle and it DOES NOT exist
 	if akHandle < minPersistentHandle || akHandle > maxPersistentHandle {
-		return ErroHandleOutOfRange
+		return ErrHandleOutOfRange
 	}
 
 	ak := tpm2.Handle(akHandle)
