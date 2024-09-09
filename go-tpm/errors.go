@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	ErroHandleOutOfRange     = errors.New("Handle out of range")
+	ErrHandleOutOfRange      = errors.New("Handle out of range")
 	ErrInvalidHandle         = errors.New("Invalid handle")
 	ErrExistingHandle        = errors.New("The handle already exists")
 	ErrHandleDoesNotExist    = errors.New("The handle does not exist")

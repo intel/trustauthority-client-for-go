@@ -14,7 +14,7 @@ import (
 func (tpm *canonicalTpm) NVRead(nvHandle int) ([]byte, error) {
 
 	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
-		return nil, ErroHandleOutOfRange
+		return nil, ErrHandleOutOfRange
 	}
 
 	// Verify that the provided handle is within the range of nv space
@@ -50,7 +50,7 @@ func (tpm *canonicalTpm) NVRead(nvHandle int) ([]byte, error) {
 func (tpm *canonicalTpm) NVWrite(nvHandle int, data []byte) error {
 
 	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
-		return ErroHandleOutOfRange
+		return ErrHandleOutOfRange
 	}
 
 	if len(data) > maxNvSize {
@@ -93,7 +93,7 @@ func (tpm *canonicalTpm) NVWrite(nvHandle int, data []byte) error {
 func (tpm *canonicalTpm) NVDelete(nvHandle int) error {
 
 	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
-		return ErroHandleOutOfRange
+		return ErrHandleOutOfRange
 	}
 
 	// Verify that the provided handle is within the range of nv space
@@ -123,7 +123,7 @@ func (tpm *canonicalTpm) NVDelete(nvHandle int) error {
 func (tpm *canonicalTpm) NVDefine(nvHandle int, len int) error {
 
 	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
-		return ErroHandleOutOfRange
+		return ErrHandleOutOfRange
 	}
 
 	// Verify that the provided handle is within the range of nv space
