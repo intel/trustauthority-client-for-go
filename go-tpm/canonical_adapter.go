@@ -16,11 +16,29 @@ import (
 // TpmAdapterOptions for creating an evidence adapter using the host's TPM.
 type TpmAdapterOptions func(*tpmCompositeAdapter) error
 
+type tpmCompositeAdapter struct {
+	akHandle      int
+	pcrSelections []PcrSelection
+	deviceType    TpmDeviceType
+	ownerAuth     string
+}
+
+var defaultAdapter = tpmCompositeAdapter{
+	akHandle:      DefaultAkHandle,
+	pcrSelections: defaultPcrSelections,
+	deviceType:    Linux,
+	ownerAuth:     "",
+}
+
 // NewEvidenceAdapter creates a new composite adapter for the host's TPM.
 func NewEvidenceAdapter(akHandle int, pcrSelections string, ownerAuth string) (connector.EvidenceAdapter2, error) {
 	selections, err := parsePcrSelections(pcrSelections)
 	if err != nil {
 		return nil, err
+	}
+
+	if akHandle == 0 {
+		akHandle = DefaultAkHandle
 	}
 
 	return &tpmCompositeAdapter{
@@ -32,14 +50,10 @@ func NewEvidenceAdapter(akHandle int, pcrSelections string, ownerAuth string) (c
 
 // NewEvidenceAdapterWithOptions creates a new composite adapter for the host's TPM.
 func NewEvidenceAdapterWithOptions(opts ...TpmAdapterOptions) (connector.EvidenceAdapter2, error) {
-	// Provide default values for the adapter
-	tca := &tpmCompositeAdapter{
-		akHandle:      DefaultAkHandle,
-		pcrSelections: defaultPcrSelections,
-		deviceType:    Linux,
-		ownerAuth:     "",
-	}
+	// By default, create an adpater with default values
+	tca := &defaultAdapter
 
+	// Iterate over the options and apply them to the adapter
 	for _, option := range opts {
 		if err := option(tca); err != nil {
 			return nil, err
@@ -47,13 +61,6 @@ func NewEvidenceAdapterWithOptions(opts ...TpmAdapterOptions) (connector.Evidenc
 	}
 
 	return tca, nil
-}
-
-type tpmCompositeAdapter struct {
-	akHandle      int
-	pcrSelections []PcrSelection
-	deviceType    TpmDeviceType
-	ownerAuth     string
 }
 
 // WithOwnerAuth specifies the owner password used to communicate
@@ -78,6 +85,10 @@ func WithDeviceType(deviceType TpmDeviceType) TpmAdapterOptions {
 // it uses
 func WithAkHandle(akHandle int) TpmAdapterOptions {
 	return func(tca *tpmCompositeAdapter) error {
+		if akHandle == 0 {
+			akHandle = DefaultAkHandle
+		}
+
 		tca.akHandle = akHandle
 		return nil
 	}

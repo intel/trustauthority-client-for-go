@@ -11,8 +11,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// GetEKCertificate is a utility function that reads NV ram at the specified
-// index and parses its contents into an x509 certificate
 func (tpm *canonicalTpm) GetEKCertificate(nvIndex int) (*x509.Certificate, error) {
 
 	ekDer, err := tpm.NVRead(nvIndex)

@@ -11,41 +11,17 @@ import (
 	"testing"
 )
 
-func TestSimple(t *testing.T) {
-	pcrSelection := []PcrSelection{
-		{
-			Hash: crypto.SHA1,
-			Pcrs: []int{0, 1, 2, 3, 4, 5, 6, 7},
-		},
-	}
-
-	s, err := toTpm2PcrSelectionList(pcrSelection...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(s) != 1 {
-		t.Fatal("Expected 1")
-	}
-}
-
-func TestDefault(t *testing.T) {
-	pcrSelection := []PcrSelection{}
-	_, err := toTpm2PcrSelectionList(pcrSelection...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(pcrSelection, defaultPcrSelections) {
-		t.Errorf("Expected %+v, got %+v", defaultPcrSelections, pcrSelection)
-	}
-}
-
 // TODO [CASSINI-17044]: Current unit tests are for debugging phyical TPMs and will be
 // be updated at a later date.
 
 var testPcrSelections = map[string][]PcrSelection{
 	"": []PcrSelection{},
+	"sha1:all": []PcrSelection{
+		{
+			Hash: crypto.SHA1,
+			Pcrs: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23},
+		},
+	},
 	"sha1:1,2,3": []PcrSelection{
 		{
 			Hash: crypto.SHA1,
@@ -59,6 +35,28 @@ var testPcrSelections = map[string][]PcrSelection{
 		},
 		{
 			Hash: crypto.SHA256,
+			Pcrs: []int{1, 2, 3},
+		},
+	},
+	"sha1:all+sha256:1,2,3": []PcrSelection{
+		{
+			Hash: crypto.SHA1,
+			Pcrs: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23},
+		},
+		{
+			Hash: crypto.SHA256,
+			Pcrs: []int{1, 2, 3},
+		},
+	},
+	"sha384:1,2,3": []PcrSelection{
+		{
+			Hash: crypto.SHA384,
+			Pcrs: []int{1, 2, 3},
+		},
+	},
+	"sha512:1,2,3": []PcrSelection{
+		{
+			Hash: crypto.SHA512,
 			Pcrs: []int{1, 2, 3},
 		},
 	},

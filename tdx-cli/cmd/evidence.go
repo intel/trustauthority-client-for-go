@@ -93,6 +93,10 @@ func newEvidenceCommand() *cobra.Command {
 			}
 
 			if withTpm {
+				if cfg.Tpm == nil {
+					return errors.Errorf("TPM configuration not found in config file %q", configPath)
+				}
+
 				tpmAdapter, err := tpm.NewEvidenceAdapterWithOptions(
 					tpm.WithOwnerAuth(cfg.Tpm.OwnerAuth),
 					tpm.WithAkHandle(int(cfg.Tpm.AkHandle)),

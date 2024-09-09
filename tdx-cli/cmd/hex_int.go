@@ -28,13 +28,23 @@ func (hi HexInt) MarshalJSON() ([]byte, error) {
 }
 
 func (hi *HexInt) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 {
+		*hi = HexInt(0)
+		return nil
+	}
+
 	var hexStr string
 	err := json.Unmarshal(data, &hexStr)
 	if err != nil {
 		return err
 	}
 
-	// Remove the "0x" prefix from the hex string
+	if hexStr == "" {
+		*hi = HexInt(0)
+		return nil
+	}
+
+	// Remove the "0x" prefix from the hex string if provided
 	hexStr = strings.TrimPrefix(hexStr, "0x")
 
 	// Convert the hex string to bytes

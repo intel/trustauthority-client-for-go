@@ -54,8 +54,13 @@ type Config struct {
 }
 
 type TpmConfig struct {
-	AkHandle      HexInt `json:"ak_handle"`
-	OwnerAuth     string `json:"owner_auth"`
+	// AkHandle is the handle of the TPM key that will be used to sign TPM quotes
+	AkHandle HexInt `json:"ak_handle"`
+	// EkHandle is needed during AK provisioning to create the AK
+	EkHandle HexInt `json:"ek_handle"`
+	// OwnerAuth is the owner password of the TPM (defaults to "")
+	OwnerAuth string `json:"owner_auth"`
+	// PcrSelections is the list of PCR banks and indices that are included in TPM quotes
 	PcrSelections string `json:"pcr_selections"`
 }
 
@@ -227,6 +232,10 @@ func getToken(cmd *cobra.Command) error {
 	}
 
 	if withTpm {
+		if config.Tpm == nil {
+			return errors.Errorf("TPM configuration not found in config file %q", configFile)
+		}
+
 		tpmAdapter, err := tpm.NewEvidenceAdapter(int(config.Tpm.AkHandle), config.Tpm.PcrSelections, config.Tpm.OwnerAuth)
 		if err != nil {
 			return err
