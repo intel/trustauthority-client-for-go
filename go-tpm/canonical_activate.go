@@ -24,7 +24,7 @@ func (tpm *canonicalTpm) ActivateCredential(ekHandle int, akHandle int, credenti
 
 	akContext, err := tpm.ctx.NewResourceContext(ak)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to create resource context for handle %x", akHandle)
+		return nil, errors.Wrapf(err, "Failed to create resource context for handle 0x%x", akHandle)
 	}
 	akContext.SetAuthValue(tpm.ownerAuth)
 
@@ -40,7 +40,7 @@ func (tpm *canonicalTpm) ActivateCredential(ekHandle int, akHandle int, credenti
 
 	ekContext, err := tpm.ctx.NewResourceContext(ek)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to create resource context for handle %x", ekHandle)
+		return nil, errors.Wrapf(err, "Failed to create resource context for handle 0x%x", ekHandle)
 	}
 
 	// start a session with endorsement hierarchy policy permissions

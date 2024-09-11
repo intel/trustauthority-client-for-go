@@ -257,7 +257,7 @@ func readAkCertificate(akUri *url.URL, tpm TrustedPlatformModule) ([]byte, error
 
 		akPemBytes, err = tpm.NVRead(int(nvIdx))
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to read AK certificate from NV index %x", nvIdx)
+			return nil, errors.Wrapf(err, "Failed to read AK certificate from NV index 0x%x", nvIdx)
 		}
 	}
 

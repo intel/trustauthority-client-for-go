@@ -9,7 +9,6 @@ import (
 	"github.com/canonical/go-tpm2"
 	"github.com/canonical/go-tpm2/objectutil"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 )
 
 func (tpm *canonicalTpm) CreateAK(akHandle int, ekHandle int) error {
@@ -41,7 +40,7 @@ func (tpm *canonicalTpm) CreateAK(akHandle int, ekHandle int) error {
 	// create a new "resource context" for the EK handle
 	ekContext, err := tpm.ctx.NewResourceContext(ek)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to create resource context for EK at handle %x", ekHandle)
+		return errors.Wrapf(err, "Failed to create resource context for EK at handle 0x%x", ekHandle)
 	}
 
 	// start an auth policy session in the endorsement hierarchy
@@ -89,6 +88,5 @@ func (tpm *canonicalTpm) CreateAK(akHandle int, ekHandle int) error {
 		return err
 	}
 
-	logrus.Infof("Successfully created AK at handle %x", akHandle)
 	return nil
 }

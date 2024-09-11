@@ -8,7 +8,6 @@ package tpm
 import (
 	"github.com/canonical/go-tpm2"
 	"github.com/canonical/go-tpm2/objectutil"
-	"github.com/sirupsen/logrus"
 )
 
 func (tpm *canonicalTpm) CreateEK(ekHandle int) error {
@@ -49,6 +48,5 @@ func (tpm *canonicalTpm) CreateEK(ekHandle int) error {
 
 	defer tpm.ctx.FlushContext(primary)
 
-	logrus.Infof("Successfully created EK at handle %x", ekHandle)
 	return nil
 }

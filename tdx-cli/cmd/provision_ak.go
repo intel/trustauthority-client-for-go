@@ -114,14 +114,14 @@ func provisionAk(ekHandle int, akHandle int, ctr connector.Connector, t tpm.Trus
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("Successfully created EK at handle %x\n", ekHandle)
+	logrus.Infof("Successfully created EK at handle 0x%x", ekHandle)
 
 	// Create the Ak and get its name
 	err = t.CreateAK(akHandle, ekHandle)
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("Successfully created AK at handle %x\n", akHandle)
+	logrus.Infof("Successfully created AK at handle 0x%x", akHandle)
 
 	_, akTpmtPublic, _, err := t.ReadPublic(akHandle)
 	if err != nil {
