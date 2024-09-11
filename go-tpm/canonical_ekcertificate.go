@@ -19,7 +19,7 @@ func (tpm *canonicalTpm) GetEKCertificate(nvIndex int) (*x509.Certificate, error
 	}
 
 	if len(ekDer) <= 0 {
-		return nil, errors.Errorf("nvram at handle %d only contained %d bytes", nvIndex, len(ekDer))
+		return nil, errors.Errorf("nvram at handle 0x%x only contained %d bytes", nvIndex, len(ekDer))
 	}
 
 	// This code is a workaround for errors that are encountered by x509.ParseCertificate.

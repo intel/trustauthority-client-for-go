@@ -36,12 +36,12 @@ func (tpm *canonicalTpm) NVRead(nvHandle int) ([]byte, error) {
 
 	nvContext, err := tpm.ctx.NewResourceContext(tpm2.Handle(handle))
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to create resource context for handle %x", handle)
+		return nil, errors.Wrapf(err, "Failed to create resource context for handle 0x%x", handle)
 	}
 
 	data, err := tpm.ctx.NVRead(tpm.ctx.OwnerHandleContext(), nvContext, nvPublic.Size, 0, nil, nil)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error nvram at handle %x", handle)
+		return nil, errors.Wrapf(err, "Error nvram at handle 0x%x", handle)
 	}
 
 	return data, nil
@@ -65,12 +65,12 @@ func (tpm *canonicalTpm) NVWrite(nvHandle int, data []byte) error {
 
 	// delete the nv index if it already exists
 	if !tpm.ctx.DoesHandleExist(handle) {
-		return errors.Errorf("NV index %x does not exist", nvHandle)
+		return errors.Errorf("NV index 0x%x does not exist", nvHandle)
 	}
 
 	nvContext, err := tpm.ctx.NewResourceContext(handle)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to create resource context at handle %x", handle)
+		return errors.Wrapf(err, "Failed to create resource context at handle 0x%x", handle)
 	}
 	nvContext.SetAuthValue(tpm.ownerAuth)
 
@@ -81,12 +81,12 @@ func (tpm *canonicalTpm) NVWrite(nvHandle int, data []byte) error {
 
 	err = tpm.ctx.NVWrite(tpm.ctx.OwnerHandleContext(), nvContext, data, 0, session)
 	if err != nil {
-		return errors.Wrapf(ErrNvWriteFailed, "Index %d: %s", nvHandle, err.Error())
+		return errors.Wrapf(ErrNvWriteFailed, "Index 0x%x: %s", nvHandle, err.Error())
 	}
 
 	tpm.ctx.FlushContext(session)
 
-	logrus.Debugf("Successfully wrote %d bytes at NV index %x", len(data), nvHandle)
+	logrus.Debugf("Successfully wrote %d bytes at NV index 0x%x", len(data), nvHandle)
 	return nil
 }
 
@@ -104,17 +104,17 @@ func (tpm *canonicalTpm) NVDelete(nvHandle int) error {
 
 	// delete the nv index if it already exists
 	if !tpm.ctx.DoesHandleExist(handle) {
-		return errors.Errorf("Cannot delete non-existent nv index at %x", nvHandle)
+		return errors.Errorf("Cannot delete non-existent nv index at 0x%x", nvHandle)
 	}
 
 	existingCtx, err := tpm.ctx.NewResourceContext(handle)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to create resource context for handle %x", handle)
+		return errors.Wrapf(err, "Failed to create resource context for handle 0x%x", handle)
 	}
 
 	err = tpm.ctx.NVUndefineSpace(tpm.ctx.OwnerHandleContext(), existingCtx, nil)
 	if err != nil {
-		return errors.Wrapf(ErrNvReleaseFailed, "Index %d: %s", nvHandle, err.Error())
+		return errors.Wrapf(ErrNvReleaseFailed, "Index 0x%x: %s", nvHandle, err.Error())
 	}
 
 	return nil
@@ -134,7 +134,7 @@ func (tpm *canonicalTpm) NVDefine(nvHandle int, len int) error {
 
 	// delete the nv index if it already exists
 	if tpm.ctx.DoesHandleExist(handle) {
-		return errors.Errorf("Cannot create an existing nv index %x", nvHandle)
+		return errors.Errorf("Cannot create an existing nv index 0x%x", nvHandle)
 	}
 
 	auth := tpm.ownerAuth
@@ -149,7 +149,7 @@ func (tpm *canonicalTpm) NVDefine(nvHandle int, len int) error {
 
 	_, err := tpm.ctx.NVDefineSpace(tpm.ctx.OwnerHandleContext(), auth, &nvPublic, nil)
 	if err != nil {
-		return errors.Wrapf(ErrNvDefineSpaceFailed, "Index %d: %s", nvHandle, err.Error())
+		return errors.Wrapf(ErrNvDefineSpaceFailed, "Index 0x%x: %s", nvHandle, err.Error())
 	}
 
 	return nil
@@ -158,13 +158,13 @@ func (tpm *canonicalTpm) NVDefine(nvHandle int, len int) error {
 func (tpm *canonicalTpm) NVExists(nvHandle int) bool {
 
 	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
-		logrus.Errorf("NV handle %x is out of range", nvHandle)
+		logrus.Errorf("NV handle 0x%x is out of range", nvHandle)
 		return false
 	}
 
 	handle := tpm2.Handle(nvHandle)
 	if handle.Type() != tpm2.HandleTypeNVIndex {
-		logrus.Errorf("Cannot determine if nv ram exists at invalid handle %x", nvHandle)
+		logrus.Errorf("Cannot determine if nv ram exists at invalid handle 0x%x", nvHandle)
 		return false
 	}
 

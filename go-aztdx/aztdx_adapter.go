@@ -117,7 +117,7 @@ func getAzRuntimeData(reportDataHash []byte, nvReadIdx int, nvWriteIdx int) (*az
 	defer t.Close()
 
 	if !t.NVExists(nvWriteIdx) {
-		logrus.Infof("Initializing az nv index %x", nvWriteIdx)
+		logrus.Infof("Initializing az nv index 0x%x", nvWriteIdx)
 		t.NVDefine(nvWriteIdx, sha512.Size)
 	}
 

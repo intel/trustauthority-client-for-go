@@ -127,7 +127,7 @@ func (tca *tpmCompositeAdapter) GetEvidence(verifierNonce *connector.VerifierNon
 
 	quote, signature, err := tpm.GetQuote(tca.akHandle, nonceHash, tca.pcrSelections...)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to get quote using AK handle %x", tca.akHandle)
+		return nil, errors.Wrapf(err, "Failed to get quote using AK handle 0x%x", tca.akHandle)
 	}
 
 	pcrs, err := tpm.GetPcrs(tca.pcrSelections...)

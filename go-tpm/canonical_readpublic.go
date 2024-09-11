@@ -27,7 +27,7 @@ func (tpm *canonicalTpm) ReadPublic(handle int) (crypto.PublicKey, []byte, []byt
 
 	handleContext, err := tpm.ctx.NewResourceContext(h)
 	if err != nil {
-		return nil, nil, nil, errors.Wrapf(err, "Failed to create resource context for handle %x", handle)
+		return nil, nil, nil, errors.Wrapf(err, "Failed to create resource context for handle 0x%x", handle)
 	}
 
 	public, _, qualifiedName, err := tpm.ctx.ReadPublic(handleContext, nil)

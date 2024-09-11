@@ -28,7 +28,7 @@ func TestValidEkHandle(t *testing.T) {
 	}
 
 	if len(ekNv) == 0 {
-		t.Fatalf("Handle %x should not be read", DefaultAkHandle)
+		t.Fatalf("Handle 0x%x should not be read", DefaultAkHandle)
 	}
 }
 

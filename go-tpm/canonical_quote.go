@@ -13,7 +13,7 @@ import (
 )
 
 func (tpm *canonicalTpm) GetQuote(akHandle int, nonce []byte, selection ...PcrSelection) ([]byte, []byte, error) {
-	logrus.Debugf("Collecting TPM quote using AK handle %x", akHandle)
+	logrus.Debugf("Collecting TPM quote using AK handle 0x%x", akHandle)
 
 	// make sure the akHandle is a valid persistant handle and it DOES NOT exist
 	ak := tpm2.Handle(akHandle)
@@ -27,7 +27,7 @@ func (tpm *canonicalTpm) GetQuote(akHandle int, nonce []byte, selection ...PcrSe
 
 	akContext, err := tpm.ctx.NewResourceContext(ak)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "Failed to create resource context for handle %x", akHandle)
+		return nil, nil, errors.Wrapf(err, "Failed to create resource context for handle 0x%x", akHandle)
 	}
 	akContext.SetAuthValue(tpm.ownerAuth)
 
