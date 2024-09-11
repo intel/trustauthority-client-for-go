@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2023 Intel Corporation
+ *   Copyright (c) 2022-2024 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -12,8 +12,9 @@ const (
 	HeaderRequestId   = "request-id"
 	HeaderTraceId     = "trace-id"
 
-	nonceEndpoint  = "/appraisal/v1/nonce"
-	attestEndpoint = "/appraisal/v1/attest/azure/tdxvm"
+	nonceEndpoint         = "/appraisal/v1/nonce"
+	attestEndpoint        = "/appraisal/v1/attest"
+	attestAzureTdEndpoint = "/appraisal/v1/attest/azure/tdxvm"
 
 	mimeApplicationJson        = "application/json"
 	AtsCertChainMaxLen         = 10

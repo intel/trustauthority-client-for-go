@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2023 Intel Corporation
+ *   Copyright (c) 2022-2024 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -40,6 +40,10 @@ var tokenCmd = &cobra.Command{
 	},
 }
 
+const (
+	CloudProviderAzure = "azure"
+)
+
 var (
 	// max length of file name to be allowed is 255 bytes and characters allowed are a-z, A-Z, 0-9, _, ., -
 	fileNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_. -]{1,255}$`)
@@ -48,6 +52,7 @@ var (
 )
 
 type Config struct {
+	CloudProvider        string `json:"cloud_provider"`
 	TrustAuthorityUrl    string `json:"trustauthority_url"`
 	TrustAuthorityApiUrl string `json:"trustauthority_api_url"`
 	TrustAuthorityApiKey string `json:"trustauthority_api_key"`
@@ -62,7 +67,7 @@ func init() {
 	tokenCmd.Flags().StringP(constants.RequestIdOption, "r", "", "Request id to be associated with request")
 	tokenCmd.Flags().StringP(constants.TokenAlgOption, "a", "", "Token signing algorithm to be used, support PS384 and RS256")
 	tokenCmd.Flags().Bool(constants.PolicyMustMatchOption, false, "Enforce policies match during attestation")
-	tokenCmd.Flags().Bool(constants.NoEventLogOption, true, "Do not collect Event Log")
+	tokenCmd.Flags().Bool(constants.NoEventLogOption, false, "Do not collect Event Log")
 	tokenCmd.MarkFlagRequired(constants.ConfigOption)
 }
 
@@ -166,7 +171,7 @@ func getToken(cmd *cobra.Command) error {
 
 		publicKeyBlock, _ := pem.Decode(publicKey)
 		if publicKeyBlock == nil {
-			return errors.Errorf("No PEM data found in public key file")
+			return errors.New("No PEM data found in public key file")
 		}
 		userDataBytes = publicKeyBlock.Bytes
 	}
@@ -186,7 +191,7 @@ func getToken(cmd *cobra.Command) error {
 	if reqId != "" {
 		requestIdRegex := regexp.MustCompile(`^[a-zA-Z0-9_ \/.-]{1,128}$`)
 		if !requestIdRegex.Match([]byte(reqId)) {
-			return errors.Errorf("Request ID should be atmost 128 characters long and should contain only alphanumeric characters, _, space, -, ., / or \\")
+			return errors.New("Request ID should be atmost 128 characters long and should contain only alphanumeric characters, _, space, -, ., / or \\")
 		}
 	}
 	if tokenSigningAlg != "" && !connector.ValidateTokenSigningAlg(tokenSigningAlg) {
@@ -198,7 +203,12 @@ func getToken(cmd *cobra.Command) error {
 		evLogParser = tdx.NewEventLogParser()
 	}
 
-	adapter, err := tdx.NewEvidenceAdapter(userDataBytes, evLogParser)
+	var adapter connector.EvidenceAdapter
+	if strings.ToLower(config.CloudProvider) == CloudProviderAzure {
+		adapter, err = tdx.NewAzureTdxAdapter(userDataBytes)
+	} else {
+		adapter, err = tdx.NewTdxAdapter(userDataBytes, evLogParser)
+	}
 	if err != nil {
 		return errors.Wrap(err, "Error while creating tdx adapter")
 	}
@@ -214,7 +224,7 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
-	fmt.Fprintln(os.Stdout, response.Token)
+	fmt.Fprint(os.Stdout, response.Token)
 	return nil
 }
 

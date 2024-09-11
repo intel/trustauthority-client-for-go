@@ -32,8 +32,9 @@ type tokenRequest struct {
 	RuntimeData     []byte         `json:"runtime_data,omitempty"`
 	PolicyIds       []uuid.UUID    `json:"policy_ids,omitempty"`
 	UserData        []byte         `json:"user_data,omitempty"`
+	EventLog        []byte         `json:"event_log,omitempty"`
 	TokenSigningAlg string         `json:"token_signing_alg,omitempty"`
-	PolicyMustMatch bool           `json:"policy_must_match",omitempty"`
+	PolicyMustMatch bool           `json:"policy_must_match,omitempty"`
 }
 
 // AttestationTokenResponse holds the token recieved from Intel Trust Authority
@@ -43,15 +44,16 @@ type AttestationTokenResponse struct {
 
 // GetToken is used to get attestation token from Intel Trust Authority
 func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenResponse, error) {
-	url := connector.cfg.ApiUrl + attestEndpoint
+	url := connector.cfg.ApiUrl + args.attestEndpoint
 
 	newRequest := func() (*http.Request, error) {
 		tr := tokenRequest{
-			Quote:           args.Evidence.Quote,
+			Quote:           args.Evidence.Evidence,
 			VerifierNonce:   args.Nonce,
 			RuntimeData:     args.Evidence.RuntimeData,
 			PolicyIds:       args.PolicyIds,
 			UserData:        args.Evidence.UserData,
+			EventLog:        args.Evidence.EventLog,
 			TokenSigningAlg: args.TokenSigningAlg,
 			PolicyMustMatch: args.PolicyMustMatch,
 		}
@@ -151,7 +153,7 @@ func verifyCRL(crl *x509.RevocationList, leafCert *x509.Certificate, caCert *x50
 		return errors.New("Outdated CRL")
 	}
 
-	for _, rCert := range crl.RevokedCertificates {
+	for _, rCert := range crl.RevokedCertificateEntries {
 		if rCert.SerialNumber.Cmp(leafCert.SerialNumber) == 0 {
 			return errors.New("Certificate was Revoked")
 		}

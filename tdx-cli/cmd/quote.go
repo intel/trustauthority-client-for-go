@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022 Intel Corporation
+ *   Copyright (c) 2022-2024 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -8,7 +8,6 @@ package cmd
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -38,6 +37,7 @@ func init() {
 	rootCmd.AddCommand(quoteCmd)
 	quoteCmd.Flags().StringP(constants.NonceOption, "n", "", "Nonce in base64 encoded format")
 	quoteCmd.Flags().StringP(constants.UserDataOption, "u", "", "User Data in base64 encoded format")
+	quoteCmd.Flags().Bool(constants.WithAzTdxOption, false, "Collect Azure TDX evidence")
 }
 
 func getQuote(cmd *cobra.Command) error {
@@ -52,6 +52,11 @@ func getQuote(cmd *cobra.Command) error {
 		return err
 	}
 
+	withAzureTdx, err := cmd.Flags().GetBool(constants.WithAzTdxOption)
+	if err != nil {
+		return err
+	}
+
 	var userDataBytes []byte
 	if userData != "" {
 		userDataBytes, err = base64.StdEncoding.DecodeString(userData)
@@ -61,31 +66,35 @@ func getQuote(cmd *cobra.Command) error {
 	}
 
 	var nonceBytes []byte
-	var verifierNonce connector.VerifierNonce
 	if nonce != "" {
 		nonceBytes, err = base64.StdEncoding.DecodeString(nonce)
 		if err != nil {
 			return errors.Wrap(err, "Error while base64 decoding of nonce")
 		}
-		err = json.Unmarshal(nonceBytes, &verifierNonce)
-		if err != nil {
-			fmt.Println("Unmarshall error: ", err.Error())
-		}
-		nonceBytes = append(verifierNonce.Val, verifierNonce.Iat[:]...)
 	}
 
-	adapter, err := tdx.NewEvidenceAdapter(userDataBytes, nil)
+	var adapter connector.EvidenceAdapter
+	if withAzureTdx {
+		adapter, err = tdx.NewAzureTdxAdapter(userDataBytes)
+	} else {
+		adapter, err = tdx.NewTdxAdapter(userDataBytes, nil)
+	}
 	if err != nil {
 		return errors.Wrap(err, "Error while creating tdx adapter")
 	}
+
 	evidence, err := adapter.CollectEvidence(nonceBytes)
 	if err != nil {
 		return errors.Wrap(err, "Failed to collect evidence")
 	}
 
-	fmt.Println("Quote:", base64.StdEncoding.EncodeToString(evidence.Quote))
-	fmt.Println("runtime_data:", base64.StdEncoding.EncodeToString(evidence.RuntimeData))
-	fmt.Println("user_data:", userData)
+	fmt.Println("Quote:", base64.StdEncoding.EncodeToString(evidence.Evidence))
+	if evidence.RuntimeData != nil {
+		fmt.Println("runtime_data:", base64.StdEncoding.EncodeToString(evidence.RuntimeData))
+	}
+	if userData != "" {
+		fmt.Println("user_data:", userData)
+	}
 
 	return nil
 }

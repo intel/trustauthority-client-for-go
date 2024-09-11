@@ -16,10 +16,16 @@ type mockAdapter struct {
 	EvLogParser EventLogParser
 }
 
-func NewEvidenceAdapter(udata []byte, evLogParser EventLogParser) (connector.EvidenceAdapter, error) {
+func NewTdxAdapter(udata []byte, evLogParser EventLogParser) (connector.EvidenceAdapter, error) {
 	return &mockAdapter{
 		uData:       udata,
 		EvLogParser: evLogParser,
+	}, nil
+}
+
+func NewAzureTdxAdapter(udata []byte) (connector.EvidenceAdapter, error) {
+	return &mockAdapter{
+		uData: udata,
 	}, nil
 }
 
@@ -27,7 +33,7 @@ func (adapter *mockAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, 
 
 	return &connector.Evidence{
 		Type:     1,
-		Quote:    nil,
+		Evidence: nil,
 		UserData: nil,
 		EventLog: nil,
 	}, nil

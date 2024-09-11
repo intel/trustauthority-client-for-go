@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2023 Intel Corporation
+ *   Copyright (c) 2022-2024 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -28,11 +28,6 @@ type Connector interface {
 	VerifyToken(string) (*jwt.Token, error)
 }
 
-// EvidenceAdapter is an interface which exposes methods for collecting Quote from Platform
-type EvidenceAdapter interface {
-	CollectEvidence(nonce []byte) (*Evidence, error)
-}
-
 // GetNonceArgs holds the request parameters needed for getting nonce from Intel Trust Authority
 type GetNonceArgs struct {
 	RequestId string
@@ -50,6 +45,7 @@ type GetTokenArgs struct {
 	Evidence        *Evidence
 	PolicyIds       []uuid.UUID
 	RequestId       string
+	attestEndpoint  string
 	TokenSigningAlg string
 	PolicyMustMatch bool
 }
@@ -75,15 +71,6 @@ type AttestResponse struct {
 	Headers http.Header
 }
 
-// Evidence is used to store Quote to be sent for Attestation
-type Evidence struct {
-	Type        uint32
-	Quote       []byte
-	UserData    []byte
-	EventLog    []byte
-	RuntimeData []byte
-}
-
 // RetryConfig holds the configuration for automatic retries to tolerate minor outages
 type RetryConfig struct {
 	RetryWaitMin *time.Duration // Minimum time to wait between retries
@@ -100,7 +87,6 @@ type Config struct {
 	TlsCfg  *tls.Config
 	ApiUrl  string
 	ApiKey  string
-	url     *url.URL
 	*RetryConfig
 }
 
@@ -115,6 +101,7 @@ type VerifierNonce struct {
 func New(cfg *Config) (Connector, error) {
 	var err error
 	if cfg.BaseUrl != "" {
+		cfg.BaseUrl = strings.TrimSuffix(cfg.BaseUrl, "/")
 		err = validateURLScheme(cfg.BaseUrl)
 		if err != nil {
 			return nil, errors.New("Invalid Trust Authority base URL")
@@ -122,6 +109,7 @@ func New(cfg *Config) (Connector, error) {
 	}
 
 	if cfg.ApiUrl != "" {
+		cfg.ApiUrl = strings.TrimSuffix(cfg.ApiUrl, "/")
 		err = validateURLScheme(cfg.ApiUrl)
 		if err != nil {
 			return nil, errors.New("Invalid Trust Authority API URL")
@@ -209,7 +197,7 @@ func validateURLScheme(inputUrl string) error {
 		return err
 	}
 	if parsedUrl.Scheme != HttpsScheme {
-		return errors.New("Invalid URL, scheme must be https")
+		return errors.New("url scheme must be https")
 	}
 	return nil
 }

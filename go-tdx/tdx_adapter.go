@@ -23,8 +23,8 @@ type tdxAdapter struct {
 	EvLogParser EventLogParser
 }
 
-// NewEvidenceAdapter returns a new TDX Adapter instance
-func NewEvidenceAdapter(udata []byte, evLogParser EventLogParser) (connector.EvidenceAdapter, error) {
+// NewTdxAdapter returns a new TDX Adapter instance
+func NewTdxAdapter(udata []byte, evLogParser EventLogParser) (connector.EvidenceAdapter, error) {
 	return &tdxAdapter{
 		uData:       udata,
 		EvLogParser: evLogParser,

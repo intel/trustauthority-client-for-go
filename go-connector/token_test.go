@@ -7,7 +7,6 @@ package connector
 
 import (
 	"crypto/x509"
-	"crypto/x509/pkix"
 	"encoding/hex"
 	"net/http"
 	"testing"
@@ -41,7 +40,7 @@ func TestGetToken(t *testing.T) {
 
 	nonce := &VerifierNonce{}
 	evidence := &Evidence{}
-	_, err := connector.GetToken(GetTokenArgs{nonce, evidence, nil, "req1", string(PS384), false})
+	_, err := connector.GetToken(GetTokenArgs{nonce, evidence, nil, "req1", attestEndpoint, string(PS384), false})
 	if err != nil {
 		t.Errorf("GetToken returned unexpected error: %v", err)
 	}
@@ -58,7 +57,7 @@ func TestGetToken_invalidToken(t *testing.T) {
 
 	nonce := &VerifierNonce{}
 	evidence := &Evidence{}
-	_, err := connector.GetToken(GetTokenArgs{nonce, evidence, nil, "req1", "", false})
+	_, err := connector.GetToken(GetTokenArgs{nonce, evidence, nil, "req1", attestEndpoint, "", false})
 	if err == nil {
 		t.Errorf("GetToken returned nil, expected error")
 	}
@@ -264,10 +263,10 @@ func TestVerifyCRL_revokedCert(t *testing.T) {
 	crl, _ := x509.ParseRevocationList([]byte(crlBytes))
 
 	crl.NextUpdate = time.Now().AddDate(0, 0, 3)
-	revokedCert := pkix.RevokedCertificate{
+	revokedCert := x509.RevocationListEntry{
 		SerialNumber: leafCert.SerialNumber,
 	}
-	crl.RevokedCertificates = []pkix.RevokedCertificate{revokedCert}
+	crl.RevokedCertificateEntries = []x509.RevocationListEntry{revokedCert}
 
 	err := verifyCRL(crl, leafCert, interCaCert)
 	if err == nil {

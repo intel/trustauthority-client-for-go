@@ -38,4 +38,5 @@ const (
 	PolicyMustMatchOption = "policy-must-match"
 	NoEventLogOption      = "no-eventlog"
 	TokenOption           = "token"
+	WithAzTdxOption       = "aztdx"
 )

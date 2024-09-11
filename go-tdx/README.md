@@ -36,6 +36,49 @@ if err != nil {
 }
 ```
 
+### To generate an RSA key pair
+
+**GenerateKeyPair()** takes a required **KeyMetadata** argument that specifies the length in bits for the key. If successful, it returns a public and private key.
+
+```go
+km := &tdx.KeyMetadata{
+	KeyLength: 3072,
+}
+privateKeyPem, publicKeyPem, err := tdx.GenerateKeyPair(km)
+if err != nil {
+    fmt.Printf("Something bad happened: %s\n\n", err)
+    return err
+}
+```
+
+### To decrypt an encrypted blob
+
+**Decrypt()** accepts two arguments, **encryptedData** and **EncryptionMetadata**, and returns decrypted binary data. The HashAlgorithm must be one of [SHA256 | SHA384 | SHA512].
+
+```go
+em := &tdx.EncryptionMetadata{
+	PrivateKeyLocation: privateKeyPath,
+	HashAlgorithm:      "SHA256",
+}
+decryptedData, err := tdx.Decrypt(encryptedData, em)
+if err != nil {
+    fmt.Printf("Something bad happened: %s\n\n", err)
+    return err
+}
+```
+
+### To collect event log from TD
+
+Note that the TD must have an exposed ACPI table for event log collection.
+
+```go
+evLogParser := tdx.NewEventLogParser()
+eventLog, err := evLogParser.GetEventLogs()
+if err != nil {
+    return err
+}
+```
+
 ## License
 
 This source is distributed under the BSD-style license found in the [LICENSE](../LICENSE)

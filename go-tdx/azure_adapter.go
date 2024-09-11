@@ -1,7 +1,7 @@
 //go:build !test
 
 /*
- *   Copyright (c) 2023 Intel Corporation
+ *   Copyright (c) 2023-2024 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -18,30 +18,27 @@ import (
 	"net/http"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/pkg/errors"
 )
 
 const (
-	TD_REPORT_OFFSET         = 32
-	TD_REPORT_SIZE           = 1024
-	RUNTIME_DATA_SIZE_OFFSET = 1232
-	RUNTIME_DATA_OFFSET      = 1236
+	TdReportOffset        = 32
+	TdReportSize          = 1024
+	RuntimeDataSizeOffset = 1232
+	RuntimeDataOffset     = 1236
 )
 
 // AzureAdapter manages TDX Quote collection from Azure TDX platform
 type azureAdapter struct {
-	uData       []byte
-	EvLogParser EventLogParser
+	uData []byte
 }
 
-// NewEvidenceAdapter returns a new Azure Adapter instance
-func NewEvidenceAdapter(udata []byte, evLogParser EventLogParser) (connector.EvidenceAdapter, error) {
+// NewAzureTdxAdapter returns a new Azure Adapter instance
+func NewAzureTdxAdapter(udata []byte) (connector.EvidenceAdapter, error) {
 	return &azureAdapter{
-		uData:       udata,
-		EvLogParser: evLogParser,
+		uData: udata,
 	}, nil
 }
 
@@ -77,15 +74,15 @@ func (adapter *azureAdapter) CollectEvidence(nonce []byte) (*connector.Evidence,
 	if err != nil {
 		return nil, errors.Errorf("getTDReport returned err %v", err)
 	}
-	tdReport := tpmReport[TD_REPORT_OFFSET : TD_REPORT_OFFSET+TD_REPORT_SIZE]
+	tdReport := tpmReport[TdReportOffset : TdReportOffset+TdReportSize]
 
 	quote, err := getQuote(tdReport)
 	if err != nil {
 		return nil, errors.Errorf("getQuote returned error %v", err)
 	}
 
-	runtimeDataSize := binary.LittleEndian.Uint32(tpmReport[RUNTIME_DATA_SIZE_OFFSET : RUNTIME_DATA_SIZE_OFFSET+4])
-	runtimeData := tpmReport[RUNTIME_DATA_OFFSET : RUNTIME_DATA_OFFSET+runtimeDataSize]
+	runtimeDataSize := binary.LittleEndian.Uint32(tpmReport[RuntimeDataSizeOffset : RuntimeDataSizeOffset+4])
+	runtimeData := tpmReport[RuntimeDataOffset : RuntimeDataOffset+runtimeDataSize]
 
 	// validate the user-data(hash) in the evidence matches the user-data(hash) provided to the TPM
 	var runtimeDataMap map[string]interface{}
@@ -105,24 +102,10 @@ func (adapter *azureAdapter) CollectEvidence(nonce []byte) (*connector.Evidence,
 		return nil, errors.Errorf("The collected evidence is invalid")
 	}
 
-	var eventLog []byte
-	if adapter.EvLogParser != nil {
-		rtmrEventLogs, err := adapter.EvLogParser.GetEventLogs()
-		if err != nil {
-			return nil, errors.Wrap(err, "There was an error while collecting RTMR Event Log Data")
-		}
-
-		eventLog, err = json.Marshal(rtmrEventLogs)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error while marshalling RTMR Event Log Data")
-		}
-	}
-
 	return &connector.Evidence{
-		Type:        1,
-		Quote:       quote,
+		Type:        connector.AzTdx,
+		Evidence:    quote,
 		UserData:    adapter.uData,
-		EventLog:    eventLog,
 		RuntimeData: runtimeData,
 	}, nil
 }
@@ -152,9 +135,6 @@ func getTDReport(reportData []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// Adding a sleep time of 3s for the user data to be reflected in 0x1400001 nv index
-	time.Sleep(3 * time.Second)
 
 	tdReport, err := exec.Command("tpm2_nvread", "-C", "o", "0x01400001").Output()
 	if err != nil {
