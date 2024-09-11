@@ -12,7 +12,6 @@ import (
 	"strings"
 )
 
-// Copilot code:  log any bugs with github ;-)
 type HexInt int
 
 func (hi HexInt) MarshalJSON() ([]byte, error) {
