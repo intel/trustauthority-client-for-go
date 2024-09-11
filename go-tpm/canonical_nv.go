@@ -86,7 +86,7 @@ func (tpm *canonicalTpm) NVWrite(nvHandle int, data []byte) error {
 
 	tpm.ctx.FlushContext(session)
 
-	logrus.Infof("Successfully wrote %d bytes at NV index %x", len(data), nvHandle)
+	logrus.Debugf("Successfully wrote %d bytes at NV index %x", len(data), nvHandle)
 	return nil
 }
 
