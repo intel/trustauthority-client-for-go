@@ -1,97 +1,90 @@
 ---
-last_updated: 01 February 2024
+last_updated: 12 Sep 2024
 ---
 
-# Intel® Trust Authority CLI for Intel TDX
+# Intel® Trust Authority Azure SEVSNP CLI
 
-Intel® Trust Authority CLI for Intel® Trust Domain Extensions (Intel® TDX) [**tdx-cli**](./tdx-cli) provides a CLI to attest an Intel TDX trust domain (TD) with Intel Trust Authority. **tdx-cli** requires **go-connector**, and **go-tdx**. See the [README](./tdx-cli/README.md) for details.
+The Intel® Trust Authority Azure SEVSNP CLI is a command line interface for attesting a Azure SEV-SNP CVM with Intel Trust Authority. The CLI must be installed and run inside the Azure SEV-SNP CVM. 
 
-For more information, see [Intel Trust Authority CLI for Intel TDX](https://docs.trustauthority.intel.com/main/articles/integrate-go-tdx-cli.html) in the Intel Trust Authority documentation.
+**The sevsnp-cli and go-sevsnp are exclusive beta preview features that are designed to work only within the Intel® Trust Authority Pilot environment. To access these features, you must have a service offer for the Intel® Trust Authority Pilot. The development of this branch is ongoing, and we encourage you to report any issues you encounter to the product team.**
 
-## Installation
-   ```sh
-   curl -sL https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-azure.sh | sudo bash -
-   ```
+## Go Requirement
 
-### Note
-To verify the signature of TDX CLI binary downloaded using above bash scrpt, perform the following steps.
-
-1. Extract public key from the certificate
-```
-openssl x509 -in /usr/bin/trustauthority-cli.cer -pubkey -noout > /tmp/public_key.pem
-```
-
-2. Create a hash of the binary
-```
-openssl dgst -out /tmp/binaryHashOutput -sha512 -binary /usr/bin/trustauthority-cli
-```
-
-3.Verify the signature 
-```
-openssl pkeyutl -verify -pubin -inkey /tmp/public_key.pem -sigfile /usr/bin/trustauthority-cli.sig -in /tmp/binaryHashOutput -pkeyopt digest:sha512 -pkeyopt rsa_padding_mode:pss
-```
-
+Use <b>go1.22 or newer</b>. Follow https://go.dev/doc/install for installation of Go.
 
 ## Build CLI from Source
 
-### Prerequisites
+### Install tpm2-tools
+```sh
+sudo apt-get update
+sudo apt-get install tpm2-tools
+```
 
-- Use **Go 1.19 or newer**. Follow https://go.dev/doc/install for installation of Go.
+### Get the code
+Checkout the code
+```sh
+git clone -b azure-sevsnp-preview https://github.com/intel/trustauthority-client-for-go
+```
 
-### Build CLI
-Compile Intel Trust Authority TDX CLI. This will generate `trustauthority-cli` binary in current directory:
+### Build
+Use the following command to compile the Intel Trust Authority Azure SEVSNP CLI. This command generates the `trustauthority-sevsnp-cli` binary in current directory:
 
 ```sh
-cd tdx-cli/
+cd trustauthority-client-for-go/sevsnp-cli/
 make cli
 ```
 
-### Unit Tests
-
-To run the tests, run `cd tdx-cli && make test-coverage`. See the example test in `tdx-cli/token_test.go` for an example of a test.
-
 ## Usage
 
-### To get a list of all the available commands
+### To get a list all the available commands
 
 ```sh
-./trustauthority-cli --help
+trustauthority-sevsnp-cli --help
 ```
-More info about a specific command can be found using
+
+More info about a specific command can be found using the following command.
+
 ```sh
-./trustauthority-cli <command> --help
+trustauthority-sevsnp-cli <command> --help
 ```
 
-### To get an Intel Trust Authority attestation token
+### To get an Intel Trust Authority signed token
 
-The `token` command requires an Intel Trust Authority configuration to be passed in JSON format
+The `token` command requires the Intel Trust Authority configuration to be passed in json format.
 
 ```json
 {
-    "trustauthority_api_url": "https://api.trustauthority.intel.com",
+    "trustauthority_api_url": "https://api.pilot.trustauthority.intel.com",
     "trustauthority_api_key": "<trustauthority attestation api key>"
 }
 ```
-Save this data in a `config.json` file and then invoke the `token` command.
+
+Save this data in config.json file and invoke the `token` command.
 
 ```sh
-sudo ./trustauthority-cli token --config config.json --user-data <base64 encoded userdata>
+sudo ./trustauthority-sevsnp-cli token --config config.json --user-data <base64 encoded userdata> --policy-ids <comma separated trustauthority attestation policy ids>
 ```
 
+### To get the SEVSNP report with a nonce and userData
 
-### To verify an Intel Trust Authority attestation token
+```sh
+sudo ./trustauthority-sevsnp-cli report --nonce <base64 encoded nonce> --user-data <base64 encoded userdata>
+```
 
-The `verify` command requires the Intel Trust Authority baseURL to be passed in JSON format.
+### To verify an Intel Trust Authority signed token
+
+`verify` command requires Intel Trust Authority URL to be passed in json format.
 
 ```json
 {
-    "trustauthority_url": "https://portal.trustauthority.intel.com"
+    "trustauthority_url": "https://portal.pilot.trustauthority.intel.com"
 }
 ```
-Save this data in config.json file and then invoke the `verify` command.
+
+Save this data in a config.json file and invoke the `verify` command.
 
 ```sh
-./trustauthority-cli verify --config config.json --token <attestation token in JWT format>
+./trustauthority-sevsnp-cli verify --config config.json --token <attestation token in JWT format>
 ```
 
 ## License
