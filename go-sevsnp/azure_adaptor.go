@@ -15,7 +15,6 @@ import (
 	"io"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/pkg/errors"
@@ -119,9 +118,6 @@ func getTDReport(reportData []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// Adding a sleep time of 3s for the user data to be reflected in 0x1400001 nv index
-	time.Sleep(3 * time.Second)
 
 	tdReport, err := exec.Command("tpm2_nvread", "-C", "o", "0x01400001").Output()
 	if err != nil {
