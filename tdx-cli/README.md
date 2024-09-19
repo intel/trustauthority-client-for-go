@@ -1,5 +1,5 @@
 ---
-last_updated: 8 May 2024
+last_updated: 8 September 2024
 ---
 
 # Intel® Trust Authority CLI for Intel TDX
@@ -99,6 +99,15 @@ Save this data in a `config.json` file and then invoke the `token` command.
 ```sh
 sudo trustauthority-cli token --config config.json --user-data <base64 encoded userdata> --no-eventlog
 ```
+> [!NOTE]
+> If running on Azure, include `"cloud_provider": "azure"` in `config.json` file
+```json
+{
+    "cloud_provider": "azure",
+    "trustauthority_api_url": "https://api.trustauthority.intel.com",
+    "trustauthority_api_key": "<trustauthority attestation api key>"
+}
+```
 
 ### To verify an Intel Trust Authority attestation token
 
@@ -120,6 +129,11 @@ trustauthority-cli verify --config config.json --token <attestation token in JWT
 ```sh
 sudo trustauthority-cli quote --nonce <base64 encoded nonce> --user-data <base64 encoded userdata>
 ```
+> [!NOTE]
+> If running on Azure, include `--aztdx`
+> ```bash
+> sudo trustauthority-cli quote --nonce <base64 encoded nonce> --user-data <base64 encoded userdata> --aztdx
+> ```
 
 ## License
 

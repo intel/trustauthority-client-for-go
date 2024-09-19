@@ -1,5 +1,5 @@
 ---
-last_updated: 16 February 2024
+last_updated: 16 September 2024
 ---
 
 # Intel® Trust Authority Go TDX Adapter
@@ -18,14 +18,14 @@ To run the tests, run `cd go-tdx && go test ./... --tags=test`. See the example 
 
 ### To Create a new Intel TDX adapter
 
-**NewEvidenceAdapter()** and then use the adapter to collect a quote from a TD. NewEvidenceAdapter() accepts two optional arguments: **tdHeldData**, and **EventLogParser**. **tdHeldData**  is binary data provided by the client. tdHeldData, if provided, is output to the **attester_held_data** claim in the attestation token. **EventLogParser** allows you to provide a log parser for ACPI or UEFI logs, if your Intel TDX-enabled platform exposes the logs. 
+**NewTdxAdapter()** and then use the adapter to collect a quote from a TD. NewTdxAdapter() accepts two optional arguments: **tdHeldData**, and **EventLogParser**. **tdHeldData**  is binary data provided by the client. tdHeldData, if provided, is output to the **attester_held_data** claim in the attestation token. **EventLogParser** allows you to provide a log parser for ACPI or UEFI logs, if your Intel TDX-enabled platform exposes the logs. 
 
 **CollectEvidence()** requires a **nonce** argument. A SHA512 hash is calculated for the nonce and tdHeldData (if any) and saved in the TD quote REPORTDATA field. If successful, CollectEvidence() returns a TD quote that's formatted for attestation by Intel Trust Authority.
 
 ```go
 import "github.com/intel/trustauthority-client/go-tdx"
 
-adapter, err := tdx.NewEvidenceAdapter(tdHeldData, nil)
+adapter, err := tdx.NewTdxAdapter(tdHeldData, nil)
 if err != nil {
     return err
 }
