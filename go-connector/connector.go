@@ -26,6 +26,13 @@ type Connector interface {
 	GetToken(GetTokenArgs) (GetTokenResponse, error)
 	Attest(AttestArgs) (AttestResponse, error)
 	VerifyToken(string) (*jwt.Token, error)
+
+	// AttestEvidence serializes 'evidence' to json and sends it to the Trust Authority
+	// for attestation.  'cloudProvider' is an optional string that is appended to the
+	// attestation endpoint (ex. "azure" is routed to /v2/attest/azure).  Currently,
+	// only "azure" is supported.  'reqId' is an optional string that is included in the
+	// x-request-id header that can be used for troubleshooting.
+	AttestEvidence(evidence interface{}, cloudProvider string, reqId string) (AttestResponse, error)
 }
 
 // GetNonceArgs holds the request parameters needed for getting nonce from Intel Trust Authority

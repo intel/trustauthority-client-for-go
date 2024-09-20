@@ -89,3 +89,38 @@ func getQuoteFromConfigFS(reportData []byte) ([]byte, error) {
 
 	return resp.OutBlob, nil
 }
+
+func NewCompositeEvidenceAdapter(evLogParser EventLogParser) (connector.CompositeEvidenceAdapter, error) {
+	return &tdxAdapter{
+		EvLogParser: evLogParser,
+	}, nil
+}
+
+func (adapter *tdxAdapter) GetEvidenceIdentifier() string {
+	return "tdx"
+}
+
+func (adapter *tdxAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, userData []byte) (interface{}, error) {
+	adapter.uData = userData
+
+	var nonce []byte
+	if verifierNonce != nil {
+		nonce = append(verifierNonce.Val, verifierNonce.Iat[:]...)
+	}
+
+	quote, err := adapter.CollectEvidence(nonce)
+	if err != nil {
+		return nil, err
+	}
+
+	return &struct {
+		R []byte                   `json:"runtime_data"`
+		Q []byte                   `json:"quote"`
+		U []byte                   `json:"user_data,omitempty"`
+		V *connector.VerifierNonce `json:"verifier_nonce,omitempty"`
+	}{
+		R: quote.RuntimeData,
+		Q: quote.Evidence,
+		U: quote.UserData,
+	}, nil
+}

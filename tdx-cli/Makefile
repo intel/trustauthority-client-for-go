@@ -4,7 +4,7 @@
 APPNAME := trustauthority-cli
 GITCOMMIT := $(shell git describe --always)
 GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
-VERSION := v1.6.0
+VERSION := v1.11.0
 
 cli:
 	CGO_ENABLED=1 CGO_CFLAGS="-O2 -D_FORTIFY_SOURCE=2" go build -buildmode=pie -trimpath -ldflags "-s -linkmode=external -extldflags -Wl,-O1,-z,relro,-z,now \
@@ -14,7 +14,7 @@ cli:
 test:
 	go test ./... --tags=test
 test-coverage:
-	go test ./... --tags=test -coverprofile=cover.out; go tool cover -func cover.out
+	go test ./... --tags=test -coverprofile=cover.out; go tool cover -html=cover.out -o cover.html; go tool cover -func cover.out
 clean:
 	rm -rf ${APPNAME}
 all: clean cli test test-coverage

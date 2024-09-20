@@ -9,7 +9,7 @@ package constants
 const (
 	RSAKeyBitLength     = 3072
 	LinuxFilePathSize   = 4096
-	CLIShortDescription = "Intel® Trust Authority CLI for TDX"
+	CLIShortDescription = "Intel® Trust Authority CLI"
 )
 
 // Command Names
@@ -21,6 +21,7 @@ const (
 	RootCmd          = "trustauthority-cli"
 	VersionCmd       = "version"
 	VerifyCmd        = "verify"
+	EvidenceCmd      = "evidence"
 )
 
 // Options Names
@@ -39,4 +40,7 @@ const (
 	NoEventLogOption      = "no-eventlog"
 	TokenOption           = "token"
 	WithAzTdxOption       = "aztdx"
+	WithTpmOption         = "tpm"
+	WithTdxOption         = "tdx"
+	NoVerifierNonceOption = "no-verifier-nonce"
 )

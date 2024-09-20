@@ -38,3 +38,27 @@ func (adapter *mockAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, 
 		EventLog: nil,
 	}, nil
 }
+
+func NewCompositeEvidenceAdapter(evLogParser EventLogParser) (connector.CompositeEvidenceAdapter, error) {
+	return &mockAdapter2{}, nil
+}
+
+type mockAdapter2 struct{}
+
+func (m *mockAdapter2) GetEvidenceIdentifier() string {
+	return "tdx"
+}
+
+func (m *mockAdapter2) GetEvidence(verifierNonce *connector.VerifierNonce, userData []byte) (interface{}, error) {
+	return &struct {
+		R []byte                   `json:"runtime_data"`
+		Q []byte                   `json:"quote"`
+		U []byte                   `json:"user_data,omitempty"`
+		V *connector.VerifierNonce `json:"verifier_nonce,omitempty"`
+	}{
+		R: make([]byte, 128),
+		Q: make([]byte, 128),
+		U: userData,
+		V: verifierNonce,
+	}, nil
+}
