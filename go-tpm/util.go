@@ -58,7 +58,7 @@ func parsePcrSelections(args string) ([]PcrSelection, error) {
 	pcrSelections := []PcrSelection{}
 
 	if args == "" {
-		return pcrSelections, nil
+		return defaultPcrSelections, nil
 	}
 
 	// tpm2-tools like selection strings "sha1:1,2,3+sha256:1,2,3"

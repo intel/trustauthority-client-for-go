@@ -22,6 +22,12 @@ const (
 	// see "Registry of Reserved TPM 2.0 Handles and Localities" section 2.2.2
 	minNvHandle = 0x01000000
 	maxNvHandle = 0x01C2FFFF
+
+	imaLogPath       = "/sys/kernel/security/ima/ascii_runtime_measurements"
+	uefiEventLogPath = "/sys/kernel/security/tpm0/binary_bios_measurements"
+
+	// TCG event log header
+	specIdEvent03 = "Spec ID Event03"
 )
 
 var (

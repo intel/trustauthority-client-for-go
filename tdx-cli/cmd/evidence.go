@@ -31,6 +31,8 @@ func newEvidenceCommand() *cobra.Command {
 	var noEvLog bool
 	var userData string
 	var policyIds string
+	var withImaLogs bool
+	var withUefiEventLogs bool
 	var builderOptions []connector.EvidenceBuilderOption
 	var ctr connector.Connector
 
@@ -88,12 +90,22 @@ func newEvidenceCommand() *cobra.Command {
 					return errors.Errorf("TPM configuration not found in config file %q", configPath)
 				}
 
-				tpmAdapter, err := tpm.NewCompositeEvidenceAdapterWithOptions(
+				tpmOptions := []tpm.TpmAdapterOptions{
 					tpm.WithOwnerAuth(cfg.Tpm.OwnerAuth),
 					tpm.WithAkHandle(int(cfg.Tpm.AkHandle)),
-					tpm.WithPcrSelections(cfg.Tpm.PcrSelections))
+					tpm.WithPcrSelections(cfg.Tpm.PcrSelections)}
+
+				if withImaLogs {
+					tpmOptions = append(tpmOptions, tpm.WithImaLogs())
+				}
+
+				if withUefiEventLogs {
+					tpmOptions = append(tpmOptions, tpm.WithUefiEventLogs())
+				}
+
+				tpmAdapter, err := tpm.NewCompositeEvidenceAdapterWithOptions(tpmOptions...)
 				if err != nil {
-					return errors.Wrap(err, "Error while creating tpm adapter")
+					return err
 				}
 
 				builderOptions = append(builderOptions, connector.WithEvidenceAdapter(tpmAdapter))
@@ -163,6 +175,8 @@ func newEvidenceCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&tokenSigningAlg, constants.TokenAlgOption, "a", "", "Token signing algorithm to be used, support PS384 and RS256")
 	cmd.Flags().BoolVar(&policiesMustMatch, constants.PolicyMustMatchOption, false, "When true, all policies must match for a token to be created")
 	cmd.Flags().BoolVar(&noEvLog, constants.NoEventLogOption, false, "Do not collect Event Log")
+	cmd.Flags().BoolVar(&withImaLogs, constants.WithImaLogs, false, "When true, TPM evidence will include IMA runtime measurements")
+	cmd.Flags().BoolVar(&withUefiEventLogs, constants.WithEventLogs, false, "When true, TPM evidence will include UEFI event logs")
 
 	return &cmd
 }

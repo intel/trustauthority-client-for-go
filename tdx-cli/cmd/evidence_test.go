@@ -23,7 +23,8 @@ func TestEvidence(t *testing.T) {
 	configJson := `{
 		"trustauthority_api_url": "https://example.com",
 		"trustauthority_api_key": "YXBpa2V5",
-		"cloud_provider": "azure"
+		"cloud_provider": "azure",
+		"tpm": {}
 	}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
@@ -35,6 +36,7 @@ func TestEvidence(t *testing.T) {
 		confFilePath,
 		"--" + constants.NoVerifierNonceOption,
 		"--" + constants.WithTdxOption,
+		"--" + constants.WithTpmOption,
 	})
 
 	err := cmd.Execute()

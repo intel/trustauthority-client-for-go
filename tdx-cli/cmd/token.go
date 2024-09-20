@@ -84,6 +84,8 @@ func init() {
 	tokenCmd.Flags().Bool(constants.WithTdxOption, false, "Include TDX evidence")
 	tokenCmd.Flags().Bool(constants.WithTpmOption, false, "Include TPM evidence")
 	tokenCmd.Flags().Bool(constants.NoVerifierNonceOption, false, "Do not include an ITA verifier-nonce in evidence")
+	tokenCmd.Flags().Bool(constants.WithImaLogs, false, "When true, TPM evidence will include IMA runtime measurements")
+	tokenCmd.Flags().Bool(constants.WithEventLogs, false, "When true, TPM evidence will include UEFI event logs")
 
 	tokenCmd.MarkFlagRequired(constants.ConfigOption)
 }
@@ -176,6 +178,16 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
+	withImaLogs, err := cmd.Flags().GetBool(constants.WithImaLogs)
+	if err != nil {
+		return err
+	}
+
+	withUefiEventLogs, err := cmd.Flags().GetBool(constants.WithEventLogs)
+	if err != nil {
+		return err
+	}
+
 	// backward compatibility cli options: if the user did not specify "--tdx" or "--tpm" options,
 	// include TDX evidence by default
 	if !withTdx && !withTpm {
@@ -259,10 +271,20 @@ func getToken(cmd *cobra.Command) error {
 			return errors.Errorf("TPM configuration not found in config file %q", configFile)
 		}
 
-		tpmAdapter, err := tpm.NewCompositeEvidenceAdapterWithOptions(
+		tpmOptions := []tpm.TpmAdapterOptions{
 			tpm.WithOwnerAuth(config.Tpm.OwnerAuth),
 			tpm.WithAkHandle(int(config.Tpm.AkHandle)),
-			tpm.WithPcrSelections(config.Tpm.PcrSelections))
+			tpm.WithPcrSelections(config.Tpm.PcrSelections)}
+
+		if withImaLogs {
+			tpmOptions = append(tpmOptions, tpm.WithImaLogs())
+		}
+
+		if withUefiEventLogs {
+			tpmOptions = append(tpmOptions, tpm.WithUefiEventLogs())
+		}
+
+		tpmAdapter, err := tpm.NewCompositeEvidenceAdapterWithOptions(tpmOptions...)
 		if err != nil {
 			return errors.Wrap(err, "Error while creating tpm adapter")
 		}

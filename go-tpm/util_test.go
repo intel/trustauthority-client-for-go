@@ -15,7 +15,7 @@ import (
 // be updated at a later date.
 
 var testPcrSelections = map[string][]PcrSelection{
-	"": []PcrSelection{},
+	"": defaultPcrSelections,
 	"sha1:all": []PcrSelection{
 		{
 			Hash: crypto.SHA1,

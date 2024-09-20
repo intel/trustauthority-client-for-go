@@ -42,5 +42,7 @@ const (
 	WithAzTdxOption       = "aztdx"
 	WithTpmOption         = "tpm"
 	WithTdxOption         = "tdx"
+	WithImaLogs           = "ima"
+	WithEventLogs         = "evl"
 	NoVerifierNonceOption = "no-verifier-nonce"
 )
