@@ -26,13 +26,13 @@ func TestQuoteCmd(t *testing.T) {
 			description: "Test without inputs",
 		},
 		{
-			args: []string{constants.QuoteCmd, "--" + constants.UserDataOption, "dGVzdHVzZXJkYXRh",
+			args: []string{constants.QuoteCmd, "--" + constants.UserDataOptions.Name, "dGVzdHVzZXJkYXRh",
 				"--" + constants.NonceOption, "dGVzdHVzZXJkYXRh"},
 			wantErr:     false,
 			description: "Test with all valid inputs",
 		},
 		{
-			args:        []string{constants.QuoteCmd, "--" + constants.UserDataOption, "u$erd@t@"},
+			args:        []string{constants.QuoteCmd, "--" + constants.UserDataOptions.Name, "u$erd@t@"},
 			wantErr:     true,
 			description: "Test with malformed userdata",
 		},

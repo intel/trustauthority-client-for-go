@@ -36,15 +36,15 @@ var verifyCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(verifyCmd)
-	verifyCmd.Flags().StringP(constants.ConfigOption, "c", "", "Trust Authority config in JSON format")
+	verifyCmd.Flags().StringP(constants.ConfigOptions.Name, constants.ConfigOptions.ShortHand, "", constants.ConfigOptions.Description)
 	verifyCmd.Flags().StringP(constants.TokenOption, "t", "", "Token in JWT format")
 	verifyCmd.MarkFlagRequired(constants.TokenOption)
-	verifyCmd.MarkFlagRequired(constants.ConfigOption)
+	verifyCmd.MarkFlagRequired(constants.ConfigOptions.Name)
 }
 
 func verifyToken(cmd *cobra.Command) error {
 
-	configFile, err := cmd.Flags().GetString(constants.ConfigOption)
+	configFile, err := cmd.Flags().GetString(constants.ConfigOptions.Name)
 	if err != nil {
 		return err
 	}

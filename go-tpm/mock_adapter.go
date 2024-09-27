@@ -57,10 +57,10 @@ func WithPcrSelections(selections string) TpmAdapterOptions {
 	return func(tca *mockTpmAdapter) error { return nil }
 }
 
-func WithImaLogs() TpmAdapterOptions {
+func WithImaLogs(imaLogsPath string) TpmAdapterOptions {
 	return func(tca *mockTpmAdapter) error { return nil }
 }
 
-func WithUefiEventLogs() TpmAdapterOptions {
+func WithUefiEventLogs(eventLogsPath string) TpmAdapterOptions {
 	return func(tca *mockTpmAdapter) error { return nil }
 }

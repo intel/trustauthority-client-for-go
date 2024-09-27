@@ -32,7 +32,9 @@ func newEvidenceCommand() *cobra.Command {
 	var userData string
 	var policyIds string
 	var withImaLogs bool
-	var withUefiEventLogs bool
+	var withEventLogs bool
+	var eventLogsPath string
+	var imaLogsPath string
 	var builderOptions []connector.EvidenceBuilderOption
 	var ctr connector.Connector
 
@@ -96,11 +98,11 @@ func newEvidenceCommand() *cobra.Command {
 					tpm.WithPcrSelections(cfg.Tpm.PcrSelections)}
 
 				if withImaLogs {
-					tpmOptions = append(tpmOptions, tpm.WithImaLogs())
+					tpmOptions = append(tpmOptions, tpm.WithImaLogs(imaLogsPath))
 				}
 
-				if withUefiEventLogs {
-					tpmOptions = append(tpmOptions, tpm.WithUefiEventLogs())
+				if withEventLogs {
+					tpmOptions = append(tpmOptions, tpm.WithUefiEventLogs(eventLogsPath))
 				}
 
 				tpmAdapter, err := tpm.NewCompositeEvidenceAdapterWithOptions(tpmOptions...)
@@ -166,17 +168,19 @@ func newEvidenceCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&configPath, constants.ConfigOption, "c", "", "Trust Authority config in JSON format")
-	cmd.Flags().BoolVar(&withTpm, constants.WithTpmOption, false, "Include TPM evidence in evidence output")
-	cmd.Flags().BoolVar(&withTdx, constants.WithTdxOption, false, "Include TDX evidence in evidence output")
-	cmd.Flags().BoolVar(&noVerifierNonce, constants.NoVerifierNonceOption, false, "Do not include an ITA verifier-nonce in evidence")
-	cmd.Flags().StringVarP(&userData, constants.UserDataOption, "u", "", "User data in hex or base64 encoded format")
-	cmd.Flags().StringVarP(&policyIds, constants.PolicyIdsOption, "p", "", "Trust Authority Policy Ids, comma separated")
-	cmd.Flags().StringVarP(&tokenSigningAlg, constants.TokenAlgOption, "a", "", "Token signing algorithm to be used, support PS384 and RS256")
-	cmd.Flags().BoolVar(&policiesMustMatch, constants.PolicyMustMatchOption, false, "When true, all policies must match for a token to be created")
-	cmd.Flags().BoolVar(&noEvLog, constants.NoEventLogOption, false, "Do not collect Event Log")
-	cmd.Flags().BoolVar(&withImaLogs, constants.WithImaLogs, false, "When true, TPM evidence will include IMA runtime measurements")
-	cmd.Flags().BoolVar(&withUefiEventLogs, constants.WithEventLogs, false, "When true, TPM evidence will include UEFI event logs")
+	cmd.Flags().StringVarP(&configPath, constants.ConfigOptions.Name, constants.ConfigOptions.ShortHand, "", constants.ConfigOptions.Description)
+	cmd.Flags().BoolVar(&withTpm, constants.WithTpmOptions.Name, false, constants.WithTpmOptions.Description)
+	cmd.Flags().BoolVar(&withTdx, constants.WithTdxOptions.Name, false, constants.WithTdxOptions.Description)
+	cmd.Flags().BoolVar(&noVerifierNonce, constants.NoVerifierNonceOptions.Name, false, constants.NoVerifierNonceOptions.Description)
+	cmd.Flags().StringVarP(&userData, constants.UserDataOptions.Name, constants.UserDataOptions.ShortHand, "", constants.UserDataOptions.Description)
+	cmd.Flags().StringVarP(&policyIds, constants.PolicyIdsOptions.Name, constants.PolicyIdsOptions.ShortHand, "", constants.PolicyIdsOptions.Description)
+	cmd.Flags().StringVarP(&tokenSigningAlg, constants.TokenAlgOptions.Name, constants.TokenAlgOptions.ShortHand, "", constants.TokenAlgOptions.Description)
+	cmd.Flags().BoolVar(&policiesMustMatch, constants.PolicyMustMatchOptions.Name, false, constants.PolicyMustMatchOptions.Description)
+	cmd.Flags().BoolVar(&noEvLog, constants.NoEventLogOptions.Name, false, constants.NoEventLogOptions.Description)
+	cmd.Flags().BoolVar(&withImaLogs, constants.WithImaLogsOptions.Name, false, constants.WithImaLogsOptions.Description)
+	cmd.Flags().BoolVar(&withEventLogs, constants.WithEventLogsOptions.Name, false, constants.WithEventLogsOptions.Description)
+	cmd.Flags().StringVarP(&eventLogsPath, constants.EventLogsPathOptions.Name, constants.EventLogsPathOptions.ShortHand, "", constants.EventLogsPathOptions.Description)
+	cmd.Flags().StringVarP(&imaLogsPath, constants.ImaLogsPathOptions.Name, constants.ImaLogsPathOptions.ShortHand, "", constants.ImaLogsPathOptions.Description)
 
 	return &cmd
 }

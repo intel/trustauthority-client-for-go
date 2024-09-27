@@ -61,17 +61,17 @@ func NewCompositeEvidenceAdapter(akHandle int, pcrSelections string, ownerAuth s
 
 // NewCompositeEvidenceAdapterWithOptions creates a new composite adapter for the host's TPM.
 func NewCompositeEvidenceAdapterWithOptions(opts ...TpmAdapterOptions) (connector.CompositeEvidenceAdapter, error) {
-	// By default, create an adpater with default values
-	tca := &defaultAdapter
+	// create an adpater with default values
+	tca := defaultAdapter
 
-	// Iterate over the options and apply them to the adapter
+	// iterate over the options and apply them to the adapter
 	for _, option := range opts {
-		if err := option(tca); err != nil {
+		if err := option(&tca); err != nil {
 			return nil, err
 		}
 	}
 
-	return tca, nil
+	return &tca, nil
 }
 
 // WithOwnerAuth specifies the owner password used to communicate
@@ -118,29 +118,47 @@ func WithPcrSelections(selections string) TpmAdapterOptions {
 }
 
 // WithImaLogs will include the IMA log into TPM evidence using the
-// default path "/sys/kernel/security/ima/ascii_runtime_measurements".
-func WithImaLogs() TpmAdapterOptions {
+// specified 'imaPath' parameter. If the path is empty, the default value of
+// "/sys/kernel/security/ima/ascii_runtime_measurements" is used.  An error
+// is returned if the specified file cannot be read.
+func WithImaLogs(imaPath string) TpmAdapterOptions {
 	return func(tca *tpmAdapter) error {
-		_, err := os.Stat(imaLogPath)
-		if err != nil {
-			return errors.Wrapf(err, "Failed to open ima log file %q", imaLogPath)
+		var logPath string
+		if len(imaPath) == 0 {
+			logPath = DefaultImaPath
+		} else {
+			logPath = imaPath
 		}
 
-		tca.imaLogPath = imaLogPath
+		_, err := os.Stat(logPath)
+		if err != nil {
+			return errors.Wrapf(err, "Failed to open ima log file %q", logPath)
+		}
+
+		tca.imaLogPath = logPath
 		return nil
 	}
 }
 
 // WithUefiEventLogs will include the UEFI event log into TPM evidence using the
-// default path "/sys/kernel/security/tpm0/binary_bios_measurements".
-func WithUefiEventLogs() TpmAdapterOptions {
+// specified 'uefiLogPath'.  If the uefiLogPath is empty, the default value of
+// "/sys/kernel/security/tpm0/binary_bios_measurements" is used.  An error is returned
+// if the specified file cannot be read.
+func WithUefiEventLogs(uefiLogPath string) TpmAdapterOptions {
 	return func(tca *tpmAdapter) error {
-		_, err := os.Stat(uefiEventLogPath)
-		if err != nil {
-			return errors.Wrapf(err, "Failed to open uefi event log file %q", uefiEventLogPath)
+		var logPath string
+		if len(uefiLogPath) == 0 {
+			logPath = DefaultUefiEventLogPath
+		} else {
+			logPath = uefiLogPath
 		}
 
-		tca.uefiEventLogPath = uefiEventLogPath
+		_, err := os.Stat(logPath)
+		if err != nil {
+			return errors.Wrapf(err, "Failed to open uefi event log file %q", logPath)
+		}
+
+		tca.uefiEventLogPath = logPath
 		return nil
 	}
 }

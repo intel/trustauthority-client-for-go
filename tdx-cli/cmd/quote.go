@@ -37,13 +37,13 @@ var quoteCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(quoteCmd)
 	quoteCmd.Flags().StringP(constants.NonceOption, "n", "", "Nonce in base64 encoded format")
-	quoteCmd.Flags().StringP(constants.UserDataOption, "u", "", "User Data in base64 encoded format")
+	quoteCmd.Flags().StringP(constants.UserDataOptions.Name, constants.UserDataOptions.ShortHand, "", constants.UserDataOptions.Description)
 	quoteCmd.Flags().Bool(constants.WithAzTdxOption, false, "Collect Azure TDX evidence")
 }
 
 func getQuote(cmd *cobra.Command) error {
 
-	userData, err := cmd.Flags().GetString(constants.UserDataOption)
+	userData, err := cmd.Flags().GetString(constants.UserDataOptions.Name)
 	if err != nil {
 		return err
 	}

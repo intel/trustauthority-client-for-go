@@ -73,27 +73,29 @@ type TpmConfig struct {
 
 func init() {
 	rootCmd.AddCommand(tokenCmd)
-	tokenCmd.Flags().StringP(constants.ConfigOption, "c", "", "Trust Authority config in JSON format")
-	tokenCmd.Flags().StringP(constants.UserDataOption, "u", "", "User Data in base64 encoded format")
-	tokenCmd.Flags().StringP(constants.PolicyIdsOption, "p", "", "Trust Authority Policy Ids, comma separated")
+	tokenCmd.Flags().StringP(constants.ConfigOptions.Name, constants.ConfigOptions.ShortHand, "", constants.ConfigOptions.Description)
+	tokenCmd.Flags().StringP(constants.UserDataOptions.Name, constants.UserDataOptions.ShortHand, "", constants.UserDataOptions.Description)
+	tokenCmd.Flags().StringP(constants.PolicyIdsOptions.Name, constants.PolicyIdsOptions.ShortHand, "", constants.PolicyIdsOptions.Description)
 	tokenCmd.Flags().StringP(constants.PublicKeyPathOption, "f", "", "Public key to be used as userdata")
-	tokenCmd.Flags().StringP(constants.RequestIdOption, "r", "", "Request id to be associated with request")
-	tokenCmd.Flags().StringP(constants.TokenAlgOption, "a", "", "Token signing algorithm to be used, support PS384 and RS256")
-	tokenCmd.Flags().Bool(constants.PolicyMustMatchOption, false, "Enforce policies match during attestation")
-	tokenCmd.Flags().Bool(constants.NoEventLogOption, false, "Do not collect Event Log")
-	tokenCmd.Flags().Bool(constants.WithTdxOption, false, "Include TDX evidence")
-	tokenCmd.Flags().Bool(constants.WithTpmOption, false, "Include TPM evidence")
-	tokenCmd.Flags().Bool(constants.NoVerifierNonceOption, false, "Do not include an ITA verifier-nonce in evidence")
-	tokenCmd.Flags().Bool(constants.WithImaLogs, false, "When true, TPM evidence will include IMA runtime measurements")
-	tokenCmd.Flags().Bool(constants.WithEventLogs, false, "When true, TPM evidence will include UEFI event logs")
+	tokenCmd.Flags().StringP(constants.RequestIdOptions.Name, constants.RequestIdOptions.ShortHand, "", constants.RequestIdOptions.Description)
+	tokenCmd.Flags().StringP(constants.TokenAlgOptions.Name, constants.TokenAlgOptions.ShortHand, "", constants.TokenAlgOptions.Description)
+	tokenCmd.Flags().Bool(constants.PolicyMustMatchOptions.Name, false, constants.PolicyMustMatchOptions.Description)
+	tokenCmd.Flags().Bool(constants.NoEventLogOptions.Name, false, constants.NoEventLogOptions.Description)
+	tokenCmd.Flags().Bool(constants.WithTdxOptions.Name, false, constants.WithTdxOptions.Description)
+	tokenCmd.Flags().Bool(constants.WithTpmOptions.Name, false, constants.WithTpmOptions.Description)
+	tokenCmd.Flags().Bool(constants.NoVerifierNonceOptions.Name, false, constants.NoVerifierNonceOptions.Description)
+	tokenCmd.Flags().Bool(constants.WithImaLogsOptions.Name, false, constants.WithImaLogsOptions.Description)
+	tokenCmd.Flags().Bool(constants.WithEventLogsOptions.Name, false, constants.WithEventLogsOptions.Description)
+	tokenCmd.Flags().StringP(constants.EventLogsPathOptions.Name, constants.EventLogsPathOptions.ShortHand, "", constants.EventLogsPathOptions.Description)
+	tokenCmd.Flags().StringP(constants.ImaLogsPathOptions.Name, constants.ImaLogsPathOptions.ShortHand, "", constants.ImaLogsPathOptions.Description)
 
-	tokenCmd.MarkFlagRequired(constants.ConfigOption)
+	tokenCmd.MarkFlagRequired(constants.ConfigOptions.Name)
 }
 
 func getToken(cmd *cobra.Command) error {
 	var builderOptions []connector.EvidenceBuilderOption
 
-	configFile, err := cmd.Flags().GetString(constants.ConfigOption)
+	configFile, err := cmd.Flags().GetString(constants.ConfigOptions.Name)
 	if err != nil {
 		return err
 	}
@@ -123,12 +125,12 @@ func getToken(cmd *cobra.Command) error {
 		return errors.Wrap(err, "Invalid Trust Authority Api key, must be base64 string")
 	}
 
-	userData, err := cmd.Flags().GetString(constants.UserDataOption)
+	userData, err := cmd.Flags().GetString(constants.UserDataOptions.Name)
 	if err != nil {
 		return err
 	}
 
-	policyIds, err := cmd.Flags().GetString(constants.PolicyIdsOption)
+	policyIds, err := cmd.Flags().GetString(constants.PolicyIdsOptions.Name)
 	if err != nil {
 		return err
 	}
@@ -138,17 +140,17 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
-	reqId, err := cmd.Flags().GetString(constants.RequestIdOption)
+	reqId, err := cmd.Flags().GetString(constants.RequestIdOptions.Name)
 	if err != nil {
 		return err
 	}
 
-	tokenSigningAlg, err := cmd.Flags().GetString(constants.TokenAlgOption)
+	tokenSigningAlg, err := cmd.Flags().GetString(constants.TokenAlgOptions.Name)
 	if err != nil {
 		return err
 	}
 
-	noVerifierNonce, err := cmd.Flags().GetBool(constants.NoVerifierNonceOption)
+	noVerifierNonce, err := cmd.Flags().GetBool(constants.NoVerifierNonceOptions.Name)
 	if err != nil {
 		return err
 	}
@@ -157,33 +159,43 @@ func getToken(cmd *cobra.Command) error {
 		builderOptions = append(builderOptions, connector.WithVerifierNonce(trustAuthorityConnector))
 	}
 
-	policyMustMatch, err := cmd.Flags().GetBool(constants.PolicyMustMatchOption)
+	policyMustMatch, err := cmd.Flags().GetBool(constants.PolicyMustMatchOptions.Name)
 	if err != nil {
 		return err
 	}
 	builderOptions = append(builderOptions, connector.WithPoliciesMustMatch(policyMustMatch))
 
-	noEvLog, err := cmd.Flags().GetBool(constants.NoEventLogOption)
+	noEvLog, err := cmd.Flags().GetBool(constants.NoEventLogOptions.Name)
 	if err != nil {
 		return err
 	}
 
-	withTdx, err := cmd.Flags().GetBool(constants.WithTdxOption)
+	withTdx, err := cmd.Flags().GetBool(constants.WithTdxOptions.Name)
 	if err != nil {
 		return err
 	}
 
-	withTpm, err := cmd.Flags().GetBool(constants.WithTpmOption)
+	withTpm, err := cmd.Flags().GetBool(constants.WithTpmOptions.Name)
 	if err != nil {
 		return err
 	}
 
-	withImaLogs, err := cmd.Flags().GetBool(constants.WithImaLogs)
+	withImaLogs, err := cmd.Flags().GetBool(constants.WithImaLogsOptions.Name)
 	if err != nil {
 		return err
 	}
 
-	withUefiEventLogs, err := cmd.Flags().GetBool(constants.WithEventLogs)
+	imaLogsPath, err := cmd.Flags().GetString(constants.ImaLogsPathOptions.Name)
+	if err != nil {
+		return err
+	}
+
+	withUefiEventLogs, err := cmd.Flags().GetBool(constants.WithEventLogsOptions.Name)
+	if err != nil {
+		return err
+	}
+
+	eventLogsPath, err := cmd.Flags().GetString(constants.ImaLogsPathOptions.Name)
 	if err != nil {
 		return err
 	}
@@ -277,11 +289,11 @@ func getToken(cmd *cobra.Command) error {
 			tpm.WithPcrSelections(config.Tpm.PcrSelections)}
 
 		if withImaLogs {
-			tpmOptions = append(tpmOptions, tpm.WithImaLogs())
+			tpmOptions = append(tpmOptions, tpm.WithImaLogs(imaLogsPath))
 		}
 
 		if withUefiEventLogs {
-			tpmOptions = append(tpmOptions, tpm.WithUefiEventLogs())
+			tpmOptions = append(tpmOptions, tpm.WithUefiEventLogs(eventLogsPath))
 		}
 
 		tpmAdapter, err := tpm.NewCompositeEvidenceAdapterWithOptions(tpmOptions...)

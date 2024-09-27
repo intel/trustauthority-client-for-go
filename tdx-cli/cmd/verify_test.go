@@ -36,7 +36,7 @@ func TestVerifyCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.VerifyCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				confFilePath,
 				"--" + constants.TokenOption,
 				token,
@@ -56,7 +56,7 @@ func TestVerifyCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.VerifyCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				"config-file.json",
 				"--" + constants.TokenOption,
 				token,
@@ -74,7 +74,7 @@ func TestVerifyCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.VerifyCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				confFilePath,
 			},
 			wantErr:     true,
@@ -98,7 +98,7 @@ func TestVerifyCmd_MissingTrustAuthorityUrl(t *testing.T) {
 	configJson := `{"trustauthority_url":""}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
-	_, err := execute(t, rootCmd, constants.VerifyCmd, "--"+constants.ConfigOption, confFilePath, "--"+constants.TokenOption, token)
+	_, err := execute(t, rootCmd, constants.VerifyCmd, "--"+constants.ConfigOptions.Name, confFilePath, "--"+constants.TokenOption, token)
 	assert.Error(t, err)
 }
 
@@ -107,6 +107,6 @@ func TestVerifyCmd_MalformedTrustAuthorityUrl(t *testing.T) {
 	configJson := `{"trustauthority_url":":trustauthority.intel.com"}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
-	_, err := execute(t, rootCmd, constants.VerifyCmd, "--"+constants.ConfigOption, confFilePath, "--"+constants.TokenOption, token)
+	_, err := execute(t, rootCmd, constants.VerifyCmd, "--"+constants.ConfigOptions.Name, confFilePath, "--"+constants.TokenOption, token)
 	assert.Error(t, err)
 }

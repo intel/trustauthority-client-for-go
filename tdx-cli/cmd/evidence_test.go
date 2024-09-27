@@ -32,11 +32,11 @@ func TestEvidence(t *testing.T) {
 	cmd := newEvidenceCommand()
 	cmd.SetArgs([]string{
 		constants.EvidenceCmd,
-		"--" + constants.ConfigOption,
+		"--" + constants.ConfigOptions.Name,
 		confFilePath,
-		"--" + constants.NoVerifierNonceOption,
-		"--" + constants.WithTdxOption,
-		"--" + constants.WithTpmOption,
+		"--" + constants.NoVerifierNonceOptions.Name,
+		"--" + constants.WithTdxOptions.Name,
+		"--" + constants.WithTpmOptions.Name,
 	})
 
 	err := cmd.Execute()

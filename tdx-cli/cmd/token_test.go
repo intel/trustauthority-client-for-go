@@ -48,7 +48,7 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				confFilePath,
 			},
 			wantErr:     false,
@@ -57,7 +57,7 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				"config-file.json",
 			},
 			wantErr:     true,
@@ -66,9 +66,9 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				confFilePath,
-				"--" + constants.RequestIdOption,
+				"--" + constants.RequestIdOptions.Name,
 				"r@q1",
 			},
 			wantErr:     true,
@@ -77,11 +77,11 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				confFilePath,
 				"--" + constants.PublicKeyPathOption,
 				publicKeyPath,
-				"--" + constants.RequestIdOption,
+				"--" + constants.RequestIdOptions.Name,
 				"req1",
 			},
 			wantErr:     false,
@@ -90,7 +90,7 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				confFilePath,
 				"--" + constants.PublicKeyPathOption,
 				"public-key.pem",
@@ -101,11 +101,11 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				confFilePath,
-				"--" + constants.UserDataOption,
+				"--" + constants.UserDataOptions.Name,
 				"dGVzdHVzZXJkYXRh",
-				"--" + constants.PolicyIdsOption,
+				"--" + constants.PolicyIdsOptions.Name,
 				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
 			},
 			wantErr:     false,
@@ -114,9 +114,9 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				confFilePath,
-				"--" + constants.PolicyIdsOption,
+				"--" + constants.PolicyIdsOptions.Name,
 				"4312c813-ecb2-4e6e-83d3-515d88ac06f2343",
 			},
 			wantErr:     true,
@@ -125,9 +125,9 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				confFilePath,
-				"--" + constants.UserDataOption,
+				"--" + constants.UserDataOptions.Name,
 				"u$erd@t@",
 			},
 			wantErr:     true,
@@ -136,13 +136,13 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				confFilePath,
-				"--" + constants.UserDataOption,
+				"--" + constants.UserDataOptions.Name,
 				"dGVzdHVzZXJkYXRh",
-				"--" + constants.PolicyIdsOption,
+				"--" + constants.PolicyIdsOptions.Name,
 				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
-				"--" + constants.TokenAlgOption,
+				"--" + constants.TokenAlgOptions.Name,
 				"PS384",
 			},
 			wantErr:     false,
@@ -151,15 +151,15 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				confFilePath,
-				"--" + constants.UserDataOption,
+				"--" + constants.UserDataOptions.Name,
 				"dGVzdHVzZXJkYXRh",
-				"--" + constants.PolicyIdsOption,
+				"--" + constants.PolicyIdsOptions.Name,
 				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
-				"--" + constants.TokenAlgOption,
+				"--" + constants.TokenAlgOptions.Name,
 				"RS256",
-				"--" + constants.PolicyMustMatchOption,
+				"--" + constants.PolicyMustMatchOptions.Name,
 			},
 			wantErr:     false,
 			description: "Test with Valid RS256 alg with policy must match flag",
@@ -167,13 +167,13 @@ func TestTokenCmd(t *testing.T) {
 		{
 			args: []string{
 				constants.TokenCmd,
-				"--" + constants.ConfigOption,
+				"--" + constants.ConfigOptions.Name,
 				confFilePath,
-				"--" + constants.UserDataOption,
+				"--" + constants.UserDataOptions.Name,
 				"dGVzdHVzZXJkYXRh",
-				"--" + constants.PolicyIdsOption,
+				"--" + constants.PolicyIdsOptions.Name,
 				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
-				"--" + constants.TokenAlgOption,
+				"--" + constants.TokenAlgOptions.Name,
 				"invalid",
 			},
 			wantErr:     true,
@@ -197,7 +197,7 @@ func TestTokenCmd_MissingTrustAuthorityUrl(t *testing.T) {
 	configJson := `{"trustauthority_api_url":"","trustauthority_api_key":"YXBpa2V5"}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
-	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOption, confFilePath)
+	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOptions.Name, confFilePath)
 	assert.Error(t, err)
 }
 
@@ -209,7 +209,7 @@ func TestTokenCmd_MissingTrustAuthorityApiKey(t *testing.T) {
 	configJson := `{"trustauthority_api_url":"` + server.URL + `","trustauthority_api_key":""}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
-	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOption, confFilePath)
+	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOptions.Name, confFilePath)
 	assert.Error(t, err)
 }
 
@@ -218,7 +218,7 @@ func TestTokenCmd_MalformedTrustAuthorityUrl(t *testing.T) {
 	configJson := `{"trustauthority_api_url":":trustauthority.intel.com","trustauthority_api_key":"YXBpa2V5"}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
-	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOption, confFilePath)
+	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOptions.Name, confFilePath)
 	assert.Error(t, err)
 }
 
@@ -230,6 +230,6 @@ func TestTokenCmd_MalformedTrustAuthorityApiKey(t *testing.T) {
 	configJson := `{"trustauthority_api_url":"` + server.URL + `","trustauthority_api_key":"@p!key"}`
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
-	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOption, confFilePath)
+	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOptions.Name, confFilePath)
 	assert.Error(t, err)
 }
