@@ -195,7 +195,7 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
-	eventLogsPath, err := cmd.Flags().GetString(constants.ImaLogsPathOptions.Name)
+	eventLogsPath, err := cmd.Flags().GetString(constants.EventLogsPathOptions.Name)
 	if err != nil {
 		return err
 	}
