@@ -18,7 +18,7 @@ import (
 	"strings"
 
 	"github.com/intel/trustauthority-client/go-connector"
-	"github.com/intel/trustauthority-client/tpm"
+	"github.com/intel/trustauthority-client/go-tpm"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"

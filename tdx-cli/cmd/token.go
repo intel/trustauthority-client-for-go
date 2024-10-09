@@ -17,11 +17,11 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/intel/trustauthority-client/aztdx"
+	"github.com/intel/trustauthority-client/go-aztdx"
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/go-tdx"
+	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
-	"github.com/intel/trustauthority-client/tpm"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
