@@ -3,20 +3,16 @@
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
+
 package tpm
 
 import (
 	"reflect"
 	"testing"
-
-	"github.com/canonical/go-tpm2"
 )
 
-// TODO [CASSINI-17044]: Current unit tests are for debugging phyical TPMs and will be
-// be updated at a later date.
-
 func TestValidEkHandle(t *testing.T) {
-	tpm, err := New()
+	tpm, err := newTestTpm()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,41 +28,37 @@ func TestValidEkHandle(t *testing.T) {
 	}
 }
 
-func TestInvalidEkHandle(t *testing.T) {
-	tpm, err := New()
+func TestNvHandleOutOfRange(t *testing.T) {
+	tpm, err := newTestTpm()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer tpm.Close()
 
 	_, err = tpm.NVRead(0x80000801) // this is not nv handle
-	if err != ErrInvalidHandle {
+	if err != ErrHandleOutOfRange {
 		t.Fail()
 	}
 }
 
 func TestEmptyEkHandle(t *testing.T) {
-	tpm, err := New()
+	tpm, err := newTestTpm()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer tpm.Close()
 
-	nv, err := tpm.NVRead(DefaultEkNvIndex + 1)
-	if _, ok := err.(*tpm2.TPMHandleError); !ok {
-		t.Fatalf("Expected error ErrHandleError but got %s", err.Error())
-	}
-
-	if nv != nil {
+	_, err = tpm.NVRead(DefaultEkNvIndex + 1)
+	if err != ErrorNvIndexDoesNotExist {
 		t.Fail()
 	}
 }
 
 func TestNvWrite(t *testing.T) {
-	len := 4096
-	testNvHandle := 0x01000899
+	len := 256
+	testNvHandle := 0x01001899
 
-	tpm, err := New()
+	tpm, err := newTestTpm()
 	if err != nil {
 		t.Fatal(err)
 	}

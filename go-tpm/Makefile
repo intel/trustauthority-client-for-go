@@ -2,7 +2,8 @@
 SHELL := /bin/bash
 TPM_SIMULATOR_IMAGE_NAME := tpm-simulator
 TPM_SIMULATOR_IMAGE_EXISTS := $(shell docker images -q $(TPM_SIMULATOR_IMAGE_NAME))
-SIMULATOR_TEST_TARGETS := 'TestAdapter*'
+SIMULATOR_TEST_TARGETS := '.*'
+MIN_UNIT_TEST_COVERAGE := 70
 
 default: test
 
@@ -37,6 +38,14 @@ run-unit-tests:
 
 # default, wrapper target that starts the simulator, runs the unit tests, and stops the simulator
 test: start-simulator run-unit-tests stop-simulator
+
+test-coverage: test
+	@COVERAGE=$(shell go tool cover -func cover.out | grep total | awk '{print $$3}' | sed 's/%//' | cut -d'.' -f1) && \
+	echo "Unit Test Coverage: $$COVERAGE%" && \
+	if [[ $$COVERAGE -lt $(MIN_UNIT_TEST_COVERAGE) ]]; then \
+		echo "Unit test coverage must be above $(MIN_UNIT_TEST_COVERAGE)%"; \
+		exit 1; \
+	fi
 
 clean:
 	docker image rm -f $(TPM_SIMULATOR_IMAGE_NAME)

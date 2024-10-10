@@ -5,6 +5,7 @@
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
+
 package tpm
 
 import (
@@ -35,33 +36,15 @@ type tpmAdapter struct {
 var defaultAdapter = tpmAdapter{
 	akHandle:         DefaultAkHandle,
 	pcrSelections:    defaultPcrSelections,
-	deviceType:       Linux,
+	deviceType:       TpmDeviceLinux,
 	ownerAuth:        "",
 	imaLogPath:       "",
 	uefiEventLogPath: "",
 }
 
-// NewCompositeEvidenceAdapter creates a new composite adapter for the host's TPM.
-func NewCompositeEvidenceAdapter(akHandle int, pcrSelections string, ownerAuth string) (connector.CompositeEvidenceAdapter, error) {
-	selections, err := parsePcrSelections(pcrSelections)
-	if err != nil {
-		return nil, err
-	}
-
-	if akHandle == 0 {
-		akHandle = DefaultAkHandle
-	}
-
-	return &tpmAdapter{
-		akHandle:      akHandle,
-		pcrSelections: selections,
-		ownerAuth:     ownerAuth,
-	}, nil
-}
-
 // NewCompositeEvidenceAdapterWithOptions creates a new composite adapter for the host's TPM.
 func NewCompositeEvidenceAdapterWithOptions(opts ...TpmAdapterOptions) (connector.CompositeEvidenceAdapter, error) {
-	// create an adpater with default values
+	// create an adapter with default values
 	tca := defaultAdapter
 
 	// iterate over the options and apply them to the adapter
@@ -130,11 +113,6 @@ func WithImaLogs(imaPath string) TpmAdapterOptions {
 			logPath = imaPath
 		}
 
-		_, err := os.Stat(logPath)
-		if err != nil {
-			return errors.Wrapf(err, "Failed to open ima log file %q", logPath)
-		}
-
 		tca.imaLogPath = logPath
 		return nil
 	}
@@ -151,11 +129,6 @@ func WithUefiEventLogs(uefiLogPath string) TpmAdapterOptions {
 			logPath = DefaultUefiEventLogPath
 		} else {
 			logPath = uefiLogPath
-		}
-
-		_, err := os.Stat(logPath)
-		if err != nil {
-			return errors.Wrapf(err, "Failed to open uefi event log file %q", logPath)
 		}
 
 		tca.uefiEventLogPath = logPath
@@ -196,7 +169,7 @@ func (tca *tpmAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, userD
 	if tca.imaLogPath != "" {
 		imaLogs, err = os.ReadFile(tca.imaLogPath)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to get ima logs from file %q", tca.imaLogPath)
+			return nil, errors.Wrapf(err, "Failed to open ima log file %q", tca.imaLogPath)
 		}
 	}
 
@@ -204,7 +177,7 @@ func (tca *tpmAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, userD
 	if tca.uefiEventLogPath != "" {
 		uefiBytes, err := os.ReadFile(tca.uefiEventLogPath)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to open uefi event logs from file %q", tca.uefiEventLogPath)
+			return nil, errors.Wrapf(err, "Failed to open uefi log file %q", tca.uefiEventLogPath)
 		}
 
 		uefiEventLogs, err = filterEventLogs(uefiBytes, tca.pcrSelections...)
@@ -283,12 +256,12 @@ func createNonceHash(verifierNonce *connector.VerifierNonce, userData []byte) ([
 //
 // The following table describes the expected results for different pcr selections:
 //
-// UEFI Enabled PCRs   ITA Selected PCRs              Expected Results
-// ----------------    -------------------            -----------------
-// sha1                sha1:all					   	  UEFI events is the same as filtered events.
-// sha1                sha1:1,3,7                     Event-log is filtered to only include pcr1, pcr3, and pcr7.
-// sha1                sha256:all                     Empty (filtered events only includes spec03 event).
-// sha1,sha256		   sha256:1,3,7                   Event-og is filtered to only include pcr1, pcr3, and pcr7 (no sha1 digests).
+// UEFI Enabled PCRs	ITA Selected PCRs	Expected Results
+// -----------------	-----------------	----------------
+// sha1					sha1:all			UEFI events is the same as filtered events.
+// sha1					sha1:1,3,7			Event-log is filtered to only include pcr1, pcr3, and pcr7.
+// sha1					sha256:all			Empty (filtered events only includes spec03 event).
+// sha1,sha256			sha256:1,3,7		Event-og is filtered to only include pcr1, pcr3, and pcr7 (no sha1 digests).
 func filterEventLogs(evlBuffer []byte, selection ...PcrSelection) ([]byte, error) {
 	var buf bytes.Buffer
 	pos := 0

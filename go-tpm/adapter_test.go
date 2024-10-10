@@ -3,76 +3,17 @@
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
+
 package tpm
 
 import (
+	"crypto"
+	_ "embed"
 	"reflect"
 	"testing"
+
+	"github.com/intel/trustauthority-client/go-connector"
 )
-
-func TestAdapterNew(t *testing.T) {
-	testData := []struct {
-		testName        string
-		akHandle        int
-		pcrSelections   string
-		ownerAuth       string
-		expectedAdapter *tpmAdapter
-		expectError     bool
-	}{
-		{
-			"Test default adapter",
-			DefaultAkHandle,
-			"",
-			"",
-			&defaultAdapter,
-			false,
-		},
-		{
-			"Test zero ak-handle",
-			0,
-			"",
-			"",
-			&defaultAdapter,
-			false,
-		},
-		{
-			"Test pcr selections",
-			DefaultAkHandle,
-			"sha256:all",
-			"",
-			&defaultAdapter,
-			false,
-		},
-		{
-			"Test pcr selections error",
-			DefaultAkHandle,
-			"xxxx",
-			"",
-			nil,
-			true,
-		},
-	}
-
-	for _, tt := range testData {
-		t.Run(tt.testName, func(t *testing.T) {
-			adapter, err := NewCompositeEvidenceAdapter(tt.akHandle, tt.pcrSelections, tt.ownerAuth)
-			if !tt.expectError && err != nil {
-				// not expecting an error but got one
-				t.Fatal(err)
-			} else if tt.expectError && err == nil {
-				// expecting error but didn't get one
-				t.Fatalf("NewCompositeEvidenceAdapterWithOptions should have returned an error")
-			} else if tt.expectError && err != nil {
-				// expecting error and got one -- pass unit test
-				return
-			}
-
-			if !reflect.DeepEqual(adapter, tt.expectedAdapter) {
-				t.Fatalf("NewCompositeEvidenceAdapterWithOptions() returned unexpected result: expected %v, got %v", tt.expectedAdapter, adapter)
-			}
-		})
-	}
-}
 
 func TestAdapterNewWithOptions(t *testing.T) {
 	testData := []struct {
@@ -98,12 +39,12 @@ func TestAdapterNewWithOptions(t *testing.T) {
 		{
 			testName: "Test adapter with device type",
 			options: []TpmAdapterOptions{
-				WithDeviceType(MSSIM),
+				WithDeviceType(TpmDeviceMSSIM),
 			},
 			expectedAdapter: &tpmAdapter{
 				akHandle:         DefaultAkHandle,
 				pcrSelections:    defaultPcrSelections,
-				deviceType:       MSSIM,
+				deviceType:       TpmDeviceMSSIM,
 				ownerAuth:        "",
 				imaLogPath:       "",
 				uefiEventLogPath: "",
@@ -118,7 +59,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 			expectedAdapter: &tpmAdapter{
 				akHandle:         DefaultAkHandle,
 				pcrSelections:    defaultPcrSelections,
-				deviceType:       Linux,
+				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "ownerX",
 				imaLogPath:       "",
 				uefiEventLogPath: "",
@@ -133,7 +74,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 			expectedAdapter: &tpmAdapter{
 				akHandle:         DefaultAkHandle,
 				pcrSelections:    defaultPcrSelections,
-				deviceType:       Linux,
+				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "",
 				imaLogPath:       "",
 				uefiEventLogPath: "",
@@ -156,7 +97,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 			expectedAdapter: &tpmAdapter{
 				akHandle:         DefaultAkHandle,
 				pcrSelections:    defaultPcrSelections,
-				deviceType:       Linux,
+				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "",
 				imaLogPath:       DefaultImaPath,
 				uefiEventLogPath: "",
@@ -171,7 +112,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 			expectedAdapter: &tpmAdapter{
 				akHandle:         DefaultAkHandle,
 				pcrSelections:    defaultPcrSelections,
-				deviceType:       Linux,
+				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "",
 				imaLogPath:       DefaultImaPath,
 				uefiEventLogPath: "",
@@ -186,20 +127,12 @@ func TestAdapterNewWithOptions(t *testing.T) {
 			expectedAdapter: &tpmAdapter{
 				akHandle:         DefaultAkHandle,
 				pcrSelections:    defaultPcrSelections,
-				deviceType:       Linux,
+				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "",
 				imaLogPath:       "/proc/cpuinfo",
 				uefiEventLogPath: "",
 			},
 			expectError: false,
-		},
-		{
-			testName: "Test adapter with invalid ima logs path should fail",
-			options: []TpmAdapterOptions{
-				WithImaLogs("/my/invalid/path"),
-			},
-			expectedAdapter: nil,
-			expectError:     true,
 		},
 		{
 			testName: "Test adapter with empty event-logs path",
@@ -209,7 +142,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 			expectedAdapter: &tpmAdapter{
 				akHandle:         DefaultAkHandle,
 				pcrSelections:    defaultPcrSelections,
-				deviceType:       Linux,
+				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "",
 				imaLogPath:       "",
 				uefiEventLogPath: DefaultUefiEventLogPath,
@@ -224,7 +157,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 			expectedAdapter: &tpmAdapter{
 				akHandle:         DefaultAkHandle,
 				pcrSelections:    defaultPcrSelections,
-				deviceType:       Linux,
+				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "",
 				imaLogPath:       "",
 				uefiEventLogPath: DefaultUefiEventLogPath,
@@ -239,20 +172,12 @@ func TestAdapterNewWithOptions(t *testing.T) {
 			expectedAdapter: &tpmAdapter{
 				akHandle:         DefaultAkHandle,
 				pcrSelections:    defaultPcrSelections,
-				deviceType:       Linux,
+				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "",
 				imaLogPath:       "",
 				uefiEventLogPath: "/proc/cpuinfo",
 			},
 			expectError: false,
-		},
-		{
-			testName: "Test adapter with invalid event-logs should fail",
-			options: []TpmAdapterOptions{
-				WithUefiEventLogs("/my/invalid/path"),
-			},
-			expectedAdapter: nil,
-			expectError:     true,
 		},
 	}
 
@@ -278,5 +203,69 @@ func TestAdapterNewWithOptions(t *testing.T) {
 }
 
 func TestAdpaterGetEvidence(t *testing.T) {
+	t.Skip() // TODO:  This test cannot be run until AK Provisioning is implemented (needed for GetQuote)
+}
 
+// Raw /sys/kernel/security/tpm0/binary_bios_measurements file from Azure TDX CVM.
+//
+//go:embed test_data/binary_bios_measurements
+var binary_bios_measurements []byte
+
+func TestAdpaterFilterPositive(t *testing.T) {
+	filterEventLogs(binary_bios_measurements, defaultPcrSelections...)
+}
+
+func TestAdapterNonceHash(t *testing.T) {
+	testData := []struct {
+		testName       string
+		verifierNonce  *connector.VerifierNonce
+		userData       []byte
+		expectedLength int
+		errorExpected  bool
+	}{
+		{
+			"Test nil nonce",
+			nil,
+			nil,
+			0,
+			false,
+		},
+		{
+			"Test with just VerifyNonce",
+			&connector.VerifierNonce{
+				Iat: make([]byte, crypto.SHA256.Size()),
+				Val: make([]byte, crypto.SHA256.Size()),
+			},
+			nil,
+			crypto.SHA256.Size(),
+			false,
+		},
+		{
+			"Test with just user data",
+			nil,
+			make([]byte, 2),
+			crypto.SHA256.Size(),
+			false,
+		},
+	}
+
+	for _, td := range testData {
+		t.Run(td.testName, func(t *testing.T) {
+			h, err := createNonceHash(td.verifierNonce, td.userData)
+			if !td.errorExpected && err != nil {
+				// not expecting an error but got one
+				t.Fatal(err)
+			} else if td.errorExpected && err == nil {
+				// expecting an error but got none
+				t.Fatal("Expected an error")
+			} else if td.errorExpected && err != nil {
+				// expecting an error and got one
+				return
+			}
+
+			if len(h) != td.expectedLength {
+				t.Fatalf("Expected hash length %d, got %d", td.expectedLength, len(h))
+			}
+		})
+	}
 }

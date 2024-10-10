@@ -5,6 +5,7 @@
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
+
 package tpm
 
 import (
@@ -12,11 +13,6 @@ import (
 )
 
 type TpmAdapterOptions func(*mockTpmAdapter) error
-
-// NewCompositeEvidenceAdapter creates a new composite adapter for the host's TPM.
-func NewCompositeEvidenceAdapter(akHandle int, pcrSelections string, ownerAuth string) (connector.CompositeEvidenceAdapter, error) {
-	return &mockTpmAdapter{}, nil
-}
 
 // NewCompositeEvidenceAdapterWithOptions creates a new composite adapter for the host's TPM.
 func NewCompositeEvidenceAdapterWithOptions(opts ...TpmAdapterOptions) (connector.CompositeEvidenceAdapter, error) {

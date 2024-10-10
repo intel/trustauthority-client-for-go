@@ -3,6 +3,16 @@
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
+
+// The go-tpm package provides an application level interface to an underlying
+// TPM or vTPM device.  It is not intended to be a comprehesive TPM 2.0
+// interface and provides a higher level abstraction needed by the Trust
+// Authority client.
+//
+// It exposes a number of TPM functions for getting quotes, reading public keys,
+// and reading/writing NV ram.  These are primarily used by the trustauthority-cli.
+// It also provides an implementation of the connector.CompositeEvidenceAdapter
+// interface which is also used by the trustauthority-cli.
 package tpm
 
 import (
@@ -12,9 +22,17 @@ import (
 	"github.com/canonical/go-tpm2"
 	"github.com/canonical/go-tpm2/linux"
 	"github.com/canonical/go-tpm2/mssim"
+	"github.com/pkg/errors"
 )
 
 type TrustedPlatformModule interface {
+	// CreateEK persists a new Endorsement Key in the endorsement hierarchy at the specified
+	// handle. It fails if the handle is not within range of persistent handles or, if the
+	// handle already exists (it should be deleted using tpm2-evictcontrol -c {handle}).
+	//
+	// The EK is used to perform decryption when interacting ITA during AK provisioning.
+	CreateEK(ekHandle int) error
+
 	// NVRead reads the bytes from the specified nv index/handle.  It returns an
 	// error if the handle is not within the range of valid nv ram or if the index
 	// does not exist.
@@ -67,29 +85,33 @@ type TrustedPlatformModule interface {
 type TpmDeviceType int
 
 const (
-	Linux TpmDeviceType = iota
-	MSSIM
+	TpmDeviceUnknown TpmDeviceType = iota
+	TpmDeviceLinux
+	TpmDeviceMSSIM
 
-	mssimString = "mssim"
-	linuxString = "linux"
+	unknownString = "unknown"
+	mssimString   = "mssim"
+	linuxString   = "linux"
 )
 
-func ParseTpmDeviceType(s string) TpmDeviceType {
+func ParseTpmDeviceType(s string) (TpmDeviceType, error) {
 	switch s {
 	case linuxString:
-		return Linux
+		return TpmDeviceLinux, nil
 	case mssimString:
-		return MSSIM
+		return TpmDeviceMSSIM, nil
 	default:
-		panic("unknown TpmDeviceType")
+		return TpmDeviceUnknown, errors.Errorf("Unknown TPM device type: %s", s)
 	}
 }
 
 func (t TpmDeviceType) String() string {
 	switch t {
-	case Linux:
+	case TpmDeviceUnknown:
+		return unknownString
+	case TpmDeviceLinux:
 		return linuxString
-	case MSSIM:
+	case TpmDeviceMSSIM:
 		return mssimString
 	default:
 		panic("unknown TpmDeviceType")
@@ -112,7 +134,7 @@ func New(options ...TpmOption) (TrustedPlatformModule, error) {
 
 	// Fill in defaults that may be overriden by options below
 	tpm := &trustedPlatformModule{
-		deviceType: Linux,
+		deviceType: TpmDeviceLinux,
 		ownerAuth:  []byte{},
 	}
 
@@ -123,7 +145,7 @@ func New(options ...TpmOption) (TrustedPlatformModule, error) {
 	}
 
 	var device tpm2.TPMDevice
-	if tpm.deviceType == Linux {
+	if tpm.deviceType == TpmDeviceLinux {
 		defaultDevice, err := linux.DefaultTPM2Device()
 		if err != nil {
 			return nil, err
@@ -133,7 +155,7 @@ func New(options ...TpmOption) (TrustedPlatformModule, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else if tpm.deviceType == MSSIM {
+	} else if tpm.deviceType == TpmDeviceMSSIM {
 		device = mssim.NewLocalDevice(mssim.DefaultPort)
 	}
 
