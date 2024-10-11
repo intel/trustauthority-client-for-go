@@ -69,10 +69,10 @@ func (adapter *tdxAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, e
 	}
 
 	return &connector.Evidence{
-		Type:     1,
-		Evidence: quote,
-		UserData: adapter.uData,
-		EventLog: eventLog,
+		Type:        connector.Tdx,
+		Evidence:    quote,
+		RuntimeData: adapter.uData,
+		EventLog:    eventLog,
 	}, nil
 }
 

@@ -85,8 +85,8 @@ func (adapter *sgxAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, e
 	}
 
 	return &connector.Evidence{
-		Type:     0,
-		Evidence: quote_buffer,
-		UserData: adapter.uData,
+		Type:        connector.Sgx,
+		Evidence:    quote_buffer,
+		RuntimeData: adapter.uData,
 	}, nil
 }
