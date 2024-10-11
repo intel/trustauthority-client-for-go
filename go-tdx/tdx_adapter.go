@@ -116,11 +116,12 @@ func (adapter *tdxAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, u
 	return &struct {
 		R []byte                   `json:"runtime_data"`
 		Q []byte                   `json:"quote"`
-		U []byte                   `json:"user_data,omitempty"`
+		E []byte                   `json:"event_log,omitempty"`
 		V *connector.VerifierNonce `json:"verifier_nonce,omitempty"`
 	}{
 		R: quote.RuntimeData,
 		Q: quote.Evidence,
-		U: quote.UserData,
+		E: quote.EventLog,
+		V: verifierNonce,
 	}, nil
 }
