@@ -5,17 +5,21 @@
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
+
 package aztdx
 
 import (
 	"github.com/intel/trustauthority-client/go-connector"
+	"github.com/intel/trustauthority-client/go-tpm"
 )
 
-func NewAzureTdxAdapter(userData []byte) (connector.EvidenceAdapter, error) {
+// This file is required by the tdx-cli unit tests and will be removed in CASSINI-23218.
+
+func NewAzureTdxAdapter(tpmFactory tpm.TpmFactory, userData []byte) (connector.EvidenceAdapter, error) {
 	return &mockAzTdxAdapter{}, nil
 }
 
-func NewCompositeEvidenceAdapter() (connector.CompositeEvidenceAdapter, error) {
+func NewCompositeEvidenceAdapter(tpm.TpmFactory) (connector.CompositeEvidenceAdapter, error) {
 	return &mockAzTdxAdapter{}, nil
 }
 

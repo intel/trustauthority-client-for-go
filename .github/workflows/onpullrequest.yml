@@ -91,4 +91,5 @@ jobs:
             echo "Unit test coverage must be above 80%"
             exit 1
           fi
-          cd go-tpm && make test-coverage
+          make -C go-tpm
+          make -C go-aztdx

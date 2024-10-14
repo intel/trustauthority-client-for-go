@@ -3,6 +3,7 @@
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
+
 package aztdx
 
 import (
@@ -17,6 +18,7 @@ const (
 	azTdReportOffset        = 32
 	azTdReportSize          = 1024
 	azRuntimeDataSizeOffset = 1232
+	azRuntimeDataMaxSize    = 4096
 )
 
 // azRuntimeData is an internal structure that holds runtime data from Azure VM
@@ -83,12 +85,12 @@ type azVmConfiguration struct {
 }
 
 func newAzRuntimeData(data []byte) (*azRuntimeData, error) {
-	if len(data) == 0 || len(data) < azRuntimeDataSizeOffset {
+	if len(data) == 0 || len(data) < azRuntimeDataSizeOffset || len(data) > azRuntimeDataMaxSize {
 		return nil, errors.Errorf("Invalid runtime data size %d", len(data))
 	}
 
 	runtimeDataSize := binary.LittleEndian.Uint32(data[azRuntimeDataSizeOffset : azRuntimeDataSizeOffset+4])
-	if len(data) < int(runtimeDataSize) {
+	if len(data) < azRuntimeDataSizeOffset+4+int(runtimeDataSize) {
 		return nil, errors.Errorf("Invalid runtime data size %d", len(data))
 	}
 

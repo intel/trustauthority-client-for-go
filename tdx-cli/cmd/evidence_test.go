@@ -9,6 +9,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
 )
 
@@ -29,7 +30,7 @@ func TestEvidence(t *testing.T) {
 	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
 	defer os.Remove(confFilePath)
 
-	cmd := newEvidenceCommand()
+	cmd := newEvidenceCommand(tpm.NewTpmFactory())
 	cmd.SetArgs([]string{
 		constants.EvidenceCmd,
 		"--" + constants.ConfigOptions.Name,

@@ -48,4 +48,5 @@ test-coverage: test
 	fi
 
 clean:
+	rm -f cover.out cover.html
 	docker image rm -f $(TPM_SIMULATOR_IMAGE_NAME)

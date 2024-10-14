@@ -12,6 +12,8 @@ import (
 	"github.com/intel/trustauthority-client/go-connector"
 )
 
+// This file is required by the tdx-cli unit tests and will be removed in CASSINI-23218.
+
 type TpmAdapterOptions func(*mockTpmAdapter) error
 
 // NewCompositeEvidenceAdapterWithOptions creates a new composite adapter for the host's TPM.

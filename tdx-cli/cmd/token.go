@@ -270,7 +270,7 @@ func getToken(cmd *cobra.Command) error {
 
 		var tdxAdapter connector.CompositeEvidenceAdapter
 		if strings.ToLower(config.CloudProvider) == CloudProviderAzure {
-			tdxAdapter, err = aztdx.NewCompositeEvidenceAdapter()
+			tdxAdapter, err = aztdx.NewCompositeEvidenceAdapter(tpm.NewTpmFactory())
 		} else {
 			tdxAdapter, err = tdx.NewCompositeEvidenceAdapter(evLogParser)
 		}

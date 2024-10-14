@@ -40,7 +40,6 @@ func init() {
 
 // newTestTpm creates a new TPM object for unit tests.
 func newTestTpm() (TrustedPlatformModule, error) {
-	tpmOptions := []TpmOption{}
 
 	if testTpmDevice == nil {
 		panic("testTpmDevice connot be nil")
@@ -51,14 +50,7 @@ func newTestTpm() (TrustedPlatformModule, error) {
 		panic("Failed to parse tpm device")
 	}
 
-	tpmOptions = append(tpmOptions, WithTpmDeviceType(tpmDevice))
-
-	if testOwnerAuth == nil {
-		panic("testOwnerAuth connot be nil")
-	}
-	tpmOptions = append(tpmOptions, WithTpmOwnerAuth(*testOwnerAuth))
-
-	tpm, err := New(tpmOptions...)
+	tpm, err := NewTpmFactory().New(tpmDevice, *testOwnerAuth)
 	if err != nil {
 		return nil, err
 	}

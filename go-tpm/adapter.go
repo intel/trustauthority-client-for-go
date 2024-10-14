@@ -141,10 +141,8 @@ func (tca *tpmAdapter) GetEvidenceIdentifier() string {
 }
 
 func (tca *tpmAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, userData []byte) (interface{}, error) {
-	tpm, err := New(
-		WithTpmDeviceType(tca.deviceType),
-		WithTpmOwnerAuth(tca.ownerAuth),
-	)
+
+	tpm, err := NewTpmFactory().New(tca.deviceType, tca.ownerAuth)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to open TPM")
 	}

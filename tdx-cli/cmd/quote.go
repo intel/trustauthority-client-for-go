@@ -14,6 +14,7 @@ import (
 	"github.com/intel/trustauthority-client/go-aztdx"
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/go-tdx"
+	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -76,7 +77,7 @@ func getQuote(cmd *cobra.Command) error {
 
 	var adapter connector.EvidenceAdapter
 	if withAzureTdx {
-		adapter, err = aztdx.NewAzureTdxAdapter(userDataBytes)
+		adapter, err = aztdx.NewAzureTdxAdapter(tpm.NewTpmFactory(), userDataBytes)
 	} else {
 		adapter, err = tdx.NewTdxAdapter(userDataBytes, nil)
 	}

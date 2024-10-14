@@ -21,7 +21,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newEvidenceCommand() *cobra.Command {
+func newEvidenceCommand(tpmFactory tpm.TpmFactory) *cobra.Command {
 	var withTpm bool
 	var withTdx bool
 	var tokenSigningAlg string
@@ -125,7 +125,7 @@ func newEvidenceCommand() *cobra.Command {
 
 				var tdxAdapter connector.CompositeEvidenceAdapter
 				if strings.ToLower(cfg.CloudProvider) == CloudProviderAzure {
-					tdxAdapter, err = aztdx.NewCompositeEvidenceAdapter()
+					tdxAdapter, err = aztdx.NewCompositeEvidenceAdapter(tpmFactory)
 				} else {
 					tdxAdapter, err = tdx.NewCompositeEvidenceAdapter(evLogParser)
 				}
