@@ -101,7 +101,12 @@ func getToken(cmd *cobra.Command) error {
 	}
 	config, err := loadConfig(configFile)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "Could not read config file %q", configFile)
+	}
+
+	// token requires Trust Authority API URL and API key
+	if config.TrustAuthorityApiUrl == "" || config.TrustAuthorityApiKey == "" {
+		return errors.New("Either Trust Authority API URL or Trust Authority API Key is missing in config")
 	}
 
 	tlsConfig := &tls.Config{

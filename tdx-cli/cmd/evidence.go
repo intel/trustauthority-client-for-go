@@ -53,23 +53,6 @@ func newEvidenceCommand(tpmFactory tpm.TpmFactory) *cobra.Command {
 				return errors.Wrapf(err, "Could not read config file %q", configPath)
 			}
 
-			// connector is optionally used to get a verifier-nonce
-			ctr, err = connector.New(&connector.Config{
-				ApiUrl: cfg.TrustAuthorityApiUrl,
-				ApiKey: cfg.TrustAuthorityApiKey,
-				TlsCfg: &tls.Config{
-					CipherSuites: []uint16{
-						tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-						tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-					},
-					InsecureSkipVerify: false,
-					MinVersion:         tls.VersionTLS12,
-				},
-			})
-			if err != nil {
-				return errors.Wrap(err, "Failed to create connector")
-			}
-
 			userData, err := string2bytes(userData)
 			if err != nil {
 				return err
@@ -138,6 +121,28 @@ func newEvidenceCommand(tpmFactory tpm.TpmFactory) *cobra.Command {
 			}
 
 			if !noVerifierNonce {
+				// only create the connector if the user has opted to include a verifier
+				// nonce
+				if cfg.TrustAuthorityApiUrl == "" {
+					return errors.New("The Trust Authority API URL must be present in config")
+				}
+
+				ctr, err = connector.New(&connector.Config{
+					ApiUrl: cfg.TrustAuthorityApiUrl,
+					ApiKey: cfg.TrustAuthorityApiKey,
+					TlsCfg: &tls.Config{
+						CipherSuites: []uint16{
+							tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+							tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+						},
+						InsecureSkipVerify: false,
+						MinVersion:         tls.VersionTLS12,
+					},
+				})
+				if err != nil {
+					return errors.Wrap(err, "Failed to create connector")
+				}
+
 				builderOptions = append(builderOptions, connector.WithVerifierNonce(ctr))
 			}
 

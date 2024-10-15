@@ -102,8 +102,7 @@ func WithPcrSelections(selections string) TpmAdapterOptions {
 
 // WithImaLogs will include the IMA log into TPM evidence using the
 // specified 'imaPath' parameter. If the path is empty, the default value of
-// "/sys/kernel/security/ima/ascii_runtime_measurements" is used.  An error
-// is returned if the specified file cannot be read.
+// "/sys/kernel/security/ima/ascii_runtime_measurements" is used.
 func WithImaLogs(imaPath string) TpmAdapterOptions {
 	return func(tca *tpmAdapter) error {
 		var logPath string
@@ -120,8 +119,7 @@ func WithImaLogs(imaPath string) TpmAdapterOptions {
 
 // WithUefiEventLogs will include the UEFI event log into TPM evidence using the
 // specified 'uefiLogPath'.  If the uefiLogPath is empty, the default value of
-// "/sys/kernel/security/tpm0/binary_bios_measurements" is used.  An error is returned
-// if the specified file cannot be read.
+// "/sys/kernel/security/tpm0/binary_bios_measurements" is used.
 func WithUefiEventLogs(uefiLogPath string) TpmAdapterOptions {
 	return func(tca *tpmAdapter) error {
 		var logPath string
@@ -146,6 +144,7 @@ func (tca *tpmAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, userD
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to open TPM")
 	}
+	defer tpm.Close()
 
 	// Create a sha256 hash of the verifier-nonce and user-data.
 	nonceHash, err := createNonceHash(verifierNonce, userData)
@@ -165,22 +164,22 @@ func (tca *tpmAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, userD
 
 	var imaLogs []byte
 	if tca.imaLogPath != "" {
-		imaLogs, err = os.ReadFile(tca.imaLogPath)
+		imaLogs, err = readFile(tca.imaLogPath)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to open ima log file %q", tca.imaLogPath)
+			return nil, errors.Wrapf(err, "Failed to read ima log file %q", tca.imaLogPath)
 		}
 	}
 
 	var uefiEventLogs []byte
 	if tca.uefiEventLogPath != "" {
-		uefiBytes, err := os.ReadFile(tca.uefiEventLogPath)
+		uefiBytes, err := readFile(tca.uefiEventLogPath)
 		if err != nil {
 			return nil, errors.Wrapf(err, "Failed to open uefi log file %q", tca.uefiEventLogPath)
 		}
 
 		uefiEventLogs, err = filterEventLogs(uefiBytes, tca.pcrSelections...)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to read uefi event logs from file %q", tca.uefiEventLogPath)
+			return nil, errors.Wrapf(err, "Failed to read uefi event log file %q", tca.uefiEventLogPath)
 		}
 	}
 
@@ -494,4 +493,35 @@ func validateTcgHeader(evlBuffer []byte) (int, error) {
 	pos += int(eventSize)
 
 	return pos, nil
+}
+
+func readFile(filePath string) ([]byte, error) {
+	err := validateFilePath(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	return os.ReadFile(filePath)
+}
+
+// validateFilePath performs checks fo path traversal (CT203 and T162),
+// and symlinks (T572) and assumes that os.Lstat (aka "linux") will
+// perform checks for the file's existence, unallowed characters (T34),
+// permissions, etc.
+func validateFilePath(filePath string) error {
+
+	if strings.Contains(filePath, "..") {
+		return ErrPathTraversal
+	}
+
+	info, err := os.Lstat(filePath)
+	if err != nil {
+		return err
+	}
+
+	if info.Mode()&os.ModeSymlink != 0 {
+		return ErrSymlinksNotAllowed
+	}
+
+	return nil
 }

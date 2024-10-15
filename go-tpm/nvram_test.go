@@ -9,9 +9,11 @@ package tpm
 import (
 	"reflect"
 	"testing"
+
+	"github.com/pkg/errors"
 )
 
-func TestValidEkHandle(t *testing.T) {
+func TestNvValidEkHandle(t *testing.T) {
 	tpm, err := newTestTpm()
 	if err != nil {
 		t.Fatal(err)
@@ -41,7 +43,7 @@ func TestNvHandleOutOfRange(t *testing.T) {
 	}
 }
 
-func TestEmptyEkHandle(t *testing.T) {
+func TestNvEmptyEkHandle(t *testing.T) {
 	tpm, err := newTestTpm()
 	if err != nil {
 		t.Fatal(err)
@@ -87,5 +89,23 @@ func TestNvWrite(t *testing.T) {
 	err = tpm.NVDelete(testNvHandle)
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestNvSizeCheck(t *testing.T) {
+	tpm, err := newTestTpm()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tpm.Close()
+
+	err = tpm.NVWrite(DefaultEkNvIndex, []byte{})
+	if !errors.Is(err, ErrNvInvalidSize) {
+		t.Fail()
+	}
+
+	err = tpm.NVWrite(DefaultEkNvIndex, make([]byte, maxNvSize+1))
+	if !errors.Is(err, ErrNvInvalidSize) {
+		t.Fail()
 	}
 }

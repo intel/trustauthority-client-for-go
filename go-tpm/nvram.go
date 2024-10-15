@@ -54,8 +54,8 @@ func (tpm *trustedPlatformModule) NVWrite(nvHandle int, data []byte) error {
 		return ErrHandleOutOfRange
 	}
 
-	if len(data) > maxNvSize {
-		return errors.Wrapf(ErrNvSizeExceeded, "Size %d exceeds max %d", len(data), maxNvSize)
+	if len(data) == 0 || len(data) > maxNvSize {
+		return errors.Wrapf(ErrNvInvalidSize, "The length %d provided to NVWrite must be between zero and %d", len(data), maxNvSize)
 	}
 
 	// Verify that the provided handle is within the range of nv space
@@ -125,6 +125,10 @@ func (tpm *trustedPlatformModule) NVDefine(nvHandle int, len int) error {
 
 	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
 		return ErrHandleOutOfRange
+	}
+
+	if len == 0 || len > maxNvSize {
+		return errors.Wrapf(ErrNvInvalidSize, "The length %d provided to NVDefine is not between zero and %d", len, maxNvSize)
 	}
 
 	// Verify that the provided handle is within the range of nv space

@@ -10,9 +10,11 @@ import (
 	"crypto"
 	_ "embed"
 	"reflect"
+	"syscall"
 	"testing"
 
 	"github.com/intel/trustauthority-client/go-connector"
+	"github.com/pkg/errors"
 )
 
 func TestAdapterNewWithOptions(t *testing.T) {
@@ -265,6 +267,36 @@ func TestAdapterNonceHash(t *testing.T) {
 
 			if len(h) != td.expectedLength {
 				t.Fatalf("Expected hash length %d, got %d", td.expectedLength, len(h))
+			}
+		})
+	}
+}
+
+func TestValidFilePaths(t *testing.T) {
+	testData := []struct {
+		testName      string
+		filePath      string
+		expectedError error
+	}{
+		{"Positive test case", "adapter_test.go", nil}, // this file "should" exist
+		{"Symlink should fail", "/etc/os-release", ErrSymlinksNotAllowed},
+		{"Path traversal should fail", "/etc/../etc/os-release", ErrPathTraversal},
+		{"Invalid path should fail", "/etc/does-not-exist", syscall.Errno(syscall.ENOENT)},
+	}
+
+	for _, td := range testData {
+		t.Run(td.testName, func(t *testing.T) {
+			err := validateFilePath(td.filePath)
+			if td.expectedError == nil && err != nil {
+				// not expecting an error but got one
+				t.Fatal(err)
+			} else if td.expectedError != nil && err == nil {
+				// expecting an error but got none
+				t.Fatalf("Expected error %v", td.expectedError)
+			} else {
+				if !errors.Is(err, td.expectedError) {
+					t.Fatalf("Expected error %v, but got %v", td.expectedError, err)
+				}
 			}
 		})
 	}

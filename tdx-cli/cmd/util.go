@@ -41,10 +41,6 @@ func newConfig(configJson []byte) (*Config, error) {
 		return nil, errors.Wrap(err, "Error unmarshalling JSON from config")
 	}
 
-	if config.TrustAuthorityApiUrl == "" || config.TrustAuthorityApiKey == "" {
-		return nil, errors.New("Either Trust Authority API URL or Trust Authority API Key is missing in config")
-	}
-
 	return &config, nil
 }
 
