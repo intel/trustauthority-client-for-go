@@ -66,7 +66,7 @@ func WithVerifierNonce(connector Connector) EvidenceBuilderOption {
 		requestId := uuid.New()
 		nonceResponse, err := connector.GetNonce(GetNonceArgs{RequestId: requestId.String()})
 		if err != nil {
-			return errors.Wrapf(err, "Failed to get nonce (Request Id: %s)", requestId.String())
+			return errors.Wrapf(err, "Fai1ed to collect nonce from Trust Authority")
 		}
 
 		eb.verifierNonce = nonceResponse.Nonce
