@@ -37,7 +37,7 @@ readonly CLI_NAME="Intel Trust Authority Client for Azure"
 readonly INSTALL_DIRECTORY=/usr/bin
 readonly OS_DISTRO=$(cat /etc/os-release  | grep "^ID=" | sed -e "s/ID=//g" -e "s/\"//g")
 readonly OS_DISTRO_VERSION=$(cat /etc/os-release  | grep "^VERSION_ID=" | tr -d '"' | sed -e "s/^VERSION_ID=\(\s\+\)\?\(.*\)\(\s\+\)\?$/\2/g" -e "s/\"//g")
-readonly README_LINK="https://github.com/${REPO_URL}/tree/azure-tdx-preview/tdx-cli#usage"
+readonly README_LINK="https://github.com/${REPO_URL}/tree/main/tdx-cli#usage"
 readonly CLI_BINARY_NAME=trustauthority-cli
 
 installation_intrupted()
@@ -58,7 +58,7 @@ if [ "${CLI_VERSION}" = "" ] ; then
     print_error_and_exit
 fi
 
-readonly TAR_NAME="trustauthority-cli-azure-${CLI_VERSION}.tar.gz"
+readonly TAR_NAME="trustauthority-cli-${CLI_VERSION}.tar.gz"
 readonly URL="https://github.com/${REPO_URL}/releases/download/${CLI_VERSION}/${TAR_NAME}"
 
 printf "\n%s installation started.........\n\n" "${CLI_NAME}"
