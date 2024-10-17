@@ -189,7 +189,7 @@ func (tca *tpmAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, userD
 		P []byte                   `json:"pcrs"`
 		U []byte                   `json:"user_data,omitempty"`
 		I []byte                   `json:"ima_logs,omitempty"`
-		E []byte                   `json:"tcg_event_logs,omitempty"`
+		E []byte                   `json:"uefi_event_logs,omitempty"`
 		V *connector.VerifierNonce `json:"verifier_nonce,omitempty"`
 	}{
 		Q: quote,
