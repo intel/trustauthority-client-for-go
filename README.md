@@ -1,5 +1,5 @@
 ---
-last_updated: 8 May 2024
+last_updated: 18 October 2024
 ---
 
 # Intel® Trust Authority Client
@@ -10,12 +10,6 @@ Supported TEEs include [Intel® Software Guard Extensions](https://www.intel.com
 
 For more information about the Client for Go and CLI for Intel TDX, see [Client integration reference](https://docs.trustauthority.intel.com/main/articles/integrate-overview.html) in the Intel Trust Authority documentation.
 
-> [!NOTE]  
-> If you are participating in the **Azure confidential VMs with Intel TDX** (DCesv5 and ECesv5-series confidential VMs) public preview, check out [**azure-tdx-preview**](https://github.com/intel/trustauthority-client-for-go/tree/azure-tdx-preview) instead of **main**. You can use the following command to clone the repo & branch:
-> ```sh
-> git clone https://github.com/intel/trustauthority-client-for-go client -b azure-tdx-preview
-> ```
-
 ## Methods of Integration
 
 The Client provides the following modules that can be imported by an application to attest Intel® SGX and Intel® TDX TEEs by using Intel Trust Authority. 
@@ -23,6 +17,8 @@ The Client provides the following modules that can be imported by an application
 1. [go-connector](./go-connector): Provides an HTTPClient interface to communicate with Intel Trust Authority via REST APIs for remote attestations services, and functions to verify an attestation token and download the JWKS of token signing certificates. The Connector can be used by attesters or relying parties.
 1. [go-sgx](./go-sgx): Implements an adapter interface to Intel® SGX DCAP to collect evidence from an Intel SGX enclave for attestation by Intel Trust Authority. 
 1. [go-tdx](./go-tdx): Implements an adapter interface to collect evidence from an Intel TDX trust domain (TD) for attestation by Intel Trust Authority. The go-tdx adapter also implements utility functions to decrypt a blob or create a new RSA key pair. 
+1. [go-tpm](./go-tpm): Implements an adapter interface to collect evidence from a Trusted Platform Module (TPM) for attestation by Intel Trust Authority. 
+1. [go-aztdx](./go-aztdx): Implements an adapter interface to collect evidence from a Azure Confidential Virtual Machine (CVM) with Intel TDX for attestation by Intel Trust Authority. 
 
 Intel Trust Authority CLI for Intel TDX [tdx-cli](./tdx-cli) provides a CLI to attest an Intel TDX TD with Intel Trust Authority. tdx-cli requires go-connector and go-tdx. See the [README](./tdx-cli/README.md) for details.
 

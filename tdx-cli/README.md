@@ -1,5 +1,5 @@
 ---
-last_updated: 8 September 2024
+last_updated: 18 October 2024
 ---
 
 # Intel® Trust Authority CLI for Intel TDX
@@ -8,12 +8,7 @@ Intel® Trust Authority CLI for Intel® Trust Domain Extensions (Intel® TDX) [*
 
 For more information, see [Intel Trust Authority CLI for Intel TDX](https://docs.trustauthority.intel.com/main/articles/integrate-go-tdx-cli.html) in the Intel Trust Authority documentation.
 
-## Install TDX CLI for Azure
-   ```sh
-   curl -sL https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli-azure.sh | sudo bash -
-   ```
-
-## Install TDX CLI for Google Cloud / Intel® Developer Cloud
+## Install TDX CLI
    ```sh
    curl -sL https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli.sh | sudo bash -
    ```
