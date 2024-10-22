@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/go-tdx"
@@ -110,7 +111,11 @@ func getToken(cmd *cobra.Command) error {
 
 	_, err = base64.URLEncoding.DecodeString(config.TrustAuthorityApiKey)
 	if err != nil {
-		return errors.Wrap(err, "Invalid Trust Authority Api key, must be base64 string")
+		// check if jwt token is passed instead of api-key (packaged software use-case)
+		_, _, err = new(jwt.Parser).ParseUnverified(config.TrustAuthorityApiKey, jwt.MapClaims{})
+		if err != nil {
+			return errors.Wrap(err, "Invalid Trust Authority Api key")
+		}
 	}
 
 	userData, err := cmd.Flags().GetString(constants.UserDataOptions.Name)
