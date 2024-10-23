@@ -1,10 +1,8 @@
----
-last_updated: 30 January 2024
----
-
 # Intel® Trust Authority Go SGX Adapter
 
-The **go-sgx** adapter enables a confidential computing client running in an Intel® Software Guard Extensions (Intel® SGX) enclave to collect a quote for attestation by Intel Trust Authority. The go-sgx adapter is used with the [**go-connector**](../go-connector/) to request an attestation token. 
+<p style="font-size: 0.875em;">· 10/10/2024 ·</p>
+
+The **go-sgx** adapter enables a confidential computing client running in an Intel® Software Guard Extensions (Intel® SGX) enclave to collect a quote for attestation by Intel Trust Authority. The **go-sgx** adapter is used with the [**go-connector**](../go-connector/) to request an attestation token. For more information about **go-sgx**, see [go-sgx APIs](https://docs.trustauthority.intel.com/main/articles/integrate-go-client.html#go-sgx-apis) in the Intel Trust Authority documentation.
 
 ## Requirements
 
@@ -13,7 +11,7 @@ The **go-sgx** adapter enables a confidential computing client running in an Int
 
 ## Usage
 
-Create a new Go SGX adapter, then use the adapter to collect quote from SGX enabled platform. The Intel SGX enclave must expose a method for creating an enclave report and must use a SHA256 hash value as REPORTDATA.
+Create a new **go-sgx** adapter, then use the adapter to collect quote from an Intel SGX-enabled platform. The Intel SGX enclave must expose a method for creating an enclave report and must use a SHA256 hash value as REPORTDATA.
 
 ```go
 import "github.com/intel/trustauthority-client/go-sgx"
@@ -28,6 +26,10 @@ if err != nil {
     return err
 }
 ```
+
+## Code of Conduct and Contributing
+
+See the [CONTRIBUTING](../CONTRIBUTING.md) file for information on how to contribute to this project. The project follows the [ Code of Conduct](../CODE_OF_CONDUCT.md).
 
 ## License
 

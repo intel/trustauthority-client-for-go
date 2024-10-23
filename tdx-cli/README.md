@@ -1,20 +1,19 @@
----
-last_updated: 18 October 2024
----
+# Intel® Trust Authority Attestation Client CLI
 
-# Intel® Trust Authority CLI for Intel TDX
+<p style="font-size: 0.875em;">· 08/13/2024 ·</p>
 
-Intel® Trust Authority CLI for Intel® Trust Domain Extensions (Intel® TDX) [**tdx-cli**](./tdx-cli) provides a CLI to attest an Intel TDX trust domain (TD) with Intel Trust Authority. **tdx-cli** requires **go-connector** and **go-tdx**. See the [README](./tdx-cli/README.md) for details.
+Intel® Trust Authority Attestation Client CLI ("client CLI") for Intel® Trust Domain Extensions (Intel® TDX) [**tdx-cli**](./tdx-cli) provides a CLI to attest an Intel TDX trust domain (TD) with Intel Trust Authority. The client CLI provides a core set of commands that apply to all TEEs, with minor differences in options and usage depending on the TEE or platform.
 
-For more information, see [Intel Trust Authority CLI for Intel TDX](https://docs.trustauthority.intel.com/main/articles/integrate-go-tdx-cli.html) in the Intel Trust Authority documentation.
+For a complete description of client CLI commands and options, see [Attestation Client CLI](https://docs.trustauthority.intel.com/main/articles/integrate-go-tdx-cli.html) in the Intel Trust Authority documentation.
 
 ## Install TDX CLI
    ```sh
    curl -sL https://raw.githubusercontent.com/intel/trustauthority-client-for-go/main/release/install-tdx-cli.sh | sudo bash -
    ```
 
-### Note
-To verify the signature of TDX CLI binary downloaded using the bash script, follow these steps:
+### Verify the signature of the client CLI binary
+
+To verify the signature of the client CLI binary downloaded using the bash script, follow these steps:
 
 1. Extract public key from the certificate
 ```
@@ -26,42 +25,38 @@ openssl x509 -in /usr/bin/trustauthority-cli.cer -pubkey -noout > /tmp/public_ke
 openssl dgst -out /tmp/binaryHashOutput -sha512 -binary /usr/bin/trustauthority-cli
 ```
 
-3.Verify the signature 
+3. Verify the signature 
 ```
 openssl pkeyutl -verify -pubin -inkey /tmp/public_key.pem -sigfile /usr/bin/trustauthority-cli.sig -in /tmp/binaryHashOutput -pkeyopt digest:sha512 -pkeyopt rsa_padding_mode:pss
 ```
 
-
-## Build CLI from Source
-
-### Prerequisites
+## Build the client CLI from source
 
 - Use **Go 1.22 or newer**. Follow https://go.dev/doc/install for installation of Go.
-- Ensure that you have the build-essential package and its dependencies installed. Follow the instructions below.
+- Ensure that you have the **build-essential** package and its dependencies installed. Follow the instructions below.
 
-#### Ubuntu
-```sh
-sudo apt install build-essential
-```
 
-#### SLES
-```sh
-sudo zypper install git make
-```
+1. Install the required packages for your OS.
+    1. Ubuntu:
+    ```sh
+    sudo apt install build-essential
+    ```
+    1. SUSE Linux:
+    ```sh
+    sudo zypper install git make
+    ```
 
-### Get the code
-Checkout the code
-```sh
-git clone https://github.com/intel/trustauthority-client-for-go
-```
+1. Get the code.
+    ```sh
+    git clone https://github.com/intel/trustauthority-client-for-go
+    ```
 
-### Build CLI
-Compile Intel Trust Authority TDX CLI. This will generate `trustauthority-cli` binary in current directory:
+1. Compile Intel Trust Authority attestation client CLI. This will generate a `trustauthority-cli` binary in the current directory.
 
-```sh
-cd trustauthority-client-for-go/tdx-cli/
-make cli
-```
+    ```sh
+    cd trustauthority-client-for-go/tdx-cli/
+    make cli
+    ```
 
 ### Unit Tests
 
@@ -69,12 +64,15 @@ To run the tests, run `cd tdx-cli && make test-coverage`. See the example test i
 
 ## Usage
 
-### To get a list of all the available commands
+For detailed information about the client CLI, see [Attestation Client CLI](https://docs.trustauthority.intel.com/main/articles/integrate-go-tdx-cli.html) in the Intel Trust Authority documentation. The client CLI documentation includes information about installation, configuration, commands and options. The current preview versions of the CLI are included in the documentation. 
+
+To get a list of all the available commands, run the following command:
 
 ```sh
 ./trustauthority-cli --help
 ```
-More info about a specific command can be found using
+More info about a specific command can be found using the `--help` option:
+
 ```sh
 ./trustauthority-cli <command> --help
 ```
@@ -134,3 +132,7 @@ sudo trustauthority-cli quote --nonce <base64 encoded nonce> --user-data <base64
 
 This source is distributed under the BSD-style license found in the [LICENSE](../LICENSE)
 file.
+
+<br><br>
+---
+**\*** Other names and brands may be claimed as the property of others.

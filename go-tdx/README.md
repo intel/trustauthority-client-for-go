@@ -1,14 +1,16 @@
----
-last_updated: 16 September 2024
----
+# Intel® Trust Authority Go Adapter for Intel TDX
 
-# Intel® Trust Authority Go TDX Adapter
+<p style="font-size: 0.875em;">· 10/21/2024 ·</p>
 
 The **go-tdx** adapter enables a confidential computing client running in an Intel® Trust Domain Extensions (Intel® TDX) trust domain (TD) to collect a quote for attestation by Intel Trust Authority. The go-tdx adapter is used with the [**go-connector**](../go-connector/) to request an attestation token. 
+
+The **go-tdx** adapter can be used with any Intel TDX-enabled platform that supports `configfs`, a RAM-based filesystem that provides a kernel-based mechanism for obtaining Intel TDX evidence for an attestation quote. A separate adapter is provided for Azure confidential VMs with Intel TDX, but the Azure adapter is also provided in this branch. 
 
 ## Requirements
 
 - Use **Go 1.22 or newer**. See [https://go.dev/doc/install](https://go.dev/doc/install) for installation of Go.
+- An Intel TDX-enabled Linux platform with Kernel 6.7 or newer. The platform must have the `configfs` filesystem mounted at `/sys/kernel/config` and the Intel TDX kernel module loaded. This platform uses the `tdx_adapter.go` file.
+- Alternatively, a Microsoft Azure confidential VM with Intel TDX and vTPM. This platform requires `aztdx_adapter.go`.
 
 ## Unit Tests
 
@@ -18,19 +20,19 @@ To run the tests, run `cd go-tdx && go test ./... --tags=test`. See the example 
 
 ### To Create a new Intel TDX adapter
 
-**NewTdxAdapter()** and then use the adapter to collect a quote from a TD. NewTdxAdapter() accepts two optional arguments: **tdHeldData**, and **EventLogParser**. **tdHeldData**  is binary data provided by the client. tdHeldData, if provided, is output to the **attester_held_data** claim in the attestation token. **EventLogParser** allows you to provide a log parser for ACPI or UEFI logs, if your Intel TDX-enabled platform exposes the logs. 
+**NewCompositeEvidenceAdapter()** and then use the adapter to collect a quote from a TD. NewCompositeEvidenceAdapter() accepts two optional arguments: **tdHeldData**, and **EventLogParser**. **tdHeldData**  is binary data provided by the client. tdHeldData, if provided, is output to the **attester_held_data** claim in the attestation token. **EventLogParser** allows you to provide a log parser for ACPI or UEFI logs, if your Intel TDX-enabled platform exposes the logs. 
 
 **CollectEvidence()** requires a **nonce** argument. A SHA512 hash is calculated for the nonce and tdHeldData (if any) and saved in the TD quote REPORTDATA field. If successful, CollectEvidence() returns a TD quote that's formatted for attestation by Intel Trust Authority.
 
 ```go
 import "github.com/intel/trustauthority-client/go-tdx"
 
-adapter, err := tdx.NewTdxAdapter(tdHeldData, nil)
+adapter, err := tdx.NewCompositeEvidenceAdapter(tdHeldData, nil)
 if err != nil {
     return err
 }
 
-evidence, err := adapter.CollectEvidence(nonce)
+evidence, err := adapter.GetEvidence(nil,nil)
 if err != nil {
     return err
 }
@@ -78,6 +80,10 @@ if err != nil {
     return err
 }
 ```
+
+### Code of Conduct and Contributing
+
+See the [CONTRIBUTING](../CONTRIBUTING.md) file for information on how to contribute to this project. The project follows the [ Code of Conduct](../CODE_OF_CONDUCT.md).
 
 ## License
 
