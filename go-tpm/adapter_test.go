@@ -9,6 +9,7 @@ package tpm
 import (
 	"crypto"
 	_ "embed"
+	"net/url"
 	"reflect"
 	"syscall"
 	"testing"
@@ -50,6 +51,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				ownerAuth:        "",
 				imaLogPath:       "",
 				uefiEventLogPath: "",
+				akCertificateUri: nil,
 			},
 			expectError: false,
 		},
@@ -65,6 +67,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				ownerAuth:        "ownerX",
 				imaLogPath:       "",
 				uefiEventLogPath: "",
+				akCertificateUri: nil,
 			},
 			expectError: false,
 		},
@@ -80,6 +83,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				ownerAuth:        "",
 				imaLogPath:       "",
 				uefiEventLogPath: "",
+				akCertificateUri: nil,
 			},
 			expectError: false,
 		},
@@ -103,6 +107,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				ownerAuth:        "",
 				imaLogPath:       DefaultImaPath,
 				uefiEventLogPath: "",
+				akCertificateUri: nil,
 			},
 			expectError: false,
 		},
@@ -118,6 +123,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				ownerAuth:        "",
 				imaLogPath:       DefaultImaPath,
 				uefiEventLogPath: "",
+				akCertificateUri: nil,
 			},
 			expectError: false,
 		},
@@ -133,6 +139,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				ownerAuth:        "",
 				imaLogPath:       "/proc/cpuinfo",
 				uefiEventLogPath: "",
+				akCertificateUri: nil,
 			},
 			expectError: false,
 		},
@@ -148,6 +155,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				ownerAuth:        "",
 				imaLogPath:       "",
 				uefiEventLogPath: DefaultUefiEventLogPath,
+				akCertificateUri: nil,
 			},
 			expectError: false,
 		},
@@ -163,6 +171,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				ownerAuth:        "",
 				imaLogPath:       "",
 				uefiEventLogPath: DefaultUefiEventLogPath,
+				akCertificateUri: nil,
 			},
 			expectError: false,
 		},
@@ -178,8 +187,79 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				ownerAuth:        "",
 				imaLogPath:       "",
 				uefiEventLogPath: "/proc/cpuinfo",
+				akCertificateUri: nil,
 			},
 			expectError: false,
+		},
+		{
+			testName: "Test adapter empty ak certificate uri",
+			options: []TpmAdapterOptions{
+				WithAkCertificateUri(""), // an empty path is allowed for Azure TDX runtime-data scenarios
+			},
+			expectedAdapter: &tpmAdapter{
+				akHandle:         DefaultAkHandle,
+				pcrSelections:    defaultPcrSelections,
+				deviceType:       TpmDeviceLinux,
+				ownerAuth:        "",
+				imaLogPath:       "",
+				uefiEventLogPath: "",
+				akCertificateUri: nil,
+			},
+			expectError: false,
+		},
+		{
+			testName: "Test adapter file ak certificate uri",
+			options: []TpmAdapterOptions{
+				WithAkCertificateUri("file:///dir/myak.pem"),
+			},
+			expectedAdapter: &tpmAdapter{
+				akHandle:         DefaultAkHandle,
+				pcrSelections:    defaultPcrSelections,
+				deviceType:       TpmDeviceLinux,
+				ownerAuth:        "",
+				imaLogPath:       "",
+				uefiEventLogPath: "",
+				akCertificateUri: &url.URL{
+					Scheme: "file",
+					Path:   "/dir/myak.pem",
+				},
+			},
+			expectError: false,
+		},
+		{
+			testName: "Test adapter nvram ak certificate uri",
+			options: []TpmAdapterOptions{
+				WithAkCertificateUri("nvram://0x81010001"),
+			},
+			expectedAdapter: &tpmAdapter{
+				akHandle:         DefaultAkHandle,
+				pcrSelections:    defaultPcrSelections,
+				deviceType:       TpmDeviceLinux,
+				ownerAuth:        "",
+				imaLogPath:       "",
+				uefiEventLogPath: "",
+				akCertificateUri: &url.URL{
+					Scheme: "nvram",
+					Host:   "0x81010001",
+				},
+			},
+			expectError: false,
+		},
+		{
+			testName: "Test adapter invalid ak certificate uri",
+			options: []TpmAdapterOptions{
+				WithAkCertificateUri("xyz://123"),
+			},
+			expectedAdapter: &tpmAdapter{
+				akHandle:         DefaultAkHandle,
+				pcrSelections:    defaultPcrSelections,
+				deviceType:       TpmDeviceLinux,
+				ownerAuth:        "",
+				imaLogPath:       "",
+				uefiEventLogPath: "",
+				akCertificateUri: nil,
+			},
+			expectError: true,
 		},
 	}
 
@@ -204,8 +284,31 @@ func TestAdapterNewWithOptions(t *testing.T) {
 	}
 }
 
-func TestAdpaterGetEvidence(t *testing.T) {
-	t.Skip() // TODO:  This test cannot be run until AK Provisioning is implemented (needed for GetQuote)
+func TestAdapterGetEvidencePositive(t *testing.T) {
+	tpm, err := newTestTpm()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = provisionTestAk(tpm)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tpm.Close()
+
+	adapter, err := NewCompositeEvidenceAdapterWithOptions(
+		WithDeviceType(TpmDeviceMSSIM),
+		WithAkHandle(testAkHandle),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = adapter.GetEvidence(nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 // Raw /sys/kernel/security/tpm0/binary_bios_measurements file from Azure TDX CVM.

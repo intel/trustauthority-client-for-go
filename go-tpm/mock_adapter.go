@@ -62,3 +62,7 @@ func WithImaLogs(imaLogsPath string) TpmAdapterOptions {
 func WithUefiEventLogs(eventLogsPath string) TpmAdapterOptions {
 	return func(tca *mockTpmAdapter) error { return nil }
 }
+
+func WithAkCertificateUri(uriString string) TpmAdapterOptions {
+	return func(tca *mockTpmAdapter) error { return nil }
+}

@@ -8,6 +8,8 @@ package tpm
 
 import (
 	"crypto"
+	"crypto/aes"
+	"crypto/cipher"
 	"sort"
 	"strconv"
 	"strings"
@@ -53,6 +55,33 @@ func toTpm2PcrSelectionList(selection ...PcrSelection) (tpm2.PCRSelectionList, e
 	}
 
 	return pcrSelectionList, nil
+}
+
+// AesDecrypt uses GCM to decrypt the cipherText using the key.
+// The caller is responsible for zeroing out the key after use.
+func AesDecrypt(cipherText, key []byte) ([]byte, error) {
+	if len(key) == 0 {
+		return nil, errors.New("invalid parameter. length of key is zero")
+	}
+
+	// generate a new aes cipher using key
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	nonceSize := gcm.NonceSize()
+	plaintext, err := gcm.Open(nil, cipherText[:nonceSize], cipherText[nonceSize:], nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
 }
 
 func parsePcrSelections(args string) ([]PcrSelection, error) {

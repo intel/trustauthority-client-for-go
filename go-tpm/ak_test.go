@@ -6,4 +6,4 @@
 
 package tpm
 
-// TODO:  negative unit tests for GetQuote (positive test are in tpm_e2e_test.go)
+// TODO:  negative unit tests for CreateAK (positive test are in tpm_e2e_test.go)

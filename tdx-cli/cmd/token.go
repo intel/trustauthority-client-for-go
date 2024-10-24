@@ -14,10 +14,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/google/uuid"
-	"github.com/intel/trustauthority-client/go-aztdx"
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/go-tdx"
 	"github.com/intel/trustauthority-client/go-tpm"
@@ -51,25 +49,6 @@ var (
 	// in file path, characters allowed are a-z, A-Z, 0-9, _, ., -, \, /, :
 	filePathRegex = regexp.MustCompile(`^[a-zA-Z0-9_. :/\\-]*$`)
 )
-
-type Config struct {
-	CloudProvider        string     `json:"cloud_provider"`
-	TrustAuthorityUrl    string     `json:"trustauthority_url"`
-	TrustAuthorityApiUrl string     `json:"trustauthority_api_url"`
-	TrustAuthorityApiKey string     `json:"trustauthority_api_key"`
-	Tpm                  *TpmConfig `json:"tpm,omitempty"`
-}
-
-type TpmConfig struct {
-	// AkHandle is the handle of the TPM key that will be used to sign TPM quotes
-	AkHandle HexInt `json:"ak_handle"`
-	// EkHandle is needed during AK provisioning to create the AK
-	EkHandle HexInt `json:"ek_handle"`
-	// OwnerAuth is the owner password of the TPM (defaults to "")
-	OwnerAuth string `json:"owner_auth"`
-	// PcrSelections is the list of PCR banks and indices that are included in TPM quotes
-	PcrSelections string `json:"pcr_selections"`
-}
 
 func init() {
 	rootCmd.AddCommand(tokenCmd)
@@ -124,7 +103,7 @@ func getToken(cmd *cobra.Command) error {
 		ApiKey: config.TrustAuthorityApiKey,
 	}
 
-	trustAuthorityConnector, err := connector.New(&cfg)
+	trustAuthorityConnector, err := connector.NewConnectorFactory().NewConnector(&cfg)
 	if err != nil {
 		return err
 	}
@@ -273,13 +252,7 @@ func getToken(cmd *cobra.Command) error {
 			evLogParser = tdx.NewEventLogParser()
 		}
 
-		var tdxAdapter connector.CompositeEvidenceAdapter
-		if strings.ToLower(config.CloudProvider) == CloudProviderAzure {
-			tdxAdapter, err = aztdx.NewCompositeEvidenceAdapter(tpm.NewTpmFactory())
-		} else {
-			tdxAdapter, err = tdx.NewCompositeEvidenceAdapter(evLogParser)
-		}
-
+		tdxAdapter, err := NewTdxAdapterFactory(tpm.NewTpmFactory()).New(config.CloudProvider, evLogParser)
 		if err != nil {
 			return errors.Wrap(err, "Error while creating tdx adapter")
 		}
@@ -295,7 +268,9 @@ func getToken(cmd *cobra.Command) error {
 		tpmOptions := []tpm.TpmAdapterOptions{
 			tpm.WithOwnerAuth(config.Tpm.OwnerAuth),
 			tpm.WithAkHandle(int(config.Tpm.AkHandle)),
-			tpm.WithPcrSelections(config.Tpm.PcrSelections)}
+			tpm.WithPcrSelections(config.Tpm.PcrSelections),
+			tpm.WithAkCertificateUri(config.Tpm.AkCertificateUri),
+		}
 
 		if withImaLogs {
 			tpmOptions = append(tpmOptions, tpm.WithImaLogs(imaLogsPath))

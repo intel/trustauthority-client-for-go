@@ -10,19 +10,6 @@ import (
 	"testing"
 )
 
-func TestCreatEkPositive(t *testing.T) {
-	tpm, err := newTestTpm()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer tpm.Close()
-
-	err = tpm.CreateEK(testEkHandle)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestCreateEkOutOfRange(t *testing.T) {
 	tpm, err := newTestTpm()
 	if err != nil {

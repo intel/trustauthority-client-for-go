@@ -38,6 +38,16 @@ func (m *MockTpm) CreateEK(ekHandle int) error {
 	return args.Error(0)
 }
 
+func (m *MockTpm) CreateAK(akHandle int, ekHandle int) error {
+	args := m.Called(akHandle, ekHandle)
+	return args.Error(0)
+}
+
+func (m *MockTpm) ActivateCredential(ekHandle int, akHandle int, credentialBlob []byte, secret []byte) ([]byte, error) {
+	args := m.Called(ekHandle, akHandle, credentialBlob, secret)
+	return args.Get(0).([]byte), args.Error(1)
+}
+
 func (m *MockTpm) NVRead(nvHandle int) ([]byte, error) {
 	args := m.Called(nvHandle)
 	return args.Get(0).([]byte), args.Error(1)

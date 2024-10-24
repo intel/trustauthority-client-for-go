@@ -71,7 +71,7 @@ func verifyToken(cmd *cobra.Command) error {
 		BaseUrl: config.TrustAuthorityUrl,
 	}
 
-	trustAuthorityConnector, err := connector.New(&cfg)
+	trustAuthorityConnector, err := connector.NewConnectorFactory().NewConnector(&cfg)
 	if err != nil {
 		return err
 	}
