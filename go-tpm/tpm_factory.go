@@ -60,5 +60,7 @@ func (f *tpmFactory) New(deviceType TpmDeviceType, ownerAuth string) (TrustedPla
 		return nil, err
 	}
 
+	tpm.ctx.OwnerHandleContext().SetAuthValue(tpm.ownerAuth)
+
 	return tpm, nil
 }

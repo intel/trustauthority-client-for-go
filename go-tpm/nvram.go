@@ -29,7 +29,7 @@ func (tpm *trustedPlatformModule) NVRead(nvHandle int) ([]byte, error) {
 	}
 
 	// Read the size of the data stored in the specified NVRAM index
-	handleContext := tpm2.NewLimitedHandleContext(handle)
+	handleContext := tpm2.NewHandleContext(handle)
 	nvPublic, _, err := tpm.ctx.NVReadPublic(handleContext)
 	if err != nil {
 		return nil, err
@@ -108,12 +108,13 @@ func (tpm *trustedPlatformModule) NVDelete(nvHandle int) error {
 		return errors.Errorf("Cannot delete non-existent nv index at 0x%x", nvHandle)
 	}
 
-	existingCtx, err := tpm.ctx.NewResourceContext(handle)
+	nvContext, err := tpm.ctx.NewResourceContext(handle)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to create resource context for handle 0x%x", handle)
 	}
+	nvContext.SetAuthValue(tpm.ownerAuth)
 
-	err = tpm.ctx.NVUndefineSpace(tpm.ctx.OwnerHandleContext(), existingCtx, nil)
+	err = tpm.ctx.NVUndefineSpace(tpm.ctx.OwnerHandleContext(), nvContext, nil)
 	if err != nil {
 		return errors.Wrapf(ErrNvReleaseFailed, "Index 0x%x: %s", nvHandle, err.Error())
 	}

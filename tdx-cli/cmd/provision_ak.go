@@ -113,43 +113,43 @@ func provisionAk(ekHandle int, akHandle int, ctr connector.Connector, t tpm.Trus
 	// Create the EK and get its public key
 	err := t.CreateEK(ekHandle)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Failed to create EK at handle 0x%x", ekHandle)
 	}
 	logrus.Infof("Successfully created EK at handle 0x%x", ekHandle)
 
 	// Create the Ak and get its name
 	err = t.CreateAK(akHandle, ekHandle)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Failed to create AK at handle 0x%x", akHandle)
 	}
 	logrus.Infof("Successfully created AK at handle 0x%x", akHandle)
 
 	_, akTpmtPublic, _, err := t.ReadPublic(akHandle)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Failed to read AK at handle 0x%x", akHandle)
 	}
 
 	// Get the EK certificate
 	ekCert, err := t.GetEKCertificate(tpm.DefaultEkNvIndex)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Failed to read EK certificate at nv index 0x%x", tpm.DefaultEkNvIndex)
 	}
 
 	credentialBlob, secret, cipherText, err := ctr.GetAKCertificate(ekCert, akTpmtPublic)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to retrieve AK certificate")
 	}
 
 	// Decrypt aes key that encrypts payload
 	aesKey, err := t.ActivateCredential(ekHandle, akHandle, credentialBlob, secret)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Activate credential failed")
 	}
 
 	// decrypt the ak certificate in the payload
 	akDer, err := tpm.AesDecrypt(cipherText, aesKey)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Failed to decrypt AK certificate")
 	}
 
 	// zeroize aes key
@@ -160,7 +160,7 @@ func provisionAk(ekHandle int, akHandle int, ctr connector.Connector, t tpm.Trus
 	// verify certificate
 	akCert, err := x509.ParseCertificate(akDer)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Failed to parse AK certificate")
 	}
 
 	return akCert, nil

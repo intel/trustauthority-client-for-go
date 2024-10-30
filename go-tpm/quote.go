@@ -30,7 +30,6 @@ func (tpm *trustedPlatformModule) GetQuote(akHandle int, nonce []byte, selection
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "Failed to create resource context for handle 0x%x", akHandle)
 	}
-	akContext.SetAuthValue(tpm.ownerAuth)
 
 	pcrSelection, err := toTpm2PcrSelectionList(selection...)
 	if err != nil {

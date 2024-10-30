@@ -27,7 +27,6 @@ func (tpm *trustedPlatformModule) ActivateCredential(ekHandle int, akHandle int,
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to create resource context for handle 0x%x", akHandle)
 	}
-	akContext.SetAuthValue(tpm.ownerAuth)
 
 	// verify the ek handle and create an "ekContext" needed for ActivateCredential
 	ek := tpm2.Handle(ekHandle)
