@@ -14,10 +14,11 @@ Use <b>go1.22 or newer</b>. Follow https://go.dev/doc/install for installation o
 
 ## Build CLI from Source
 
-### Install tpm2-tools
+### Install tpm2-tools and build dependencies
 ```sh
 sudo apt-get update
-sudo apt-get install tpm2-tools
+sudo apt-get install tpm2-tools gcc make
+sudo snap install go --classic
 ```
 
 ### Get the code
