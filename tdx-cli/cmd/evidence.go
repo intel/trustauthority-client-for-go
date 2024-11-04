@@ -82,6 +82,7 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory, cfgFactory ConfigFa
 					tpm.WithOwnerAuth(cfg.Tpm.OwnerAuth),
 					tpm.WithAkHandle(int(cfg.Tpm.AkHandle)),
 					tpm.WithPcrSelections(cfg.Tpm.PcrSelections),
+					tpm.WithAkCertificateUri(cfg.Tpm.AkCertificateUri),
 				}
 
 				if withImaLogs {
