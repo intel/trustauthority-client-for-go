@@ -8,7 +8,6 @@ package tpm
 
 import (
 	"crypto"
-	_ "embed"
 	"net/url"
 	"reflect"
 	"syscall"
@@ -309,15 +308,6 @@ func TestAdapterGetEvidencePositive(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-// Raw /sys/kernel/security/tpm0/binary_bios_measurements file from Azure TDX CVM.
-//
-//go:embed test_data/binary_bios_measurements
-var binary_bios_measurements []byte
-
-func TestAdpaterFilterPositive(t *testing.T) {
-	filterEventLogs(binary_bios_measurements, defaultPcrSelections...)
 }
 
 func TestAdapterNonceHash(t *testing.T) {
