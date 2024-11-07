@@ -36,6 +36,7 @@ func init() {
 	rootCmd.AddCommand(ReportCmd)
 	ReportCmd.Flags().StringP(constants.NonceOption, "n", "", "Nonce in base64 encoded format")
 	ReportCmd.Flags().StringP(constants.UserDataOption, "u", "", "User Data in base64 encoded format")
+	ReportCmd.Flags().Uint32P(constants.UserVmplOption, "v", 0, "User-provided VMPL for current VM running privilege, accepted values are: 0, 1, 2, 3")
 }
 
 func getreport(cmd *cobra.Command) error {
@@ -48,6 +49,14 @@ func getreport(cmd *cobra.Command) error {
 	nonce, err := cmd.Flags().GetString(constants.NonceOption)
 	if err != nil {
 		return err
+	}
+
+	userVmpl, err := cmd.Flags().GetUint32(constants.UserVmplOption)
+	if err != nil {
+		return err
+	}
+	if userVmpl > 3 {
+		return errors.New("User-provided VMPL should be in the range of 0 to 3")
 	}
 
 	var userDataBytes []byte
@@ -66,7 +75,7 @@ func getreport(cmd *cobra.Command) error {
 		}
 	}
 
-	adapter, err := sevsnp.NewEvidenceAdapter(userDataBytes)
+	adapter, err := sevsnp.NewEvidenceAdapter(userDataBytes, userVmpl)
 	if err != nil {
 		return errors.Wrap(err, "Error while creating sevsnp adapter")
 	}

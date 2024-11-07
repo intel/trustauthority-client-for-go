@@ -51,6 +51,7 @@ func init() {
 	rootCmd.AddCommand(tokenCmd)
 	tokenCmd.Flags().StringP(constants.ConfigOption, "c", "", "Trust Authority config in JSON format")
 	tokenCmd.Flags().StringP(constants.UserDataOption, "u", "", "User Data in base64 encoded format")
+	tokenCmd.Flags().Uint32P(constants.UserVmplOption, "v", 0, "User-provided VMPL for current VM running privilege, accepted values are: 0, 1, 2, 3")
 	tokenCmd.Flags().StringP(constants.PolicyIdsOption, "p", "", "Trust Authority Policy Ids, comma separated")
 	tokenCmd.Flags().StringP(constants.PublicKeyPathOption, "f", "", "Public key to be used as userdata")
 	tokenCmd.Flags().StringP(constants.RequestIdOption, "r", "", "Request id to be associated with request")
@@ -94,6 +95,14 @@ func getToken(cmd *cobra.Command) error {
 	userData, err := cmd.Flags().GetString(constants.UserDataOption)
 	if err != nil {
 		return err
+	}
+
+	userVmpl, err := cmd.Flags().GetUint32(constants.UserVmplOption)
+	if err != nil {
+		return err
+	}
+	if userVmpl > 3 {
+		return errors.New("User-provided VMPL should be in the range of 0 to 3")
 	}
 
 	policyIds, err := cmd.Flags().GetString(constants.PolicyIdsOption)
@@ -179,7 +188,7 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
-	adapter, err := sevsnp.NewEvidenceAdapter(userDataBytes)
+	adapter, err := sevsnp.NewEvidenceAdapter(userDataBytes, userVmpl)
 	if err != nil {
 		return errors.Wrap(err, "Error while creating sevsnp adapter")
 	}

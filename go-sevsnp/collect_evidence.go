@@ -10,7 +10,9 @@ package sevsnp
 import (
 	"crypto/sha512"
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"os"
 	"syscall"
 	"unsafe"
 
@@ -39,14 +41,20 @@ func (adapter *sevsnpAdapter) CollectEvidence(nonce []byte) (*connector.Evidence
 
 	messageHash512 := sha512.Sum512(append(nonce, adapter.uData[:]...))
 
-	_, err := linuxtsm.MakeClient()
-	if err != nil {
-		return nil, err
-	}
+	var report []byte
+	_, err := os.Stat("/sys/kernel/config/tsm/report")
+	if errors.Is(err, os.ErrNotExist) {
+		report, err = getReportFromIoctl(messageHash512[:], adapter.uVmpl)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		_, err = linuxtsm.MakeClient()
+		if err != nil {
+			return nil, err
+		}
 
-	report, err := getReportFromConfigFS(messageHash512[:])
-	if err != nil {
-		report, err = getReportFromIoctl(messageHash512[:])
+		report, err = getReportFromConfigFS(messageHash512[:], adapter.uVmpl)
 		if err != nil {
 			return nil, err
 		}
@@ -59,11 +67,16 @@ func (adapter *sevsnpAdapter) CollectEvidence(nonce []byte) (*connector.Evidence
 	}, nil
 }
 
-func getReportFromConfigFS(reportData []byte) ([]byte, error) {
+func getReportFromConfigFS(reportData []byte, vmpl uint32) ([]byte, error) {
+
+	privilege := &report.Privilege{
+		Level: uint(vmpl),
+	}
 
 	req := &report.Request{
 		InBlob:     reportData[:],
 		GetAuxBlob: true,
+		Privilege:  privilege,
 	}
 	resp, err := linuxtsm.GetReport(req)
 	if err != nil {
@@ -73,13 +86,13 @@ func getReportFromConfigFS(reportData []byte) ([]byte, error) {
 	return resp.OutBlob, nil
 }
 
-func getReportFromIoctl(reportData []byte) ([]byte, error) {
+func getReportFromIoctl(reportData []byte, vmVmpl uint32) ([]byte, error) {
 	var sevsnpRequest SevSnpReportRequest
 	var sevsnpResponse SevSnpReportResponse
 
 	var sevsnpRequestIoctl SevSnpGuestRequestIoctl
 	copy(sevsnpRequest.UserData[:], []byte(reportData[:]))
-	sevsnpRequest.Vmpl = 0
+	sevsnpRequest.Vmpl = vmVmpl
 
 	sevsnpRequestIoctl.MsgVersion = 1
 	sevsnpRequestIoctl.ReqData = &sevsnpRequest

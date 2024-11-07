@@ -36,4 +36,5 @@ const (
 	TokenOption           = "token"
 	TokenAlgOption        = "token-signing-alg"
 	PolicyMustMatchOption = "policy-must-match"
+	UserVmplOption        = "vmpl"
 )
