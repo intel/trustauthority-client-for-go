@@ -13,12 +13,8 @@ permissions: read-all
 jobs:
   build-test-scan:
     runs-on: [ ubuntu-20.04 ]
-    env:
-      http_proxy: ${{ secrets.HTTP_PROXY }}
-      https_proxy: ${{ secrets.HTTPS_PROXY }}
-      no_proxy: ${{ secrets.NO_PROXY }}
     steps:
-      - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
         with:
           fetch-depth: 0
 
@@ -70,3 +66,5 @@ jobs:
             echo "Unit test coverage must be above 80%"
             exit 1
           fi
+          make -C go-tpm
+          make -C go-aztdx
