@@ -21,7 +21,7 @@ func (tpm *trustedPlatformModule) GetPcrs(selection ...PcrSelection) ([]byte, er
 
 	_, pcrValues, err := tpm.ctx.PCRRead(pcrSelection, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Failed to read PCRs with selection %+v", pcrSelection)
 	}
 
 	selectionList, err := pcrValues.SelectionList()
