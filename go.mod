@@ -9,7 +9,7 @@ go 1.22
 require (
 	github.com/canonical/go-tpm2 v1.7.6
 	github.com/goccy/go-json v0.10.2
-	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/google/go-configfs-tsm v0.2.2
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
