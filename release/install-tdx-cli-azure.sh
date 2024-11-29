@@ -37,7 +37,7 @@ readonly CLI_NAME="Intel Trust Authority Client for Azure"
 readonly INSTALL_DIRECTORY=/usr/bin
 readonly OS_DISTRO=$(cat /etc/os-release  | grep "^ID=" | sed -e "s/ID=//g" -e "s/\"//g")
 readonly OS_DISTRO_VERSION=$(cat /etc/os-release  | grep "^VERSION_ID=" | tr -d '"' | sed -e "s/^VERSION_ID=\(\s\+\)\?\(.*\)\(\s\+\)\?$/\2/g" -e "s/\"//g")
-readonly README_LINK="https://github.com/${REPO_URL}/tree/azure-tdx-preview/tdx-cli#usage"
+readonly README_LINK="https://github.com/${REPO_URL}/tree/main/tdx-cli#usage"
 readonly CLI_BINARY_NAME=trustauthority-cli
 
 installation_intrupted()
@@ -45,17 +45,10 @@ installation_intrupted()
     printf "\n%b%s Installation interrupted by signal !!%b\n\n" "${CODE_ERROR}" "${CLI_NAME}" "${CODE_NC}"
 }
 
-# Determine the latest Client version by version number ignoring alpha, beta, and rc versions.
+# Setting the Client version to latest supported if not specified explicitly.
 if [ "${CLI_VERSION}" = "" ] ; then
-    CLI_VERSION="$(curl -sL https://github.com/intel/trustauthority-client-for-go/releases | \
-                    grep -o 'releases/tag/v[0-9]*.[0-9]*.[0-9]*' | sort -V | \
-                    tail -1 | awk -F'/' '{ print $3}')"
-    CLI_VERSION="${CLI_VERSION##*/}"
-fi
-
-if [ "${CLI_VERSION}" = "" ] ; then
-    printf "Unable to get latest Client version. Set CLI_VERSION env var and re-run. For example: export CLI_VERSION=1.2.0"
-    print_error_and_exit
+    printf "Could not find CLI_VERSION in env. Setting CLI_VERSION to v1.6.1"
+    CLI_VERSION="v1.6.1"
 fi
 
 readonly TAR_NAME="trustauthority-cli-azure-${CLI_VERSION}.tar.gz"

@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/intel/trustauthority-client/go-connector"
+	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -31,13 +33,29 @@ func (f *simpleFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 func init() {
 	logrus.SetFormatter(&simpleFormatter{})
-
-	rootCmd.AddCommand(newEvidenceCommand())
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+
+	tpmFactory := tpm.NewTpmFactory()
+	tdxAdapterFactory := NewTdxAdapterFactory(tpmFactory) // Azure uses the vTPM to get TDX evidence
+	cfgFactory := NewConfigFactory()
+	ctrFactory := connector.NewConnectorFactory()
+
+	rootCmd.AddCommand(newEvidenceCommand(
+		tdxAdapterFactory,
+		cfgFactory,
+		ctrFactory,
+	))
+
+	rootCmd.AddCommand(newProvisionAkCommand(
+		tpmFactory,
+		cfgFactory,
+		ctrFactory,
+	))
+
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)

@@ -14,14 +14,13 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"github.com/intel/trustauthority-client/aztdx"
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/go-tdx"
+	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
-	"github.com/intel/trustauthority-client/tpm"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -51,25 +50,6 @@ var (
 	// in file path, characters allowed are a-z, A-Z, 0-9, _, ., -, \, /, :
 	filePathRegex = regexp.MustCompile(`^[a-zA-Z0-9_. :/\\-]*$`)
 )
-
-type Config struct {
-	CloudProvider        string     `json:"cloud_provider"`
-	TrustAuthorityUrl    string     `json:"trustauthority_url"`
-	TrustAuthorityApiUrl string     `json:"trustauthority_api_url"`
-	TrustAuthorityApiKey string     `json:"trustauthority_api_key"`
-	Tpm                  *TpmConfig `json:"tpm,omitempty"`
-}
-
-type TpmConfig struct {
-	// AkHandle is the handle of the TPM key that will be used to sign TPM quotes
-	AkHandle HexInt `json:"ak_handle"`
-	// EkHandle is needed during AK provisioning to create the AK
-	EkHandle HexInt `json:"ek_handle"`
-	// OwnerAuth is the owner password of the TPM (defaults to "")
-	OwnerAuth string `json:"owner_auth"`
-	// PcrSelections is the list of PCR banks and indices that are included in TPM quotes
-	PcrSelections string `json:"pcr_selections"`
-}
 
 func init() {
 	rootCmd.AddCommand(tokenCmd)
@@ -101,10 +81,19 @@ func getToken(cmd *cobra.Command) error {
 	}
 	config, err := loadConfig(configFile)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "Could not read config file %q", configFile)
+	}
+
+	// token requires Trust Authority API URL and API key
+	if config.TrustAuthorityApiUrl == "" || config.TrustAuthorityApiKey == "" {
+		return errors.New("Either Trust Authority API URL or Trust Authority API Key is missing in config")
 	}
 
 	tlsConfig := &tls.Config{
+		CipherSuites: []uint16{
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+		},
 		InsecureSkipVerify: false,
 		MinVersion:         tls.VersionTLS12,
 	}
@@ -115,14 +104,18 @@ func getToken(cmd *cobra.Command) error {
 		ApiKey: config.TrustAuthorityApiKey,
 	}
 
-	trustAuthorityConnector, err := connector.New(&cfg)
+	trustAuthorityConnector, err := connector.NewConnectorFactory().NewConnector(&cfg)
 	if err != nil {
 		return err
 	}
 
 	_, err = base64.URLEncoding.DecodeString(config.TrustAuthorityApiKey)
 	if err != nil {
-		return errors.Wrap(err, "Invalid Trust Authority Api key, must be base64 string")
+		// check if jwt token is passed instead of api-key (packaged software use-case)
+		_, _, err = new(jwt.Parser).ParseUnverified(config.TrustAuthorityApiKey, jwt.MapClaims{})
+		if err != nil {
+			return errors.Wrap(err, "Invalid Trust Authority Api key")
+		}
 	}
 
 	userData, err := cmd.Flags().GetString(constants.UserDataOptions.Name)
@@ -195,7 +188,7 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
-	eventLogsPath, err := cmd.Flags().GetString(constants.ImaLogsPathOptions.Name)
+	eventLogsPath, err := cmd.Flags().GetString(constants.EventLogsPathOptions.Name)
 	if err != nil {
 		return err
 	}
@@ -264,13 +257,7 @@ func getToken(cmd *cobra.Command) error {
 			evLogParser = tdx.NewEventLogParser()
 		}
 
-		var tdxAdapter connector.CompositeEvidenceAdapter
-		if strings.ToLower(config.CloudProvider) == CloudProviderAzure {
-			tdxAdapter, err = aztdx.NewCompositeEvidenceAdapter()
-		} else {
-			tdxAdapter, err = tdx.NewCompositeEvidenceAdapter(evLogParser)
-		}
-
+		tdxAdapter, err := NewTdxAdapterFactory(tpm.NewTpmFactory()).New(config.CloudProvider, evLogParser)
 		if err != nil {
 			return errors.Wrap(err, "Error while creating tdx adapter")
 		}
@@ -286,7 +273,9 @@ func getToken(cmd *cobra.Command) error {
 		tpmOptions := []tpm.TpmAdapterOptions{
 			tpm.WithOwnerAuth(config.Tpm.OwnerAuth),
 			tpm.WithAkHandle(int(config.Tpm.AkHandle)),
-			tpm.WithPcrSelections(config.Tpm.PcrSelections)}
+			tpm.WithPcrSelections(config.Tpm.PcrSelections),
+			tpm.WithAkCertificateUri(config.Tpm.AkCertificateUri),
+		}
 
 		if withImaLogs {
 			tpmOptions = append(tpmOptions, tpm.WithImaLogs(imaLogsPath))

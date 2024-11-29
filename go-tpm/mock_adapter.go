@@ -5,18 +5,16 @@
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
+
 package tpm
 
 import (
 	"github.com/intel/trustauthority-client/go-connector"
 )
 
-type TpmAdapterOptions func(*mockTpmAdapter) error
+// This file is required by the tdx-cli unit tests and will be removed in CASSINI-23218.
 
-// NewCompositeEvidenceAdapter creates a new composite adapter for the host's TPM.
-func NewCompositeEvidenceAdapter(akHandle int, pcrSelections string, ownerAuth string) (connector.CompositeEvidenceAdapter, error) {
-	return &mockTpmAdapter{}, nil
-}
+type TpmAdapterOptions func(*mockTpmAdapter) error
 
 // NewCompositeEvidenceAdapterWithOptions creates a new composite adapter for the host's TPM.
 func NewCompositeEvidenceAdapterWithOptions(opts ...TpmAdapterOptions) (connector.CompositeEvidenceAdapter, error) {
@@ -62,5 +60,9 @@ func WithImaLogs(imaLogsPath string) TpmAdapterOptions {
 }
 
 func WithUefiEventLogs(eventLogsPath string) TpmAdapterOptions {
+	return func(tca *mockTpmAdapter) error { return nil }
+}
+
+func WithAkCertificateUri(uriString string) TpmAdapterOptions {
 	return func(tca *mockTpmAdapter) error { return nil }
 }

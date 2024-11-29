@@ -3,6 +3,7 @@
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
+
 package tpm
 
 import "crypto"
@@ -26,8 +27,9 @@ const (
 	DefaultImaPath          = "/sys/kernel/security/ima/ascii_runtime_measurements"
 	DefaultUefiEventLogPath = "/sys/kernel/security/tpm0/binary_bios_measurements"
 
-	// TCG event log header
-	specIdEvent03 = "Spec ID Event03"
+	// TCG event log constants
+	specIdEvent03   = "Spec ID Event03"
+	startupLocality = "StartupLocality"
 )
 
 var (

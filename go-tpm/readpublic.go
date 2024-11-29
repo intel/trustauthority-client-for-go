@@ -3,6 +3,7 @@
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
+
 package tpm
 
 import (
@@ -17,7 +18,8 @@ func (tpm *trustedPlatformModule) ReadPublic(handle int) (crypto.PublicKey, []by
 
 	// verify the handle and load a resource context for the handle
 	h := tpm2.Handle(handle)
-	if h.Type() != tpm2.HandleTypePersistent {
+	t := h.Type()
+	if t != tpm2.HandleTypePersistent && t != tpm2.HandleTypeTransient {
 		return nil, nil, nil, ErrInvalidHandle
 	}
 

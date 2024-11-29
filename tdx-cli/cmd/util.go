@@ -3,6 +3,7 @@
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
+
 package cmd
 
 import (
@@ -39,10 +40,6 @@ func newConfig(configJson []byte) (*Config, error) {
 	err := dec.Decode(&config)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error unmarshalling JSON from config")
-	}
-
-	if config.TrustAuthorityApiUrl == "" || config.TrustAuthorityApiKey == "" {
-		return nil, errors.New("Either Trust Authority API URL or Trust Authority API Key is missing in config")
 	}
 
 	return &config, nil

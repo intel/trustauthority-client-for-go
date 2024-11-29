@@ -46,6 +46,8 @@ func (ctr *trustAuthorityConnector) AttestEvidence(evidence interface{}, cloudPr
 	}
 
 	processResponse := func(resp *http.Response) error {
+		response.Headers = resp.Header
+
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf("Failed to read body from %s: %s", url, err)

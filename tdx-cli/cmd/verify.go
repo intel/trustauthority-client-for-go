@@ -8,7 +8,6 @@ package cmd
 
 import (
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -49,20 +48,9 @@ func verifyToken(cmd *cobra.Command) error {
 		return err
 	}
 
-	configFilePath, err := ValidateFilePath(configFile)
+	config, err := loadConfig(configFile)
 	if err != nil {
-		return errors.Wrap(err, "Invalid config file path provided")
-	}
-
-	configJson, err := os.ReadFile(configFilePath)
-	if err != nil {
-		return errors.Wrapf(err, "Error reading config from file")
-	}
-
-	var config Config
-	err = json.Unmarshal(configJson, &config)
-	if err != nil {
-		return errors.Wrap(err, "Error unmarshalling JSON from config")
+		return errors.Wrapf(err, "Could not read config file %q", configFile)
 	}
 
 	if config.TrustAuthorityUrl == "" {
@@ -70,6 +58,10 @@ func verifyToken(cmd *cobra.Command) error {
 	}
 
 	tlsConfig := &tls.Config{
+		CipherSuites: []uint16{
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+		},
 		InsecureSkipVerify: false,
 		MinVersion:         tls.VersionTLS12,
 	}
@@ -79,7 +71,7 @@ func verifyToken(cmd *cobra.Command) error {
 		BaseUrl: config.TrustAuthorityUrl,
 	}
 
-	trustAuthorityConnector, err := connector.New(&cfg)
+	trustAuthorityConnector, err := connector.NewConnectorFactory().NewConnector(&cfg)
 	if err != nil {
 		return err
 	}

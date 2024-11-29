@@ -8,6 +8,7 @@ package connector
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"net/http"
 	"net/url"
 	"strings"
@@ -33,6 +34,11 @@ type Connector interface {
 	// only "azure" is supported.  'reqId' is an optional string that is included in the
 	// x-request-id header that can be used for troubleshooting.
 	AttestEvidence(evidence interface{}, cloudProvider string, reqId string) (AttestResponse, error)
+
+	// GetAkCertificate sends the TPM's EK certificate and the AK's TPMT_PUBLIC structure
+	// to Intel Trust Authority and returns an encrypted AK certificate, a secret, and credential blob
+	// that can be decrypted by the TPM (ActivateCredential command).
+	GetAKCertificate(ekCert *x509.Certificate, akTpmtPublic []byte) ([]byte, []byte, []byte, error)
 }
 
 // GetNonceArgs holds the request parameters needed for getting nonce from Intel Trust Authority

@@ -12,10 +12,8 @@ import (
 )
 
 const (
-	testUrl      = "https://notused.com"
-	testApiKey   = "AAAAAA=="
-	testEkHandle = 0x81000F00
-	testAkHandle = 0x81000F01
+	testUrl    = "https://notused.com"
+	testApiKey = "AAAAAA=="
 )
 
 var (

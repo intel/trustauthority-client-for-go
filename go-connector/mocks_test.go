@@ -6,6 +6,8 @@
 package connector
 
 import (
+	"crypto/x509"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/mock"
 )
@@ -45,4 +47,9 @@ func (m *MockConnector) VerifyToken(token string) (*jwt.Token, error) {
 func (m *MockConnector) AttestEvidence(evidence interface{}, cloudProvider string, reqId string) (AttestResponse, error) {
 	args := m.Called(evidence, cloudProvider, reqId)
 	return args.Get(0).(AttestResponse), args.Error(1)
+}
+
+func (m *MockConnector) GetAKCertificate(ekCert *x509.Certificate, akTpmtPublic []byte) ([]byte, []byte, []byte, error) {
+	args := m.Called(ekCert, akTpmtPublic)
+	return args.Get(0).([]byte), args.Get(1).([]byte), args.Get(2).([]byte), args.Error(3)
 }

@@ -3,25 +3,24 @@
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
+
 package cmd
 
 import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"strings"
 
-	"github.com/intel/trustauthority-client/aztdx"
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/go-tdx"
+	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
-	"github.com/intel/trustauthority-client/tpm"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
-func newEvidenceCommand() *cobra.Command {
+func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory, cfgFactory ConfigFactory, ctrFactory connector.ConnectorFactory) *cobra.Command {
 	var withTpm bool
 	var withTdx bool
 	var tokenSigningAlg string
@@ -48,22 +47,9 @@ func newEvidenceCommand() *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 
-			cfg, err := loadConfig(configPath)
+			cfg, err := cfgFactory.LoadConfig(configPath)
 			if err != nil {
 				return errors.Wrapf(err, "Could not read config file %q", configPath)
-			}
-
-			// connector is optionally used to get a verifier-nonce
-			ctr, err = connector.New(&connector.Config{
-				ApiUrl: cfg.TrustAuthorityApiUrl,
-				ApiKey: cfg.TrustAuthorityApiKey,
-				TlsCfg: &tls.Config{
-					InsecureSkipVerify: false,
-					MinVersion:         tls.VersionTLS12,
-				},
-			})
-			if err != nil {
-				return errors.Wrap(err, "Failed to create connector")
 			}
 
 			userData, err := string2bytes(userData)
@@ -95,7 +81,9 @@ func newEvidenceCommand() *cobra.Command {
 				tpmOptions := []tpm.TpmAdapterOptions{
 					tpm.WithOwnerAuth(cfg.Tpm.OwnerAuth),
 					tpm.WithAkHandle(int(cfg.Tpm.AkHandle)),
-					tpm.WithPcrSelections(cfg.Tpm.PcrSelections)}
+					tpm.WithPcrSelections(cfg.Tpm.PcrSelections),
+					tpm.WithAkCertificateUri(cfg.Tpm.AkCertificateUri),
+				}
 
 				if withImaLogs {
 					tpmOptions = append(tpmOptions, tpm.WithImaLogs(imaLogsPath))
@@ -119,13 +107,7 @@ func newEvidenceCommand() *cobra.Command {
 					evLogParser = tdx.NewEventLogParser()
 				}
 
-				var tdxAdapter connector.CompositeEvidenceAdapter
-				if strings.ToLower(cfg.CloudProvider) == CloudProviderAzure {
-					tdxAdapter, err = aztdx.NewCompositeEvidenceAdapter()
-				} else {
-					tdxAdapter, err = tdx.NewCompositeEvidenceAdapter(evLogParser)
-				}
-
+				tdxAdapter, err := tdxAdapterFactory.New(cfg.CloudProvider, evLogParser)
 				if err != nil {
 					return errors.Wrap(err, "Error while creating tdx adapter")
 				}
@@ -134,6 +116,28 @@ func newEvidenceCommand() *cobra.Command {
 			}
 
 			if !noVerifierNonce {
+				// only create the connector if the user has opted to include a verifier
+				// nonce
+				if cfg.TrustAuthorityApiUrl == "" {
+					return errors.New("The Trust Authority API URL must be present in config")
+				}
+
+				ctr, err = ctrFactory.NewConnector(&connector.Config{
+					ApiUrl: cfg.TrustAuthorityApiUrl,
+					ApiKey: cfg.TrustAuthorityApiKey,
+					TlsCfg: &tls.Config{
+						CipherSuites: []uint16{
+							tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+							tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+						},
+						InsecureSkipVerify: false,
+						MinVersion:         tls.VersionTLS12,
+					},
+				})
+				if err != nil {
+					return errors.Wrap(err, "Failed to create connector")
+				}
+
 				builderOptions = append(builderOptions, connector.WithVerifierNonce(ctr))
 			}
 
