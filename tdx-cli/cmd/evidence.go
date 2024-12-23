@@ -12,7 +12,6 @@ import (
 	"fmt"
 
 	"github.com/intel/trustauthority-client/go-connector"
-	"github.com/intel/trustauthority-client/go-tdx"
 	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
 
@@ -20,7 +19,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory, cfgFactory ConfigFactory, ctrFactory connector.ConnectorFactory) *cobra.Command {
+func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
+	tpmAdapterFactory tpm.TpmAdapterFactory,
+	cfgFactory ConfigFactory,
+	ctrFactory connector.ConnectorFactory) *cobra.Command {
+
 	var withTpm bool
 	var withTdx bool
 	var tokenSigningAlg string
@@ -93,7 +96,7 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory, cfgFactory ConfigFa
 					tpmOptions = append(tpmOptions, tpm.WithUefiEventLogs(eventLogsPath))
 				}
 
-				tpmAdapter, err := tpm.NewCompositeEvidenceAdapterWithOptions(tpmOptions...)
+				tpmAdapter, err := tpmAdapterFactory.New(tpmOptions...)
 				if err != nil {
 					return err
 				}
@@ -102,12 +105,7 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory, cfgFactory ConfigFa
 			}
 
 			if withTdx {
-				var evLogParser tdx.EventLogParser
-				if !noEvLog {
-					evLogParser = tdx.NewEventLogParser()
-				}
-
-				tdxAdapter, err := tdxAdapterFactory.New(cfg.CloudProvider, evLogParser)
+				tdxAdapter, err := tdxAdapterFactory.New(cfg.CloudProvider, noEvLog)
 				if err != nil {
 					return errors.Wrap(err, "Error while creating tdx adapter")
 				}

@@ -27,7 +27,7 @@ To run the tests, run `cd go-tdx && go test ./... --tags=test`. See the example 
 ```go
 import "github.com/intel/trustauthority-client/go-tdx"
 
-adapter, err := tdx.NewCompositeEvidenceAdapter(tdHeldData, nil)
+adapter, err := tdx.NewCompositeEvidenceAdapter(false)
 if err != nil {
     return err
 }
@@ -69,13 +69,18 @@ if err != nil {
 }
 ```
 
-### To collect event log from TD
-
-Note that the TD must have an exposed ACPI table for event log collection.
+### To include the confidenctial event log (CCEL) from TD
+Provide 'true' to the NewCompositeEventAdapter function (Note: that the TD must have an exposed ACPI table for event log collection).
 
 ```go
-evLogParser := tdx.NewEventLogParser()
-eventLog, err := evLogParser.GetEventLogs()
+import "github.com/intel/trustauthority-client/go-tdx"
+
+adapter, err := tdx.NewCompositeEvidenceAdapter(true)
+if err != nil {
+    return err
+}
+
+evidence, err := adapter.GetEvidence(nil,nil)
 if err != nil {
     return err
 }

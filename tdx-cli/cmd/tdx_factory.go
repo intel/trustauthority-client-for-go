@@ -17,7 +17,7 @@ import (
 
 // TdxAdapterFactory is an interface for creating TDX adapters.
 type TdxAdapterFactory interface {
-	New(cloudProvider string, evLogParser tdx.EventLogParser) (connector.CompositeEvidenceAdapter, error)
+	New(cloudProvider string, eventLogDisabled bool) (connector.CompositeEvidenceAdapter, error)
 }
 
 // NewTdxAdapterFactory creates a new, default TDX adapter factory.
@@ -31,13 +31,13 @@ type tdxAdapterFactory struct {
 	tpmFactory tpm.TpmFactory // needed for Azure TDX adapter
 }
 
-func (f *tdxAdapterFactory) New(cloudProvider string, evLogParser tdx.EventLogParser) (connector.CompositeEvidenceAdapter, error) {
+func (f *tdxAdapterFactory) New(cloudProvider string, eventLogDisabled bool) (connector.CompositeEvidenceAdapter, error) {
 	var tdxAdapter connector.CompositeEvidenceAdapter
 	var err error
 	if strings.ToLower(cloudProvider) == CloudProviderAzure {
 		tdxAdapter, err = aztdx.NewCompositeEvidenceAdapter(f.tpmFactory)
 	} else {
-		tdxAdapter, err = tdx.NewCompositeEvidenceAdapter(evLogParser)
+		tdxAdapter, err = tdx.NewCompositeEvidenceAdapter(eventLogDisabled)
 	}
 
 	if err != nil {

@@ -1,10 +1,10 @@
-# Copyright (c) 2022 Intel Corporation
+# Copyright (c) 2024 Intel Corporation
 # All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 APPNAME := trustauthority-cli
 GITCOMMIT := $(shell git describe --always)
 GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
-VERSION := v1.8.0
+VERSION := v1.9.0
 
 cli:
 	CGO_ENABLED=1 CGO_CFLAGS="-O2 -D_FORTIFY_SOURCE=2" go build -buildmode=pie -trimpath -ldflags "-s -linkmode=external -extldflags -Wl,-O1,-z,relro,-z,now \

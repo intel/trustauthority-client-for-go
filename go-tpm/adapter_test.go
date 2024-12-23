@@ -264,7 +264,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 
 	for _, tt := range testData {
 		t.Run(tt.testName, func(t *testing.T) {
-			adapter, err := NewCompositeEvidenceAdapterWithOptions(tt.options...)
+			adapter, err := NewTpmAdapterFactory(NewTpmFactory()).New(tt.options...)
 			if !tt.expectError && err != nil {
 				// not expecting an error but got one
 				t.Fatal(err)
@@ -296,7 +296,7 @@ func TestAdapterGetEvidencePositive(t *testing.T) {
 
 	tpm.Close()
 
-	adapter, err := NewCompositeEvidenceAdapterWithOptions(
+	adapter, err := NewTpmAdapterFactory(NewTpmFactory()).New(
 		WithDeviceType(TpmDeviceMSSIM),
 		WithAkHandle(testAkHandle),
 	)

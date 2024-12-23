@@ -1,5 +1,3 @@
-//go:build !test
-
 /*
  *   Copyright (c) 2022-2024 Intel Corporation
  *   All rights reserved.
@@ -45,8 +43,15 @@ var defaultAdapter = tpmAdapter{
 	uefiEventLogPath: "",
 }
 
-// NewCompositeEvidenceAdapterWithOptions creates a new composite adapter for the host's TPM.
-func NewCompositeEvidenceAdapterWithOptions(opts ...TpmAdapterOptions) (connector.CompositeEvidenceAdapter, error) {
+type TpmAdapterFactory interface {
+	New(opts ...TpmAdapterOptions) (connector.CompositeEvidenceAdapter, error)
+}
+
+type tpmAdapterFactory struct {
+	tpmFactory TpmFactory
+}
+
+func (t *tpmAdapterFactory) New(opts ...TpmAdapterOptions) (connector.CompositeEvidenceAdapter, error) {
 	// create an adapter with default values
 	tca := defaultAdapter
 
@@ -58,6 +63,10 @@ func NewCompositeEvidenceAdapterWithOptions(opts ...TpmAdapterOptions) (connecto
 	}
 
 	return &tca, nil
+}
+
+func NewTpmAdapterFactory(tpmFactory TpmFactory) TpmAdapterFactory {
+	return &tpmAdapterFactory{tpmFactory: tpmFactory}
 }
 
 // WithOwnerAuth specifies the owner password used to communicate

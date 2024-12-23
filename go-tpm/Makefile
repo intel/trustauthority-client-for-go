@@ -1,4 +1,6 @@
-# Copyright(C) 2024 Intel Corporation. All Rights Reserved.
+# Copyright (c) 2024 Intel Corporation
+# All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
 SHELL := /bin/bash
 TPM_SIMULATOR_IMAGE_NAME := tpm-simulator
 TPM_SIMULATOR_IMAGE_EXISTS := $(shell docker images -q $(TPM_SIMULATOR_IMAGE_NAME))

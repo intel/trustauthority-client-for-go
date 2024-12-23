@@ -40,18 +40,32 @@ func init() {
 func Execute() {
 
 	tpmFactory := tpm.NewTpmFactory()
+	tpmAdapterFactory := tpm.NewTpmAdapterFactory(tpmFactory)
 	tdxAdapterFactory := NewTdxAdapterFactory(tpmFactory) // Azure uses the vTPM to get TDX evidence
 	cfgFactory := NewConfigFactory()
 	ctrFactory := connector.NewConnectorFactory()
 
 	rootCmd.AddCommand(newEvidenceCommand(
 		tdxAdapterFactory,
+		tpmAdapterFactory,
 		cfgFactory,
 		ctrFactory,
 	))
 
 	rootCmd.AddCommand(newProvisionAkCommand(
 		tpmFactory,
+		cfgFactory,
+		ctrFactory,
+	))
+
+	rootCmd.AddCommand(newTokenCommand(
+		tdxAdapterFactory,
+		tpmAdapterFactory,
+		cfgFactory,
+		ctrFactory,
+	))
+
+	rootCmd.AddCommand(newVerifyCommand(
 		cfgFactory,
 		ctrFactory,
 	))

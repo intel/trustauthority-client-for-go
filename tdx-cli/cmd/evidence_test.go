@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/intel/trustauthority-client/go-connector"
+	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
@@ -18,19 +19,19 @@ import (
 func TestEvidence(t *testing.T) {
 	tests := []struct {
 		name            string
-		dependencyMocks func() (MockTdxAdapterFactory, MockConfigFactory, MockConnectorFactory)
+		dependencyMocks func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory)
 		cmdArgs         []string
 		errorExpected   bool
 	}{
 		{
 			name: "Test Evidence Positive",
-			dependencyMocks: func() (MockTdxAdapterFactory, MockConfigFactory, MockConnectorFactory) {
-				return testEvidenceFactories()
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
 			},
 			cmdArgs: []string{ // going for positive coverage -- add "positive" arguments
 				constants.EvidenceCmd,
 				"--" + constants.ConfigOptions.Name,
-				"doesnotexist.json",
+				testNonExistentFileName,
 				"--" + constants.WithTdxOptions.Name,
 				"--" + constants.WithTpmOptions.Name,
 				"--" + constants.NoEventLogOptions.Name,
@@ -46,15 +47,16 @@ func TestEvidence(t *testing.T) {
 		},
 		{
 			name: "Test Evidence Config Failure",
-			dependencyMocks: func() (MockTdxAdapterFactory, MockConfigFactory, MockConnectorFactory) {
-				mockConfigFactory := MockConfigFactory{}
-				mockConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{}, errors.New("Unit test failure"))
-				return MockTdxAdapterFactory{}, mockConfigFactory, MockConnectorFactory{}
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				angryConfigFactory := MockConfigFactory{}
+				angryConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{}, errors.New("Unit test failure"))
+
+				return happyMockTdxAdapterFactory(), happyMockTpmAdapterFactory(), &angryConfigFactory, happyMockConnectorFactory()
 			},
 			cmdArgs: []string{
 				constants.EvidenceCmd,
 				"--" + constants.ConfigOptions.Name,
-				"doesnotexist.json",
+				testNonExistentFileName,
 				"--" + constants.WithTdxOptions.Name,
 				"--" + constants.WithTpmOptions.Name,
 				"--" + constants.NoEventLogOptions.Name,
@@ -63,13 +65,13 @@ func TestEvidence(t *testing.T) {
 		},
 		{
 			name: "Test Evidence Invalid User Data",
-			dependencyMocks: func() (MockTdxAdapterFactory, MockConfigFactory, MockConnectorFactory) {
-				return testEvidenceFactories()
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
 			},
 			cmdArgs: []string{
 				constants.EvidenceCmd,
 				"--" + constants.ConfigOptions.Name,
-				"doesnotexist.json",
+				testNonExistentFileName,
 				"--" + constants.WithTdxOptions.Name,
 				"--" + constants.WithTpmOptions.Name,
 				"--" + constants.NoEventLogOptions.Name,
@@ -80,13 +82,13 @@ func TestEvidence(t *testing.T) {
 		},
 		{
 			name: "Test Evidence Invalid Policy Id",
-			dependencyMocks: func() (MockTdxAdapterFactory, MockConfigFactory, MockConnectorFactory) {
-				return testEvidenceFactories()
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
 			},
 			cmdArgs: []string{
 				constants.EvidenceCmd,
 				"--" + constants.ConfigOptions.Name,
-				"doesnotexist.json",
+				testNonExistentFileName,
 				"--" + constants.WithTdxOptions.Name,
 				"--" + constants.WithTpmOptions.Name,
 				"--" + constants.NoEventLogOptions.Name,
@@ -97,33 +99,20 @@ func TestEvidence(t *testing.T) {
 		},
 		{
 			name: "Test Evidence Invalid TPM config",
-			dependencyMocks: func() (MockTdxAdapterFactory, MockConfigFactory, MockConnectorFactory) {
-				mockConnector := MockConnector{}
-				mockConnector.On("GetNonce", mock.Anything).Return(connector.GetNonceResponse{}, nil)
-
-				mockConnectorFactory := MockConnectorFactory{}
-				mockConnectorFactory.On("NewConnector", mock.Anything).Return(&mockConnector, nil)
-
-				mockConfigFactory := MockConfigFactory{}
-				mockConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{
-					TrustAuthorityApiUrl: "https://localhost:8080",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				angryConfigFactory := MockConfigFactory{}
+				angryConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{
+					TrustAuthorityApiUrl: testValidUrl,
 					CloudProvider:        CloudProviderAzure,
 					// Tpm: &TpmConfig{},  // TPM config is missing
 				}, nil)
 
-				mockCompositeAdapter := MockCompositeEvidenceAdapter{}
-				mockCompositeAdapter.On("GetEvidenceIdentifier").Return("tdx", nil)
-				mockCompositeAdapter.On("GetEvidence", mock.Anything, mock.Anything).Return(struct{}{}, nil)
-
-				mockTdxAdapterFactory := MockTdxAdapterFactory{}
-				mockTdxAdapterFactory.On("New", mock.Anything, mock.Anything).Return(&mockCompositeAdapter, nil)
-
-				return mockTdxAdapterFactory, mockConfigFactory, mockConnectorFactory
+				return happyMockTdxAdapterFactory(), happyMockTpmAdapterFactory(), &angryConfigFactory, happyMockConnectorFactory()
 			},
 			cmdArgs: []string{
 				constants.EvidenceCmd,
 				"--" + constants.ConfigOptions.Name,
-				"doesnotexist.json",
+				testNonExistentFileName,
 				"--" + constants.WithTdxOptions.Name,
 				"--" + constants.WithTpmOptions.Name,
 				"--" + constants.NoEventLogOptions.Name,
@@ -134,33 +123,16 @@ func TestEvidence(t *testing.T) {
 		},
 		{
 			name: "Test Evidence TDX Adapter Factory Failure",
-			dependencyMocks: func() (MockTdxAdapterFactory, MockConfigFactory, MockConnectorFactory) {
-				mockConnector := MockConnector{}
-				mockConnector.On("GetNonce", mock.Anything).Return(connector.GetNonceResponse{}, nil)
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				angryTdxAdapterFactory := MockTdxAdapterFactory{}
+				angryTdxAdapterFactory.On("New", mock.Anything, mock.Anything).Return(&MockCompositeEvidenceAdapter{}, errors.New("Unit test failure"))
 
-				mockConnectorFactory := MockConnectorFactory{}
-				mockConnectorFactory.On("NewConnector", mock.Anything).Return(&mockConnector, nil)
-
-				mockConfigFactory := MockConfigFactory{}
-				mockConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{
-					TrustAuthorityApiUrl: "https://localhost:8080",
-					CloudProvider:        CloudProviderAzure,
-					Tpm:                  &TpmConfig{},
-				}, nil)
-
-				mockCompositeAdapter := MockCompositeEvidenceAdapter{}
-				mockCompositeAdapter.On("GetEvidenceIdentifier").Return("tdx", nil)
-				mockCompositeAdapter.On("GetEvidence", mock.Anything, mock.Anything).Return(struct{}{}, nil)
-
-				mockTdxAdapterFactory := MockTdxAdapterFactory{}
-				mockTdxAdapterFactory.On("New", mock.Anything, mock.Anything).Return(&mockCompositeAdapter, errors.New("Unit test failure"))
-
-				return mockTdxAdapterFactory, mockConfigFactory, mockConnectorFactory
+				return &angryTdxAdapterFactory, happyMockTpmAdapterFactory(), mockConfigFactory(nil), happyMockConnectorFactory()
 			},
 			cmdArgs: []string{
 				constants.EvidenceCmd,
 				"--" + constants.ConfigOptions.Name,
-				"doesnotexist.json",
+				testNonExistentFileName,
 				"--" + constants.WithTdxOptions.Name,
 				"--" + constants.WithTpmOptions.Name,
 				"--" + constants.NoEventLogOptions.Name,
@@ -169,13 +141,13 @@ func TestEvidence(t *testing.T) {
 		},
 		{
 			name: "Test Evidence Invalid Token Alg Signature",
-			dependencyMocks: func() (MockTdxAdapterFactory, MockConfigFactory, MockConnectorFactory) {
-				return testEvidenceFactories()
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
 			},
 			cmdArgs: []string{
 				constants.EvidenceCmd,
 				"--" + constants.ConfigOptions.Name,
-				"doesnotexist.json",
+				testNonExistentFileName,
 				"--" + constants.WithTdxOptions.Name,
 				"--" + constants.WithTpmOptions.Name,
 				"--" + constants.NoEventLogOptions.Name,
@@ -186,30 +158,16 @@ func TestEvidence(t *testing.T) {
 		},
 		{
 			name: "Test Evidence Connector Factory Failure",
-			dependencyMocks: func() (MockTdxAdapterFactory, MockConfigFactory, MockConnectorFactory) {
-				mockConnectorFactory := MockConnectorFactory{}
-				mockConnectorFactory.On("NewConnector", mock.Anything).Return(&MockConnector{}, errors.New("Unit test failure"))
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				angryConnectorFactory := MockConnectorFactory{}
+				angryConnectorFactory.On("NewConnector", mock.Anything).Return(&MockConnector{}, errors.New("Unit test failure"))
 
-				mockConfigFactory := MockConfigFactory{}
-				mockConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{
-					TrustAuthorityApiUrl: "https://localhost:8080",
-					CloudProvider:        CloudProviderAzure,
-					Tpm:                  &TpmConfig{},
-				}, nil)
-
-				mockCompositeAdapter := MockCompositeEvidenceAdapter{}
-				mockCompositeAdapter.On("GetEvidenceIdentifier").Return("tdx", nil)
-				mockCompositeAdapter.On("GetEvidence", mock.Anything, mock.Anything).Return(struct{}{}, nil)
-
-				mockTdxAdapterFactory := MockTdxAdapterFactory{}
-				mockTdxAdapterFactory.On("New", mock.Anything, mock.Anything).Return(&mockCompositeAdapter, nil)
-
-				return mockTdxAdapterFactory, mockConfigFactory, mockConnectorFactory
+				return happyMockTdxAdapterFactory(), happyMockTpmAdapterFactory(), mockConfigFactory(nil), &angryConnectorFactory
 			},
 			cmdArgs: []string{
 				constants.EvidenceCmd,
 				"--" + constants.ConfigOptions.Name,
-				"doesnotexist.json",
+				testNonExistentFileName,
 				"--" + constants.WithTdxOptions.Name,
 				"--" + constants.WithTpmOptions.Name,
 				"--" + constants.NoEventLogOptions.Name,
@@ -220,8 +178,7 @@ func TestEvidence(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockTdxAdapterFactory, mockConfigFactory, mockConnectorFactory := tt.dependencyMocks()
-			cmd := newEvidenceCommand(&mockTdxAdapterFactory, &mockConfigFactory, &mockConnectorFactory)
+			cmd := newEvidenceCommand(tt.dependencyMocks())
 			cmd.SetArgs(tt.cmdArgs)
 
 			// err  | expected | result
@@ -238,28 +195,4 @@ func TestEvidence(t *testing.T) {
 			}
 		})
 	}
-}
-
-func testEvidenceFactories() (MockTdxAdapterFactory, MockConfigFactory, MockConnectorFactory) {
-	mockConnector := MockConnector{}
-	mockConnector.On("GetNonce", mock.Anything).Return(connector.GetNonceResponse{}, nil)
-
-	mockConnectorFactory := MockConnectorFactory{}
-	mockConnectorFactory.On("NewConnector", mock.Anything).Return(&mockConnector, nil)
-
-	mockConfigFactory := MockConfigFactory{}
-	mockConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{
-		TrustAuthorityApiUrl: "https://localhost:8080",
-		CloudProvider:        CloudProviderAzure,
-		Tpm:                  &TpmConfig{},
-	}, nil)
-
-	mockCompositeAdapter := MockCompositeEvidenceAdapter{}
-	mockCompositeAdapter.On("GetEvidenceIdentifier").Return("tdx", nil)
-	mockCompositeAdapter.On("GetEvidence", mock.Anything, mock.Anything).Return(struct{}{}, nil)
-
-	mockTdxAdapterFactory := MockTdxAdapterFactory{}
-	mockTdxAdapterFactory.On("New", mock.Anything, mock.Anything).Return(&mockCompositeAdapter, nil)
-
-	return mockTdxAdapterFactory, mockConfigFactory, mockConnectorFactory
 }

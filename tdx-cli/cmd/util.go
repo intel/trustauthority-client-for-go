@@ -7,43 +7,16 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/intel/trustauthority-client/tdx-cli/constants"
 	"github.com/pkg/errors"
 )
-
-func loadConfig(configFile string) (*Config, error) {
-
-	configFilePath, err := ValidateFilePath(configFile)
-	if err != nil {
-		return nil, errors.Wrap(err, "Invalid config file path provided")
-	}
-	configJson, err := os.ReadFile(configFilePath)
-	if err != nil {
-		return nil, errors.Wrapf(err, "Error reading config from file")
-	}
-
-	return newConfig(configJson)
-}
-
-func newConfig(configJson []byte) (*Config, error) {
-
-	var config Config
-	dec := json.NewDecoder(bytes.NewReader(configJson))
-	dec.DisallowUnknownFields()
-	err := dec.Decode(&config)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error unmarshalling JSON from config")
-	}
-
-	return &config, nil
-}
 
 func parsePolicyIds(policyIds string) ([]uuid.UUID, error) {
 	var pIds []uuid.UUID
@@ -82,4 +55,37 @@ func string2bytes(s string) ([]byte, error) {
 		}
 		return bytes, nil
 	}
+}
+
+func ValidateFilePath(path string) (string, error) {
+	if info, err := os.Stat(path); err == nil && info.IsDir() {
+		return "", errors.Wrap(ErrInvalidFilePath, "path cannot be directory, please provide file path")
+	}
+	cleanedPath := filepath.Clean(path)
+	if err := checkFilePathForInvalidChars(cleanedPath); err != nil {
+		return "", errors.Wrap(ErrInvalidFilePath, err.Error())
+	}
+	r, err := filepath.EvalSymlinks(cleanedPath)
+	if err != nil && !os.IsNotExist(err) {
+		return cleanedPath, errors.Wrap(ErrInvalidFilePath, "Unsafe symlink detected in path")
+	}
+	if r == "" {
+		return cleanedPath, nil
+	}
+	if err = checkFilePathForInvalidChars(r); err != nil {
+		return "", errors.Wrap(ErrInvalidFilePath, err.Error())
+	}
+	return r, nil
+}
+
+func checkFilePathForInvalidChars(path string) error {
+	filePath, fileName := filepath.Split(path)
+	//Max file path length allowed in linux is 4096 characters
+	if len(path) > constants.LinuxFilePathSize || !filePathRegex.MatchString(filePath) {
+		return errors.New("Invalid file path provided")
+	}
+	if !fileNameRegex.MatchString(fileName) {
+		return errors.New("Invalid file name provided")
+	}
+	return nil
 }
