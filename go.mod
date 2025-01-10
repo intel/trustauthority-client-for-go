@@ -4,10 +4,11 @@
 
 module github.com/intel/trustauthority-client
 
-go 1.22
+go 1.23
 
 require (
 	github.com/canonical/go-tpm2 v1.7.6
+	github.com/confidentsecurity/go-nvtrust v0.0.0-20250109124608-b2cfc0e15526
 	github.com/goccy/go-json v0.10.2
 	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/google/go-configfs-tsm v0.2.2
@@ -16,10 +17,11 @@ require (
 	github.com/lestrrat-go/jwx/v2 v2.0.21
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
+	github.com/NVIDIA/go-nvml v0.12.4-0 // indirect
 	github.com/canonical/go-sp800.108-kdf v0.0.0-20210314145419-a3359f2d21b9 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
@@ -39,3 +41,5 @@ require (
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/NVIDIA/go-nvml => github.com/confidentsecurity/go-nvml v0.0.0-20250102214226-9a52cebf0382

@@ -18,6 +18,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/intel/trustauthority-client/go-connector"
+	"github.com/intel/trustauthority-client/go-nvgpu"
 	"github.com/intel/trustauthority-client/go-tdx"
 	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
@@ -63,6 +64,7 @@ func init() {
 	tokenCmd.Flags().Bool(constants.NoEventLogOptions.Name, false, constants.NoEventLogOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithTdxOptions.Name, false, constants.WithTdxOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithTpmOptions.Name, false, constants.WithTpmOptions.Description)
+	tokenCmd.Flags().Bool(constants.WithNvGpuOptions.Name, false, constants.WithNvGpuOptions.Description)
 	tokenCmd.Flags().Bool(constants.NoVerifierNonceOptions.Name, false, constants.NoVerifierNonceOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithImaLogsOptions.Name, false, constants.WithImaLogsOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithEventLogsOptions.Name, false, constants.WithEventLogsOptions.Description)
@@ -173,6 +175,12 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
+	withNvGpu, err := cmd.Flags().GetBool(constants.WithNvGpuOptions.Name)
+
+	if err != nil {
+		return err
+	}
+
 	withImaLogs, err := cmd.Flags().GetBool(constants.WithImaLogsOptions.Name)
 	if err != nil {
 		return err
@@ -188,15 +196,15 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
+	// backward compatibility cli options: if the user did not specify "--tdx, "--tpm" or "--nvgpu" options,
+	// include TDX evidence by default
+	if !withTdx && !withTpm && !withNvGpu {
+		withTdx = true
+	}
+
 	eventLogsPath, err := cmd.Flags().GetString(constants.EventLogsPathOptions.Name)
 	if err != nil {
 		return err
-	}
-
-	// backward compatibility cli options: if the user did not specify "--tdx" or "--tpm" options,
-	// include TDX evidence by default
-	if !withTdx && !withTpm {
-		withTdx = true
 	}
 
 	var userDataBytes []byte
@@ -291,6 +299,11 @@ func getToken(cmd *cobra.Command) error {
 		}
 
 		builderOptions = append(builderOptions, connector.WithEvidenceAdapter(tpmAdapter))
+	}
+
+	if withNvGpu {
+		gpuAdapter := nvgpu.NewCompositeEvidenceAdapter()
+		builderOptions = append(builderOptions, connector.WithEvidenceAdapter(gpuAdapter))
 	}
 
 	evidenceBuilder, err := connector.NewEvidenceBuilder(builderOptions...)
