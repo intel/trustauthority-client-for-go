@@ -39,7 +39,7 @@ func WithGpuAttester(gpuAttester GPUAttester) Option {
 
 func NewCompositeEvidenceAdapter(opts ...Option) connector.CompositeEvidenceAdapter {
 	options := &GPUAdapterOptions{
-		GpuAttester: gonvtrust.NewGpuAttester(false),
+		GpuAttester: gonvtrust.NewGpuAttester(nil),
 	}
 	for _, opt := range opts {
 		opt(options)
