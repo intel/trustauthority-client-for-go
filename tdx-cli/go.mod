@@ -20,7 +20,7 @@ require (
 	github.com/NVIDIA/go-nvml v0.12.4-0 // indirect
 	github.com/canonical/go-sp800.108-kdf v0.0.0-20210314145419-a3359f2d21b9 // indirect
 	github.com/canonical/go-tpm2 v1.7.6 // indirect
-	github.com/confidentsecurity/go-nvtrust v0.0.0-20250109124608-b2cfc0e15526 // indirect
+	github.com/confidentsecurity/go-nvtrust v0.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect

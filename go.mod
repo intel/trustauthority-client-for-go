@@ -8,7 +8,7 @@ go 1.23
 
 require (
 	github.com/canonical/go-tpm2 v1.7.6
-	github.com/confidentsecurity/go-nvtrust v0.0.0-20250109124608-b2cfc0e15526
+	github.com/confidentsecurity/go-nvtrust v0.1.1
 	github.com/goccy/go-json v0.10.2
 	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/google/go-configfs-tsm v0.2.2
