@@ -30,13 +30,11 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 	var noVerifierNonce bool
 	var configPath string
 	var policiesMustMatch bool
-	var noEvLog bool
 	var userData string
 	var policyIds string
 	var withImaLogs bool
 	var withEventLogs bool
-	var eventLogsPath string
-	var imaLogsPath string
+	var withCcel bool
 	var builderOptions []connector.EvidenceBuilderOption
 	var ctr connector.Connector
 
@@ -86,14 +84,8 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 					tpm.WithAkHandle(int(cfg.Tpm.AkHandle)),
 					tpm.WithPcrSelections(cfg.Tpm.PcrSelections),
 					tpm.WithAkCertificateUri(cfg.Tpm.AkCertificateUri),
-				}
-
-				if withImaLogs {
-					tpmOptions = append(tpmOptions, tpm.WithImaLogs(imaLogsPath))
-				}
-
-				if withEventLogs {
-					tpmOptions = append(tpmOptions, tpm.WithUefiEventLogs(eventLogsPath))
+					tpm.WithImaLogs(withImaLogs),
+					tpm.WithUefiEventLogs(withEventLogs),
 				}
 
 				tpmAdapter, err := tpmAdapterFactory.New(tpmOptions...)
@@ -105,7 +97,7 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 			}
 
 			if withTdx {
-				tdxAdapter, err := tdxAdapterFactory.New(cfg.CloudProvider, noEvLog)
+				tdxAdapter, err := tdxAdapterFactory.New(cfg.CloudProvider, withCcel)
 				if err != nil {
 					return errors.Wrap(err, "Error while creating tdx adapter")
 				}
@@ -178,11 +170,9 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 	cmd.Flags().StringVarP(&policyIds, constants.PolicyIdsOptions.Name, constants.PolicyIdsOptions.ShortHand, "", constants.PolicyIdsOptions.Description)
 	cmd.Flags().StringVarP(&tokenSigningAlg, constants.TokenAlgOptions.Name, constants.TokenAlgOptions.ShortHand, "", constants.TokenAlgOptions.Description)
 	cmd.Flags().BoolVar(&policiesMustMatch, constants.PolicyMustMatchOptions.Name, false, constants.PolicyMustMatchOptions.Description)
-	cmd.Flags().BoolVar(&noEvLog, constants.NoEventLogOptions.Name, false, constants.NoEventLogOptions.Description)
 	cmd.Flags().BoolVar(&withImaLogs, constants.WithImaLogsOptions.Name, false, constants.WithImaLogsOptions.Description)
 	cmd.Flags().BoolVar(&withEventLogs, constants.WithEventLogsOptions.Name, false, constants.WithEventLogsOptions.Description)
-	cmd.Flags().StringVarP(&eventLogsPath, constants.EventLogsPathOptions.Name, constants.EventLogsPathOptions.ShortHand, "", constants.EventLogsPathOptions.Description)
-	cmd.Flags().StringVarP(&imaLogsPath, constants.ImaLogsPathOptions.Name, constants.ImaLogsPathOptions.ShortHand, "", constants.ImaLogsPathOptions.Description)
+	cmd.Flags().BoolVar(&withCcel, constants.WithCcelOptions.Name, false, constants.WithCcelOptions.Description)
 
 	return &cmd
 }

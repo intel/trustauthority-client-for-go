@@ -15,11 +15,9 @@ import (
 
 // TdxAdapter manages TDX Quote collection from TDX enabled platform
 type tdxAdapter struct {
-	uData             []byte
-	eventLogsDisabled bool
-	cfsQuoteProvider  cfsQuoteProvider
-	ccelTablePath     string
-	ccelDataPath      string
+	uData            []byte
+	withCcel         bool
+	cfsQuoteProvider cfsQuoteProvider
 }
 
 type compositeTdxEvidence struct {
@@ -49,13 +47,8 @@ func (adapter *tdxAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, e
 	}
 
 	var ccelBytes []byte
-	if !adapter.eventLogsDisabled {
-		ccelTable, err := readCcelTable(adapter.ccelTablePath)
-		if err != nil {
-			return nil, err
-		}
-
-		ccelBytes, err = readCcelData(ccelTable, adapter.ccelDataPath)
+	if adapter.withCcel {
+		ccelBytes, err = GetCcel()
 		if err != nil {
 			return nil, err
 		}
@@ -93,12 +86,10 @@ func (cp *cfsQuoteProviderImpl) getQuoteFromConfigFS(reportData []byte) ([]byte,
 	return resp.OutBlob, nil
 }
 
-func NewCompositeEvidenceAdapter(eventLogsDisabled bool) (connector.CompositeEvidenceAdapter, error) {
+func NewCompositeEvidenceAdapter(withCcel bool) (connector.CompositeEvidenceAdapter, error) {
 	return &tdxAdapter{
-		eventLogsDisabled: eventLogsDisabled,
-		cfsQuoteProvider:  &cfsQuoteProviderImpl{},
-		ccelTablePath:     CcelPath,
-		ccelDataPath:      CcelDataPath,
+		withCcel:         withCcel,
+		cfsQuoteProvider: &cfsQuoteProviderImpl{},
 	}, nil
 }
 

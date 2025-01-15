@@ -8,7 +8,6 @@ package cmd
 
 import "github.com/pkg/errors"
 
-// KWT:  expand error codes and assert in unit tests
 var (
 	ErrInvalidFilePath = errors.New("Invalid invalid file path provided")
 	ErrMalformedJson   = errors.New("Malformed JSON provided")

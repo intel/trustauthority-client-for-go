@@ -20,8 +20,8 @@ func TestCollectEvidencePositive(t *testing.T) {
 	mockCfsQuoteProvider.On("getQuoteFromConfigFS", mock.Anything).Return([]byte("quote"), nil)
 
 	adapter := tdxAdapter{
-		eventLogsDisabled: true,
-		cfsQuoteProvider:  mockCfsQuoteProvider,
+		withCcel:         false,
+		cfsQuoteProvider: mockCfsQuoteProvider,
 	}
 
 	_, err := adapter.CollectEvidence([]byte("nonce"))
@@ -36,8 +36,8 @@ func TestCollectEvidenceConfigFsError(t *testing.T) {
 	mockCfsQuoteProvider.On("getQuoteFromConfigFS", mock.Anything).Return([]byte{}, errors.New("unit test failure"))
 
 	adapter := tdxAdapter{
-		eventLogsDisabled: true,
-		cfsQuoteProvider:  mockCfsQuoteProvider,
+		withCcel:         false,
+		cfsQuoteProvider: mockCfsQuoteProvider,
 	}
 
 	_, err := adapter.CollectEvidence([]byte("nonce"))
@@ -51,8 +51,8 @@ func TestCompositeAdapterPositive(t *testing.T) {
 	mockCfsQuoteProvider.On("getQuoteFromConfigFS", mock.Anything).Return([]byte("quote"), nil)
 
 	adapter := tdxAdapter{
-		eventLogsDisabled: true,
-		cfsQuoteProvider:  mockCfsQuoteProvider,
+		withCcel:         false,
+		cfsQuoteProvider: mockCfsQuoteProvider,
 	}
 
 	_, err := adapter.GetEvidence(&connector.VerifierNonce{
@@ -69,8 +69,8 @@ func TestCompositeAdapterConfigFsError(t *testing.T) {
 	mockCfsQuoteProvider.On("getQuoteFromConfigFS", mock.Anything).Return([]byte{}, errors.New("unit test failure"))
 
 	adapter := tdxAdapter{
-		eventLogsDisabled: true,
-		cfsQuoteProvider:  mockCfsQuoteProvider,
+		withCcel:         false,
+		cfsQuoteProvider: mockCfsQuoteProvider,
 	}
 
 	_, err := adapter.GetEvidence(nil, nil)
@@ -80,14 +80,17 @@ func TestCompositeAdapterConfigFsError(t *testing.T) {
 }
 
 func TestCompositeAdapterCcelPositive(t *testing.T) {
+
+	// use test data files
+	ccelTablePath = testCcelTablePath
+	ccelDataPath = testCcelDataPath
+
 	mockCfsQuoteProvider := &MockCfsQuoteProvider{}
 	mockCfsQuoteProvider.On("getQuoteFromConfigFS", mock.Anything).Return([]byte("quote"), nil)
 
 	adapter := tdxAdapter{
-		eventLogsDisabled: false,
-		cfsQuoteProvider:  mockCfsQuoteProvider,
-		ccelTablePath:     testCcelTablePath,
-		ccelDataPath:      testCcelDataPath,
+		withCcel:         true,
+		cfsQuoteProvider: mockCfsQuoteProvider,
 	}
 
 	evidence, err := adapter.GetEvidence(nil, nil)
@@ -101,41 +104,27 @@ func TestCompositeAdapterCcelPositive(t *testing.T) {
 }
 
 func TestCompositeAdapterCcelBadTablePath(t *testing.T) {
+
+	// use invalid test data files
+	ccelTablePath = testInvalidPath
+	ccelDataPath = testCcelDataPath
+
 	mockCfsQuoteProvider := &MockCfsQuoteProvider{}
 	mockCfsQuoteProvider.On("getQuoteFromConfigFS", mock.Anything).Return([]byte("quote"), nil)
 
 	adapter := tdxAdapter{
-		eventLogsDisabled: false,
-		cfsQuoteProvider:  mockCfsQuoteProvider,
-		ccelTablePath:     testInvalidPath,
-		ccelDataPath:      testCcelDataPath,
+		withCcel:         true,
+		cfsQuoteProvider: mockCfsQuoteProvider,
 	}
 
 	_, err := adapter.GetEvidence(nil, nil)
-	if err == nil {
-		t.Errorf("expected error")
-	}
-}
-
-func TestCompositeAdapterCcelBadDataPath(t *testing.T) {
-	mockCfsQuoteProvider := &MockCfsQuoteProvider{}
-	mockCfsQuoteProvider.On("getQuoteFromConfigFS", mock.Anything).Return([]byte("quote"), nil)
-
-	adapter := tdxAdapter{
-		eventLogsDisabled: false,
-		cfsQuoteProvider:  mockCfsQuoteProvider,
-		ccelTablePath:     testCcelTablePath,
-		ccelDataPath:      testInvalidPath,
-	}
-
-	_, err := adapter.GetEvidence(nil, nil)
-	if err == nil {
-		t.Errorf("expected error")
+	if !errors.Is(err, ErrorCcelTableNotFound) {
+		t.Errorf("expected ErrorCcelTableNotFound")
 	}
 }
 
 func TestCompositeAdapterNew(t *testing.T) {
-	adapter, err := NewCompositeEvidenceAdapter(true)
+	adapter, err := NewCompositeEvidenceAdapter(false)
 	if err != nil {
 		t.Errorf("Error: %v", err)
 	}
@@ -144,20 +133,12 @@ func TestCompositeAdapterNew(t *testing.T) {
 		t.Errorf("expected adapter")
 	}
 
-	if adapter.(*tdxAdapter).eventLogsDisabled != true {
-		t.Errorf("expected eventLogsDisabled to be true")
+	if adapter.(*tdxAdapter).withCcel != false {
+		t.Errorf("expected withCcel to be false")
 	}
 
 	if adapter.(*tdxAdapter).cfsQuoteProvider == nil {
 		t.Errorf("expected cfsQuoteProvider")
-	}
-
-	if adapter.(*tdxAdapter).ccelTablePath != CcelPath {
-		t.Errorf("expected ccelTablePath")
-	}
-
-	if adapter.(*tdxAdapter).ccelDataPath != CcelDataPath {
-		t.Errorf("expected ccelDataPath")
 	}
 
 	if adapter.GetEvidenceIdentifier() != "tdx" {

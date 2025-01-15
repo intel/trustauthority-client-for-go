@@ -2,7 +2,7 @@
 # All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 SHELL := /bin/bash
-MIN_UNIT_TEST_COVERAGE := 70 # KWT:  address tdx_adpater.go coverage
+MIN_UNIT_TEST_COVERAGE := 80
 
 .PHONY: test
 default: test

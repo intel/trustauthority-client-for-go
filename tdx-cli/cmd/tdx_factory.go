@@ -31,13 +31,13 @@ type tdxAdapterFactory struct {
 	tpmFactory tpm.TpmFactory // needed for Azure TDX adapter
 }
 
-func (f *tdxAdapterFactory) New(cloudProvider string, eventLogDisabled bool) (connector.CompositeEvidenceAdapter, error) {
+func (f *tdxAdapterFactory) New(cloudProvider string, withCcel bool) (connector.CompositeEvidenceAdapter, error) {
 	var tdxAdapter connector.CompositeEvidenceAdapter
 	var err error
 	if strings.ToLower(cloudProvider) == CloudProviderAzure {
 		tdxAdapter, err = aztdx.NewCompositeEvidenceAdapter(f.tpmFactory)
 	} else {
-		tdxAdapter, err = tdx.NewCompositeEvidenceAdapter(eventLogDisabled)
+		tdxAdapter, err = tdx.NewCompositeEvidenceAdapter(withCcel)
 	}
 
 	if err != nil {

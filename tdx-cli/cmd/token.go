@@ -60,14 +60,12 @@ func newTokenCommand(tdxAdapterFactory TdxAdapterFactory,
 	tokenCmd.Flags().StringP(constants.RequestIdOptions.Name, constants.RequestIdOptions.ShortHand, "", constants.RequestIdOptions.Description)
 	tokenCmd.Flags().StringP(constants.TokenAlgOptions.Name, constants.TokenAlgOptions.ShortHand, "", constants.TokenAlgOptions.Description)
 	tokenCmd.Flags().Bool(constants.PolicyMustMatchOptions.Name, false, constants.PolicyMustMatchOptions.Description)
-	tokenCmd.Flags().Bool(constants.NoEventLogOptions.Name, false, constants.NoEventLogOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithTdxOptions.Name, false, constants.WithTdxOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithTpmOptions.Name, false, constants.WithTpmOptions.Description)
 	tokenCmd.Flags().Bool(constants.NoVerifierNonceOptions.Name, false, constants.NoVerifierNonceOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithImaLogsOptions.Name, false, constants.WithImaLogsOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithEventLogsOptions.Name, false, constants.WithEventLogsOptions.Description)
-	tokenCmd.Flags().StringP(constants.EventLogsPathOptions.Name, constants.EventLogsPathOptions.ShortHand, "", constants.EventLogsPathOptions.Description)
-	tokenCmd.Flags().StringP(constants.ImaLogsPathOptions.Name, constants.ImaLogsPathOptions.ShortHand, "", constants.ImaLogsPathOptions.Description)
+	tokenCmd.Flags().Bool(constants.WithCcelOptions.Name, false, constants.WithCcelOptions.Description)
 
 	tokenCmd.MarkFlagRequired(constants.ConfigOptions.Name)
 	return &tokenCmd
@@ -164,11 +162,6 @@ func getToken(cmd *cobra.Command,
 	}
 	builderOptions = append(builderOptions, connector.WithPoliciesMustMatch(policyMustMatch))
 
-	noEvLog, err := cmd.Flags().GetBool(constants.NoEventLogOptions.Name)
-	if err != nil {
-		return err
-	}
-
 	withTdx, err := cmd.Flags().GetBool(constants.WithTdxOptions.Name)
 	if err != nil {
 		return err
@@ -184,17 +177,12 @@ func getToken(cmd *cobra.Command,
 		return err
 	}
 
-	imaLogsPath, err := cmd.Flags().GetString(constants.ImaLogsPathOptions.Name)
+	withCcel, err := cmd.Flags().GetBool(constants.WithCcelOptions.Name)
 	if err != nil {
 		return err
 	}
 
 	withUefiEventLogs, err := cmd.Flags().GetBool(constants.WithEventLogsOptions.Name)
-	if err != nil {
-		return err
-	}
-
-	eventLogsPath, err := cmd.Flags().GetString(constants.EventLogsPathOptions.Name)
 	if err != nil {
 		return err
 	}
@@ -258,9 +246,9 @@ func getToken(cmd *cobra.Command,
 	}
 
 	if withTdx {
-		tdxAdapter, err := tdxAdapterFactory.New(config.CloudProvider, noEvLog)
+		tdxAdapter, err := tdxAdapterFactory.New(config.CloudProvider, withCcel)
 		if err != nil {
-			return errors.Wrap(err, "Error while creating tdx adapter")
+			return errors.Wrap(err, "Error creating tdx adapter")
 		}
 
 		builderOptions = append(builderOptions, connector.WithEvidenceAdapter(tdxAdapter))
@@ -276,14 +264,8 @@ func getToken(cmd *cobra.Command,
 			tpm.WithAkHandle(int(config.Tpm.AkHandle)),
 			tpm.WithPcrSelections(config.Tpm.PcrSelections),
 			tpm.WithAkCertificateUri(config.Tpm.AkCertificateUri),
-		}
-
-		if withImaLogs {
-			tpmOptions = append(tpmOptions, tpm.WithImaLogs(imaLogsPath))
-		}
-
-		if withUefiEventLogs {
-			tpmOptions = append(tpmOptions, tpm.WithUefiEventLogs(eventLogsPath))
+			tpm.WithImaLogs(withImaLogs),
+			tpm.WithUefiEventLogs(withUefiEventLogs),
 		}
 
 		tpmAdapter, err := tpmAdapterFactory.New(tpmOptions...)
