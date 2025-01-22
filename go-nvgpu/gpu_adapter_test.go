@@ -120,3 +120,23 @@ func TestGetEvidence_AttesterReturnsInvalidBase64(t *testing.T) {
 	assert.Error(t, err)
 	assert.Empty(t, evidence)
 }
+
+func TestGetEvidence_VerifierNonceIsMissing(t *testing.T) {
+	mockAttester := new(MockGPUAttester)
+	adapter := NewCompositeEvidenceAdapter(WithGpuAttester(mockAttester))
+
+	expectedEvidence := gonvtrust.RemoteEvidence{
+		Evidence:    base64.StdEncoding.EncodeToString([]byte("test_evidence")),
+		Certificate: "test_certificate",
+	}
+	mockAttester.On("GetRemoteEvidence", mock.AnythingOfType("[]uint8")).Return([]gonvtrust.RemoteEvidence{expectedEvidence}, nil)
+
+	evidence, err := adapter.GetEvidence(nil, nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, evidence)
+
+	gpuEvidence, ok := evidence.(*GPUEvidence)
+	assert.True(t, ok)
+	assert.Equal(t, expectedEvidence.Certificate, gpuEvidence.Certificate)
+	assert.Equal(t, base64.StdEncoding.EncodeToString([]byte(hex.EncodeToString([]byte("test_evidence")))), gpuEvidence.Evidence)
+}
