@@ -1,6 +1,7 @@
 package nvgpu
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
@@ -10,11 +11,14 @@ import (
 	"github.com/intel/trustauthority-client/go-connector"
 )
 
+const HopperArch = "hopper"
+
 type GPUEvidence struct {
 	Evidence      string                  `json:"evidence"`
 	Certificate   string                  `json:"certificate"`
 	Nonce         string                  `json:"gpu_nonce"`
 	VerifierNonce connector.VerifierNonce `json:"verifier_nonce"`
+	Arch          string                  `json:"arch"`
 }
 
 type GPUAdapter struct {
@@ -76,6 +80,7 @@ func (g *GPUAdapter) collectEvidence(nonce []byte) (GPUEvidence, error) {
 
 	hexNonce := fmt.Sprintf("%x", hash)
 	return GPUEvidence{
+		Arch:        HopperArch,
 		Nonce:       hexNonce,
 		Evidence:    rawEvidence.Evidence,
 		Certificate: rawEvidence.Certificate,
@@ -86,6 +91,11 @@ func (adapter *GPUAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, u
 	var nonce []byte
 	if verifierNonce != nil {
 		nonce = append(verifierNonce.Val, verifierNonce.Iat[:]...)
+	} else {
+		nonce = make([]byte, 32)
+		if _, err := rand.Read(nonce); err != nil {
+			return nil, fmt.Errorf("failed to generate random nonce: %v", err)
+		}
 	}
 
 	evidence, err := adapter.collectEvidence(nonce)
@@ -93,7 +103,8 @@ func (adapter *GPUAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, u
 		return nil, err
 	}
 
-	evidence.VerifierNonce = *verifierNonce
-
+	if verifierNonce != nil {
+		evidence.VerifierNonce = *verifierNonce
+	}
 	return &evidence, nil
 }
