@@ -1,6 +1,6 @@
 # Intel® Trust Authority Client for Go
 
-<p style="font-size: 0.875em;">· 10/14/2024 ·</p>
+<p style="font-size: 0.875em;">· 01/20/2025 ·</p>
 
 [Intel® Trust Authority](https://www.intel.com/content/www/us/en/security/trust-authority.html) [Client for Go](https://docs.trustauthority.intel.com/main/articles/integrate-go-client.html) ("the client") provides a set of Go modules and a command line interface (CLI) for attesting different TEEs with Intel Trust Authority. The attestation client API and [attestation client CLI](https://docs.trustauthority.intel.com/main/articles/integrate-go-tdx-cli.html) can be used by both attesters and relying parties, in either Passport or Background-check attestation mode. 
 
@@ -22,7 +22,7 @@ The Intel Trust Authority Client for Go works with the following TEEs and platfo
 | Azure\* confidential VMs with Intel TDX and vTPM | GA | [**main**](https://github.com/intel/trustauthority-client-for-go/tree/go-tpm) | Moved from Preview to GA status. See notes.|
 | Google Cloud Platform\* (GCP) confidential VMs on Intel CPUs with Intel TDX | GA | [**main**](https://github.com/intel/trustauthority-client-for-go/tree/main/go-tdx) | Moved from Preview to GA status. See notes. |
 | AMD Secure Encrypted Virtualization - Secure Nested Paging\* (AMD SEV-SNP\*) | Preview | [**sevsnp-preview**](https://github.com/intel/trustauthority-client-for-go/tree/sevsnp-preview) | Pilot environment only |
-| Physical TPM | Preview | [**physical-tpm-preview**](https://github.com/intel/trustauthority-client-for-go/tree/physical-tpm-preview) | Pilot environment only |
+| Physical TPM | GA | [**main**](https://github.com/intel/trustauthority-client-for-go/tree/main) | GA |
 
 Platforms with status **GA** are available and supported in the US and EU production environments. **Preview** TEEs and platforms are in limited-access preview status in the pilot environments only. Details of implementation and usage may change before general availability. The corresponding Intel Trust Authority attestation services for preview features are not available in the production environment. Contact your Intel representative for more information about the pilot program.
 

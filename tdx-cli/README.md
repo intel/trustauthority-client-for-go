@@ -1,6 +1,6 @@
 # Intel® Trust Authority Attestation Client CLI
 
-<p style="font-size: 0.875em;">· 08/13/2024 ·</p>
+<p style="font-size: 0.875em;">· 01/20/2025 ·</p>
 
 Intel® Trust Authority Attestation Client CLI ("client CLI") for Intel® Trust Domain Extensions (Intel® TDX) [**tdx-cli**](./tdx-cli) provides a CLI to attest an Intel TDX trust domain (TD) with Intel Trust Authority. The client CLI provides a core set of commands that apply to all TEEs, with minor differences in options and usage depending on the TEE or platform.
 
@@ -116,17 +116,6 @@ Save this data in config.json file and then invoke the `verify` command.
 ```sh
 trustauthority-cli verify --config config.json --token <attestation token in JWT format>
 ```
-
-### To get a TD quote with a nonce and user data
-
-```sh
-sudo trustauthority-cli quote --nonce <base64 encoded nonce> --user-data <base64 encoded userdata>
-```
-> [!NOTE]
-> If running on Azure, include `--aztdx`
-> ```bash
-> sudo trustauthority-cli quote --nonce <base64 encoded nonce> --user-data <base64 encoded userdata> --aztdx
-> ```
 
 ## License
 
