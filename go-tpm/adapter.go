@@ -1,5 +1,3 @@
-//go:build !test
-
 /*
  *   Copyright (c) 2022-2024 Intel Corporation
  *   All rights reserved.
@@ -31,22 +29,29 @@ type tpmAdapter struct {
 	pcrSelections    []PcrSelection
 	deviceType       TpmDeviceType
 	ownerAuth        string
-	imaLogPath       string
-	uefiEventLogPath string
+	withImaLogs      bool
+	withUefiLogs     bool
 	akCertificateUri *url.URL
 }
 
 var defaultAdapter = tpmAdapter{
-	akHandle:         DefaultAkHandle,
-	pcrSelections:    defaultPcrSelections,
-	deviceType:       TpmDeviceLinux,
-	ownerAuth:        "",
-	imaLogPath:       "",
-	uefiEventLogPath: "",
+	akHandle:      DefaultAkHandle,
+	pcrSelections: defaultPcrSelections,
+	deviceType:    TpmDeviceLinux,
+	ownerAuth:     "",
+	withImaLogs:   false,
+	withUefiLogs:  false,
 }
 
-// NewCompositeEvidenceAdapterWithOptions creates a new composite adapter for the host's TPM.
-func NewCompositeEvidenceAdapterWithOptions(opts ...TpmAdapterOptions) (connector.CompositeEvidenceAdapter, error) {
+type TpmAdapterFactory interface {
+	New(opts ...TpmAdapterOptions) (connector.CompositeEvidenceAdapter, error)
+}
+
+type tpmAdapterFactory struct {
+	tpmFactory TpmFactory
+}
+
+func (t *tpmAdapterFactory) New(opts ...TpmAdapterOptions) (connector.CompositeEvidenceAdapter, error) {
 	// create an adapter with default values
 	tca := defaultAdapter
 
@@ -58,6 +63,10 @@ func NewCompositeEvidenceAdapterWithOptions(opts ...TpmAdapterOptions) (connecto
 	}
 
 	return &tca, nil
+}
+
+func NewTpmAdapterFactory(tpmFactory TpmFactory) TpmAdapterFactory {
+	return &tpmAdapterFactory{tpmFactory: tpmFactory}
 }
 
 // WithOwnerAuth specifies the owner password used to communicate
@@ -103,36 +112,22 @@ func WithPcrSelections(selections string) TpmAdapterOptions {
 	}
 }
 
-// WithImaLogs will include the IMA log into TPM evidence using the
-// specified 'imaPath' parameter. If the path is empty, the default value of
-// "/sys/kernel/security/ima/ascii_runtime_measurements" is used.
-func WithImaLogs(imaPath string) TpmAdapterOptions {
+// WithImaLogs controls the inclusion of IMA logs into TPM evidence.  When enabled,
+// logs from "/sys/kernel/security/ima/ascii_runtime_measurements" will be included
+// in evidence.
+func WithImaLogs(enabled bool) TpmAdapterOptions {
 	return func(tca *tpmAdapter) error {
-		var logPath string
-		if len(imaPath) == 0 {
-			logPath = DefaultImaPath
-		} else {
-			logPath = imaPath
-		}
-
-		tca.imaLogPath = logPath
+		tca.withImaLogs = enabled
 		return nil
 	}
 }
 
-// WithUefiEventLogs will include the UEFI event log into TPM evidence using the
-// specified 'uefiLogPath'.  If the uefiLogPath is empty, the default value of
-// "/sys/kernel/security/tpm0/binary_bios_measurements" is used.
-func WithUefiEventLogs(uefiLogPath string) TpmAdapterOptions {
+// WithUefiEventLogs controls the inclusion of UEFI event logs into TPM evidence.  When enabled,
+// logs from "/sys/kernel/security/tpm0/binary_bios_measurements" will be included
+// in evidence.
+func WithUefiEventLogs(enabled bool) TpmAdapterOptions {
 	return func(tca *tpmAdapter) error {
-		var logPath string
-		if len(uefiLogPath) == 0 {
-			logPath = DefaultUefiEventLogPath
-		} else {
-			logPath = uefiLogPath
-		}
-
-		tca.uefiEventLogPath = logPath
+		tca.withUefiLogs = enabled
 		return nil
 	}
 }
@@ -192,28 +187,28 @@ func (tca *tpmAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, userD
 	}
 
 	var imaLogs []byte
-	if tca.imaLogPath != "" {
-		imaLogs, err = readFile(tca.imaLogPath)
+	if tca.withImaLogs {
+		imaLogs, err = readFile(DefaultImaPath)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to read ima log file %q", tca.imaLogPath)
+			return nil, errors.Wrapf(err, "Failed to read ima log file %q", DefaultImaPath)
 		}
 	}
 
 	var uefiEventLogs []byte
-	if tca.uefiEventLogPath != "" {
-		uefiBytes, err := readFile(tca.uefiEventLogPath)
+	if tca.withUefiLogs {
+		uefiBytes, err := readFile(DefaultUefiEventLogPath)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to open uefi log file %q", tca.uefiEventLogPath)
+			return nil, errors.Wrapf(err, "Failed to open uefi log file %q", DefaultUefiEventLogPath)
 		}
 
 		eventLogFilter, err := newEventLogFilter(uefiBytes, tca.pcrSelections...)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to create event log filter for file %q", tca.uefiEventLogPath)
+			return nil, errors.Wrap(err, "Failed to create event log filter for file")
 		}
 
 		uefiEventLogs, err = eventLogFilter.FilterEventLogs()
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to parse uefi event log file %q", tca.uefiEventLogPath)
+			return nil, errors.Wrap(err, "Failed to parse uefi event log file")
 		}
 	}
 

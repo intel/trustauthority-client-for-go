@@ -6,6 +6,14 @@
 
 package cmd
 
+import (
+	"bytes"
+	"encoding/json"
+	"os"
+
+	"github.com/pkg/errors"
+)
+
 type Config struct {
 	CloudProvider        string     `json:"cloud_provider"`
 	TrustAuthorityUrl    string     `json:"trustauthority_url"`
@@ -39,5 +47,32 @@ func NewConfigFactory() ConfigFactory {
 type configFactory struct{}
 
 func (c *configFactory) LoadConfig(configFile string) (*Config, error) {
-	return loadConfig(configFile)
+	configFilePath, err := ValidateFilePath(configFile)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Invalid config file path %q provided", configFile)
+	}
+	configJson, err := os.ReadFile(configFilePath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error reading config file %q", configFile)
+	}
+
+	cfg, err := newConfig(configJson)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error parsing config from file %q", configFile)
+
+	}
+
+	return cfg, nil
+}
+
+func newConfig(configJson []byte) (*Config, error) {
+	var config Config
+	dec := json.NewDecoder(bytes.NewReader(configJson))
+	dec.DisallowUnknownFields()
+	err := dec.Decode(&config)
+	if err != nil {
+		return nil, errors.Wrap(ErrMalformedJson, err.Error())
+	}
+
+	return &config, nil
 }

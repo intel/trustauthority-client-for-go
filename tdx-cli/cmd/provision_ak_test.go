@@ -29,7 +29,7 @@ func TestAkProvisioning(t *testing.T) {
 			cmdArgs: []string{
 				constants.ProvisionAkCmd,
 				"--" + constants.ConfigOptions.Name,
-				"doesnotexist.json",
+				testNonExistentFileName,
 			},
 			errorExpected: false,
 		},
@@ -43,7 +43,7 @@ func TestAkProvisioning(t *testing.T) {
 			cmdArgs: []string{
 				constants.ProvisionAkCmd,
 				"--" + constants.ConfigOptions.Name,
-				"doesnotexist.json",
+				testNonExistentFileName,
 			},
 			errorExpected: true,
 		},
@@ -55,7 +55,7 @@ func TestAkProvisioning(t *testing.T) {
 
 				mockConfigFactory := MockConfigFactory{}
 				mockConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{
-					TrustAuthorityApiUrl: "https://localhost:8080",
+					TrustAuthorityApiUrl: testValidUrl,
 					CloudProvider:        CloudProviderAzure,
 					Tpm:                  &TpmConfig{},
 				}, nil)
@@ -68,7 +68,7 @@ func TestAkProvisioning(t *testing.T) {
 			cmdArgs: []string{
 				constants.ProvisionAkCmd,
 				"--" + constants.ConfigOptions.Name,
-				"doesnotexist.json",
+				testNonExistentFileName,
 			},
 			errorExpected: true,
 		},
@@ -80,7 +80,7 @@ func TestAkProvisioning(t *testing.T) {
 
 				mockConfigFactory := MockConfigFactory{}
 				mockConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{
-					TrustAuthorityApiUrl: "https://localhost:8080",
+					TrustAuthorityApiUrl: testValidUrl,
 					CloudProvider:        CloudProviderAzure,
 					Tpm:                  &TpmConfig{},
 				}, nil)
@@ -93,7 +93,7 @@ func TestAkProvisioning(t *testing.T) {
 			cmdArgs: []string{
 				constants.ProvisionAkCmd,
 				"--" + constants.ConfigOptions.Name,
-				"doesnotexist.json",
+				testNonExistentFileName,
 			},
 			errorExpected: true,
 		},
@@ -141,7 +141,7 @@ func testProvisionAkFactories() (MockTpmFactory, MockConfigFactory, MockConnecto
 
 	mockConfigFactory := MockConfigFactory{}
 	mockConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{
-		TrustAuthorityApiUrl: "https://localhost:8080",
+		TrustAuthorityApiUrl: testValidUrl,
 		CloudProvider:        CloudProviderAzure,
 		Tpm:                  &TpmConfig{},
 	}, nil)

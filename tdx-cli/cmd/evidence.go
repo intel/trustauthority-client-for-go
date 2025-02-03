@@ -12,7 +12,6 @@ import (
 	"fmt"
 
 	"github.com/intel/trustauthority-client/go-connector"
-	"github.com/intel/trustauthority-client/go-tdx"
 	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
 
@@ -20,20 +19,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory, cfgFactory ConfigFactory, ctrFactory connector.ConnectorFactory) *cobra.Command {
+func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
+	tpmAdapterFactory tpm.TpmAdapterFactory,
+	cfgFactory ConfigFactory,
+	ctrFactory connector.ConnectorFactory) *cobra.Command {
+
 	var withTpm bool
 	var withTdx bool
 	var tokenSigningAlg string
 	var noVerifierNonce bool
 	var configPath string
 	var policiesMustMatch bool
-	var noEvLog bool
 	var userData string
 	var policyIds string
 	var withImaLogs bool
 	var withEventLogs bool
-	var eventLogsPath string
-	var imaLogsPath string
+	var withCcel bool
 	var builderOptions []connector.EvidenceBuilderOption
 	var ctr connector.Connector
 
@@ -83,17 +84,11 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory, cfgFactory ConfigFa
 					tpm.WithAkHandle(int(cfg.Tpm.AkHandle)),
 					tpm.WithPcrSelections(cfg.Tpm.PcrSelections),
 					tpm.WithAkCertificateUri(cfg.Tpm.AkCertificateUri),
+					tpm.WithImaLogs(withImaLogs),
+					tpm.WithUefiEventLogs(withEventLogs),
 				}
 
-				if withImaLogs {
-					tpmOptions = append(tpmOptions, tpm.WithImaLogs(imaLogsPath))
-				}
-
-				if withEventLogs {
-					tpmOptions = append(tpmOptions, tpm.WithUefiEventLogs(eventLogsPath))
-				}
-
-				tpmAdapter, err := tpm.NewCompositeEvidenceAdapterWithOptions(tpmOptions...)
+				tpmAdapter, err := tpmAdapterFactory.New(tpmOptions...)
 				if err != nil {
 					return err
 				}
@@ -102,12 +97,7 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory, cfgFactory ConfigFa
 			}
 
 			if withTdx {
-				var evLogParser tdx.EventLogParser
-				if !noEvLog {
-					evLogParser = tdx.NewEventLogParser()
-				}
-
-				tdxAdapter, err := tdxAdapterFactory.New(cfg.CloudProvider, evLogParser)
+				tdxAdapter, err := tdxAdapterFactory.New(cfg.CloudProvider, withCcel)
 				if err != nil {
 					return errors.Wrap(err, "Error while creating tdx adapter")
 				}
@@ -180,11 +170,9 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory, cfgFactory ConfigFa
 	cmd.Flags().StringVarP(&policyIds, constants.PolicyIdsOptions.Name, constants.PolicyIdsOptions.ShortHand, "", constants.PolicyIdsOptions.Description)
 	cmd.Flags().StringVarP(&tokenSigningAlg, constants.TokenAlgOptions.Name, constants.TokenAlgOptions.ShortHand, "", constants.TokenAlgOptions.Description)
 	cmd.Flags().BoolVar(&policiesMustMatch, constants.PolicyMustMatchOptions.Name, false, constants.PolicyMustMatchOptions.Description)
-	cmd.Flags().BoolVar(&noEvLog, constants.NoEventLogOptions.Name, false, constants.NoEventLogOptions.Description)
 	cmd.Flags().BoolVar(&withImaLogs, constants.WithImaLogsOptions.Name, false, constants.WithImaLogsOptions.Description)
 	cmd.Flags().BoolVar(&withEventLogs, constants.WithEventLogsOptions.Name, false, constants.WithEventLogsOptions.Description)
-	cmd.Flags().StringVarP(&eventLogsPath, constants.EventLogsPathOptions.Name, constants.EventLogsPathOptions.ShortHand, "", constants.EventLogsPathOptions.Description)
-	cmd.Flags().StringVarP(&imaLogsPath, constants.ImaLogsPathOptions.Name, constants.ImaLogsPathOptions.ShortHand, "", constants.ImaLogsPathOptions.Description)
+	cmd.Flags().BoolVar(&withCcel, constants.WithCcelOptions.Name, false, constants.WithCcelOptions.Description)
 
 	return &cmd
 }

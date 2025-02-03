@@ -20,7 +20,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/intel/trustauthority-client/go-connector"
-	"github.com/intel/trustauthority-client/go-tdx"
 	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
@@ -83,6 +82,12 @@ func init() {
 	}
 	testAkPub = akPriv.Public().(*rsa.PublicKey)
 }
+
+const (
+	testApiKey              = "YXBpa2V5"
+	testValidUrl            = "https://notused.com:8080"
+	testNonExistentFileName = "doesnotexist.json"
+)
 
 var (
 	testEkHandle        = 0x81000F00
@@ -270,8 +275,18 @@ type MockTdxAdapterFactory struct {
 	mock.Mock
 }
 
-func (m *MockTdxAdapterFactory) New(cloudProvider string, evLogParser tdx.EventLogParser) (connector.CompositeEvidenceAdapter, error) {
-	args := m.Called(cloudProvider, evLogParser)
+func (m *MockTdxAdapterFactory) New(cloudProvider string, eventLogDisabled bool) (connector.CompositeEvidenceAdapter, error) {
+	args := m.Called(cloudProvider, eventLogDisabled)
+	return args.Get(0).(connector.CompositeEvidenceAdapter), args.Error(1)
+}
+
+// MockTpmAdapterFactory
+type MockTpmAdapterFactory struct {
+	mock.Mock
+}
+
+func (m *MockTpmAdapterFactory) New(opts ...tpm.TpmAdapterOptions) (connector.CompositeEvidenceAdapter, error) {
+	args := m.Called(opts)
 	return args.Get(0).(connector.CompositeEvidenceAdapter), args.Error(1)
 }
 
@@ -288,4 +303,60 @@ func (m *MockCompositeEvidenceAdapter) GetEvidence(verifierNonce *connector.Veri
 func (m *MockCompositeEvidenceAdapter) GetEvidenceIdentifier() string {
 	args := m.Called()
 	return args.String(0)
+}
+
+func createDefaultMocks() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+	return happyMockTdxAdapterFactory(), happyMockTpmAdapterFactory(), mockConfigFactory(nil), happyMockConnectorFactory()
+}
+
+func happyMockConnectorFactory() connector.ConnectorFactory {
+	mockConnector := MockConnector{}
+	mockConnector.On("GetNonce", mock.Anything).Return(connector.GetNonceResponse{}, nil)
+	mockConnector.On("AttestEvidence", mock.Anything, mock.Anything, mock.Anything).Return(connector.AttestResponse{}, nil)
+	mockConnector.On("VerifyToken", mock.Anything).Return(&jwt.Token{}, nil)
+
+	mockConnectorFactory := MockConnectorFactory{}
+	mockConnectorFactory.On("NewConnector", mock.Anything).Return(&mockConnector, nil)
+
+	return &mockConnectorFactory
+}
+
+func happyMockTdxAdapterFactory() TdxAdapterFactory {
+	mockCompositeAdapter := MockCompositeEvidenceAdapter{}
+	mockCompositeAdapter.On("GetEvidenceIdentifier").Return("tdx", nil)
+	mockCompositeAdapter.On("GetEvidence", mock.Anything, mock.Anything).Return(struct{}{}, nil)
+
+	mockTdxAdapterFactory := MockTdxAdapterFactory{}
+	mockTdxAdapterFactory.On("New", mock.Anything, mock.Anything).Return(&mockCompositeAdapter, nil)
+
+	return &mockTdxAdapterFactory
+}
+
+func happyMockTpmAdapterFactory() tpm.TpmAdapterFactory {
+	mockCompositeAdapter := MockCompositeEvidenceAdapter{}
+	mockCompositeAdapter.On("GetEvidenceIdentifier").Return("tpm", nil)
+	mockCompositeAdapter.On("GetEvidence", mock.Anything, mock.Anything).Return(struct{}{}, nil)
+
+	mockTpmAdapterFactory := MockTpmAdapterFactory{}
+	mockTpmAdapterFactory.On("New", mock.Anything, mock.Anything).Return(&mockCompositeAdapter, nil)
+
+	return &mockTpmAdapterFactory
+}
+
+func mockConfigFactory(cfg *Config) ConfigFactory {
+	c := cfg
+	if c == nil {
+		c = &Config{
+			TrustAuthorityApiUrl: testValidUrl,
+			TrustAuthorityUrl:    testValidUrl,
+			TrustAuthorityApiKey: testApiKey,
+			CloudProvider:        CloudProviderAzure,
+			Tpm:                  &TpmConfig{},
+		}
+	}
+
+	mockConfigFactory := MockConfigFactory{}
+	mockConfigFactory.On("LoadConfig", mock.Anything).Return(c, nil)
+
+	return &mockConfigFactory
 }

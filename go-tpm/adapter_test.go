@@ -48,8 +48,8 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				pcrSelections:    defaultPcrSelections,
 				deviceType:       TpmDeviceMSSIM,
 				ownerAuth:        "",
-				imaLogPath:       "",
-				uefiEventLogPath: "",
+				withImaLogs:      false,
+				withUefiLogs:     false,
 				akCertificateUri: nil,
 			},
 			expectError: false,
@@ -64,8 +64,8 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				pcrSelections:    defaultPcrSelections,
 				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "ownerX",
-				imaLogPath:       "",
-				uefiEventLogPath: "",
+				withImaLogs:      false,
+				withUefiLogs:     false,
 				akCertificateUri: nil,
 			},
 			expectError: false,
@@ -80,8 +80,8 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				pcrSelections:    defaultPcrSelections,
 				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "",
-				imaLogPath:       "",
-				uefiEventLogPath: "",
+				withImaLogs:      false,
+				withUefiLogs:     false,
 				akCertificateUri: nil,
 			},
 			expectError: false,
@@ -95,97 +95,33 @@ func TestAdapterNewWithOptions(t *testing.T) {
 			expectError:     true,
 		},
 		{
-			testName: "Test adapter with empty ima logs path",
+			testName: "Test adapter with ima logs",
 			options: []TpmAdapterOptions{
-				WithImaLogs(""),
+				WithImaLogs(true),
 			},
 			expectedAdapter: &tpmAdapter{
 				akHandle:         DefaultAkHandle,
 				pcrSelections:    defaultPcrSelections,
 				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "",
-				imaLogPath:       DefaultImaPath,
-				uefiEventLogPath: "",
+				withImaLogs:      true,
+				withUefiLogs:     false,
 				akCertificateUri: nil,
 			},
 			expectError: false,
 		},
 		{
-			testName: "Test adapter with default ima logs path",
+			testName: "Test adapter with event-logs",
 			options: []TpmAdapterOptions{
-				WithImaLogs(DefaultImaPath),
+				WithUefiEventLogs(true),
 			},
 			expectedAdapter: &tpmAdapter{
 				akHandle:         DefaultAkHandle,
 				pcrSelections:    defaultPcrSelections,
 				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "",
-				imaLogPath:       DefaultImaPath,
-				uefiEventLogPath: "",
-				akCertificateUri: nil,
-			},
-			expectError: false,
-		},
-		{
-			testName: "Test adapter with custom ima logs path",
-			options: []TpmAdapterOptions{
-				WithImaLogs("/proc/cpuinfo"), // a valid path that is expected to be readable on linux
-			},
-			expectedAdapter: &tpmAdapter{
-				akHandle:         DefaultAkHandle,
-				pcrSelections:    defaultPcrSelections,
-				deviceType:       TpmDeviceLinux,
-				ownerAuth:        "",
-				imaLogPath:       "/proc/cpuinfo",
-				uefiEventLogPath: "",
-				akCertificateUri: nil,
-			},
-			expectError: false,
-		},
-		{
-			testName: "Test adapter with empty event-logs path",
-			options: []TpmAdapterOptions{
-				WithUefiEventLogs(""),
-			},
-			expectedAdapter: &tpmAdapter{
-				akHandle:         DefaultAkHandle,
-				pcrSelections:    defaultPcrSelections,
-				deviceType:       TpmDeviceLinux,
-				ownerAuth:        "",
-				imaLogPath:       "",
-				uefiEventLogPath: DefaultUefiEventLogPath,
-				akCertificateUri: nil,
-			},
-			expectError: false,
-		},
-		{
-			testName: "Test adapter with default event-logs path",
-			options: []TpmAdapterOptions{
-				WithUefiEventLogs(DefaultUefiEventLogPath),
-			},
-			expectedAdapter: &tpmAdapter{
-				akHandle:         DefaultAkHandle,
-				pcrSelections:    defaultPcrSelections,
-				deviceType:       TpmDeviceLinux,
-				ownerAuth:        "",
-				imaLogPath:       "",
-				uefiEventLogPath: DefaultUefiEventLogPath,
-				akCertificateUri: nil,
-			},
-			expectError: false,
-		},
-		{
-			testName: "Test adapter with custom event-logs path",
-			options: []TpmAdapterOptions{
-				WithUefiEventLogs("/proc/cpuinfo"), // a valid path that is expected to be readable on linux
-			},
-			expectedAdapter: &tpmAdapter{
-				akHandle:         DefaultAkHandle,
-				pcrSelections:    defaultPcrSelections,
-				deviceType:       TpmDeviceLinux,
-				ownerAuth:        "",
-				imaLogPath:       "",
-				uefiEventLogPath: "/proc/cpuinfo",
+				withImaLogs:      false,
+				withUefiLogs:     true,
 				akCertificateUri: nil,
 			},
 			expectError: false,
@@ -200,8 +136,8 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				pcrSelections:    defaultPcrSelections,
 				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "",
-				imaLogPath:       "",
-				uefiEventLogPath: "",
+				withImaLogs:      false,
+				withUefiLogs:     false,
 				akCertificateUri: nil,
 			},
 			expectError: false,
@@ -212,12 +148,12 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				WithAkCertificateUri("file:///dir/myak.pem"),
 			},
 			expectedAdapter: &tpmAdapter{
-				akHandle:         DefaultAkHandle,
-				pcrSelections:    defaultPcrSelections,
-				deviceType:       TpmDeviceLinux,
-				ownerAuth:        "",
-				imaLogPath:       "",
-				uefiEventLogPath: "",
+				akHandle:      DefaultAkHandle,
+				pcrSelections: defaultPcrSelections,
+				deviceType:    TpmDeviceLinux,
+				ownerAuth:     "",
+				withImaLogs:   false,
+				withUefiLogs:  false,
 				akCertificateUri: &url.URL{
 					Scheme: "file",
 					Path:   "/dir/myak.pem",
@@ -231,12 +167,12 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				WithAkCertificateUri("nvram://0x81010001"),
 			},
 			expectedAdapter: &tpmAdapter{
-				akHandle:         DefaultAkHandle,
-				pcrSelections:    defaultPcrSelections,
-				deviceType:       TpmDeviceLinux,
-				ownerAuth:        "",
-				imaLogPath:       "",
-				uefiEventLogPath: "",
+				akHandle:      DefaultAkHandle,
+				pcrSelections: defaultPcrSelections,
+				deviceType:    TpmDeviceLinux,
+				ownerAuth:     "",
+				withImaLogs:   false,
+				withUefiLogs:  false,
 				akCertificateUri: &url.URL{
 					Scheme: "nvram",
 					Host:   "0x81010001",
@@ -254,8 +190,8 @@ func TestAdapterNewWithOptions(t *testing.T) {
 				pcrSelections:    defaultPcrSelections,
 				deviceType:       TpmDeviceLinux,
 				ownerAuth:        "",
-				imaLogPath:       "",
-				uefiEventLogPath: "",
+				withImaLogs:      false,
+				withUefiLogs:     false,
 				akCertificateUri: nil,
 			},
 			expectError: true,
@@ -264,7 +200,7 @@ func TestAdapterNewWithOptions(t *testing.T) {
 
 	for _, tt := range testData {
 		t.Run(tt.testName, func(t *testing.T) {
-			adapter, err := NewCompositeEvidenceAdapterWithOptions(tt.options...)
+			adapter, err := NewTpmAdapterFactory(NewTpmFactory()).New(tt.options...)
 			if !tt.expectError && err != nil {
 				// not expecting an error but got one
 				t.Fatal(err)
@@ -296,7 +232,7 @@ func TestAdapterGetEvidencePositive(t *testing.T) {
 
 	tpm.Close()
 
-	adapter, err := NewCompositeEvidenceAdapterWithOptions(
+	adapter, err := NewTpmAdapterFactory(NewTpmFactory()).New(
 		WithDeviceType(TpmDeviceMSSIM),
 		WithAkHandle(testAkHandle),
 	)

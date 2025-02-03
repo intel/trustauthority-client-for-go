@@ -1,5 +1,3 @@
-//go:build !test
-
 /*
  *   Copyright (c) 2022-2024 Intel Corporation
  *   All rights reserved.
@@ -9,26 +7,24 @@ package tdx
 
 import (
 	"crypto/sha512"
-	"encoding/json"
 
 	"github.com/google/go-configfs-tsm/configfs/linuxtsm"
 	"github.com/google/go-configfs-tsm/report"
 	"github.com/intel/trustauthority-client/go-connector"
-	"github.com/pkg/errors"
 )
 
 // TdxAdapter manages TDX Quote collection from TDX enabled platform
 type tdxAdapter struct {
-	uData       []byte
-	EvLogParser EventLogParser
+	uData            []byte
+	withCcel         bool
+	cfsQuoteProvider cfsQuoteProvider
 }
 
-// NewTdxAdapter returns a new TDX Adapter instance
-func NewTdxAdapter(udata []byte, evLogParser EventLogParser) (connector.EvidenceAdapter, error) {
-	return &tdxAdapter{
-		uData:       udata,
-		EvLogParser: evLogParser,
-	}, nil
+type compositeTdxEvidence struct {
+	RuntimeData   []byte                   `json:"runtime_data"`
+	Quote         []byte                   `json:"quote"`
+	EventLog      []byte                   `json:"event_log,omitempty"`
+	VerifierNonce *connector.VerifierNonce `json:"verifier_nonce,omitempty"`
 }
 
 // CollectEvidence is used to get TDX quote using TDX Quote Generation service
@@ -45,26 +41,16 @@ func (adapter *tdxAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, e
 	}
 	reportData := hash.Sum(nil)
 
-	_, err = linuxtsm.MakeClient()
+	quote, err := adapter.cfsQuoteProvider.getQuoteFromConfigFS(reportData)
 	if err != nil {
 		return nil, err
 	}
 
-	quote, err := getQuoteFromConfigFS(reportData)
-	if err != nil {
-		return nil, err
-	}
-
-	var eventLog []byte
-	if adapter.EvLogParser != nil {
-		rtmrEventLogs, err := adapter.EvLogParser.GetEventLogs()
+	var ccelBytes []byte
+	if adapter.withCcel {
+		ccelBytes, err = GetCcel()
 		if err != nil {
-			return nil, errors.Wrap(err, "There was an error while collecting RTMR Event Log Data")
-		}
-
-		eventLog, err = json.Marshal(rtmrEventLogs)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error while marshalling RTMR Event Log Data")
+			return nil, err
 		}
 	}
 
@@ -72,11 +58,21 @@ func (adapter *tdxAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, e
 		Type:        connector.Tdx,
 		Evidence:    quote,
 		RuntimeData: adapter.uData,
-		EventLog:    eventLog,
+		EventLog:    ccelBytes,
 	}, nil
 }
 
-func getQuoteFromConfigFS(reportData []byte) ([]byte, error) {
+type cfsQuoteProvider interface {
+	getQuoteFromConfigFS(reportData []byte) ([]byte, error)
+}
+
+type cfsQuoteProviderImpl struct{}
+
+func (cp *cfsQuoteProviderImpl) getQuoteFromConfigFS(reportData []byte) ([]byte, error) {
+	_, err := linuxtsm.MakeClient()
+	if err != nil {
+		return nil, err
+	}
 
 	req := &report.Request{
 		InBlob:     reportData[:],
@@ -90,9 +86,10 @@ func getQuoteFromConfigFS(reportData []byte) ([]byte, error) {
 	return resp.OutBlob, nil
 }
 
-func NewCompositeEvidenceAdapter(evLogParser EventLogParser) (connector.CompositeEvidenceAdapter, error) {
+func NewCompositeEvidenceAdapter(withCcel bool) (connector.CompositeEvidenceAdapter, error) {
 	return &tdxAdapter{
-		EvLogParser: evLogParser,
+		withCcel:         withCcel,
+		cfsQuoteProvider: &cfsQuoteProviderImpl{},
 	}, nil
 }
 
@@ -113,15 +110,10 @@ func (adapter *tdxAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, u
 		return nil, err
 	}
 
-	return &struct {
-		R []byte                   `json:"runtime_data"`
-		Q []byte                   `json:"quote"`
-		E []byte                   `json:"event_log,omitempty"`
-		V *connector.VerifierNonce `json:"verifier_nonce,omitempty"`
-	}{
-		R: quote.RuntimeData,
-		Q: quote.Evidence,
-		E: quote.EventLog,
-		V: verifierNonce,
+	return &compositeTdxEvidence{
+		RuntimeData:   quote.RuntimeData,
+		Quote:         quote.Evidence,
+		EventLog:      quote.EventLog,
+		VerifierNonce: verifierNonce,
 	}, nil
 }

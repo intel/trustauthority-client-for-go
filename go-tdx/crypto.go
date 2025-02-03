@@ -31,6 +31,14 @@ type EncryptionMetadata struct {
 	HashAlgorithm      string
 }
 
+const (
+	// SHA Types
+	SHA256  = "SHA256"
+	SHA384  = "SHA384"
+	SHA512  = "SHA512"
+	SM3_256 = "SM3_256"
+)
+
 // GenerateKeyPair is used to create the private key based on provided key metadata
 func GenerateKeyPair(km *KeyMetadata) ([]byte, []byte, error) {
 	keyPair, err := rsa.GenerateKey(rand.Reader, km.KeyLength)

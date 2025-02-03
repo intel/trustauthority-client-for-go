@@ -51,10 +51,8 @@ var (
 	PolicyIdsOptions       = CommandOptions{"policy-ids", "p", "Trust Authority Policy Ids, comma separated"}
 	TokenAlgOptions        = CommandOptions{"token-signing-alg", "a", "Token signing algorithm to be used, support PS384 and RS256"}
 	PolicyMustMatchOptions = CommandOptions{"policy-must-match", "", "When true, all policies must match for a token to be created"}
-	NoEventLogOptions      = CommandOptions{"no-eventlog", "", "Do not collect Event Log"}
-	WithImaLogsOptions     = CommandOptions{"ima", "", "When true, TPM evidence will include IMA runtime measurements"}
-	WithEventLogsOptions   = CommandOptions{"evl", "", "When true, TPM evidence will include UEFI event logs"}
-	ImaLogsPathOptions     = CommandOptions{"ima-path", "", "Optional parameter to override the default path to IMA logs"}
-	EventLogsPathOptions   = CommandOptions{"evl-path", "", "Optional parameter to override the default path to UEFI event-logs"}
+	WithImaLogsOptions     = CommandOptions{"ima", "", "When set, TPM evidence will include IMA runtime measurements"}
+	WithEventLogsOptions   = CommandOptions{"evl", "", "When set, TPM evidence will include UEFI event logs"}
+	WithCcelOptions        = CommandOptions{"ccel", "", "When set, TDX evidence will include Confidential Computing Event Logs"}
 	RequestIdOptions       = CommandOptions{"request-id", "r", "Request ID for the token"}
 )

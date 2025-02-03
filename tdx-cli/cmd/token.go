@@ -12,33 +12,16 @@ import (
 	"encoding/pem"
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/intel/trustauthority-client/go-connector"
-	"github.com/intel/trustauthority-client/go-tdx"
 	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
-
-// tokenCmd represents the token command
-var tokenCmd = &cobra.Command{
-	Use:   constants.TokenCmd,
-	Short: "Fetches the attestation token from Trust Authority",
-	Long:  ``,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		err := getToken(cmd)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
-			return err
-		}
-		return nil
-	},
-}
 
 const (
 	CloudProviderAzure = "azure"
@@ -51,8 +34,25 @@ var (
 	filePathRegex = regexp.MustCompile(`^[a-zA-Z0-9_. :/\\-]*$`)
 )
 
-func init() {
-	rootCmd.AddCommand(tokenCmd)
+func newTokenCommand(tdxAdapterFactory TdxAdapterFactory,
+	tpmAdapterFactory tpm.TpmAdapterFactory,
+	cfgFactory ConfigFactory,
+	ctrFactory connector.ConnectorFactory) *cobra.Command {
+
+	tokenCmd := cobra.Command{
+		Use:   constants.TokenCmd,
+		Short: "Fetches the attestation token from Trust Authority",
+		Long:  ``,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := getToken(cmd, tdxAdapterFactory, tpmAdapterFactory, cfgFactory, ctrFactory)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+				return err
+			}
+			return nil
+		},
+	}
+
 	tokenCmd.Flags().StringP(constants.ConfigOptions.Name, constants.ConfigOptions.ShortHand, "", constants.ConfigOptions.Description)
 	tokenCmd.Flags().StringP(constants.UserDataOptions.Name, constants.UserDataOptions.ShortHand, "", constants.UserDataOptions.Description)
 	tokenCmd.Flags().StringP(constants.PolicyIdsOptions.Name, constants.PolicyIdsOptions.ShortHand, "", constants.PolicyIdsOptions.Description)
@@ -60,26 +60,30 @@ func init() {
 	tokenCmd.Flags().StringP(constants.RequestIdOptions.Name, constants.RequestIdOptions.ShortHand, "", constants.RequestIdOptions.Description)
 	tokenCmd.Flags().StringP(constants.TokenAlgOptions.Name, constants.TokenAlgOptions.ShortHand, "", constants.TokenAlgOptions.Description)
 	tokenCmd.Flags().Bool(constants.PolicyMustMatchOptions.Name, false, constants.PolicyMustMatchOptions.Description)
-	tokenCmd.Flags().Bool(constants.NoEventLogOptions.Name, false, constants.NoEventLogOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithTdxOptions.Name, false, constants.WithTdxOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithTpmOptions.Name, false, constants.WithTpmOptions.Description)
 	tokenCmd.Flags().Bool(constants.NoVerifierNonceOptions.Name, false, constants.NoVerifierNonceOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithImaLogsOptions.Name, false, constants.WithImaLogsOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithEventLogsOptions.Name, false, constants.WithEventLogsOptions.Description)
-	tokenCmd.Flags().StringP(constants.EventLogsPathOptions.Name, constants.EventLogsPathOptions.ShortHand, "", constants.EventLogsPathOptions.Description)
-	tokenCmd.Flags().StringP(constants.ImaLogsPathOptions.Name, constants.ImaLogsPathOptions.ShortHand, "", constants.ImaLogsPathOptions.Description)
+	tokenCmd.Flags().Bool(constants.WithCcelOptions.Name, false, constants.WithCcelOptions.Description)
 
 	tokenCmd.MarkFlagRequired(constants.ConfigOptions.Name)
+	return &tokenCmd
 }
 
-func getToken(cmd *cobra.Command) error {
+func getToken(cmd *cobra.Command,
+	tdxAdapterFactory TdxAdapterFactory,
+	tpmAdapterFactory tpm.TpmAdapterFactory,
+	cfgFactory ConfigFactory,
+	ctrFactory connector.ConnectorFactory) error {
+
 	var builderOptions []connector.EvidenceBuilderOption
 
 	configFile, err := cmd.Flags().GetString(constants.ConfigOptions.Name)
 	if err != nil {
 		return err
 	}
-	config, err := loadConfig(configFile)
+	config, err := cfgFactory.LoadConfig(configFile)
 	if err != nil {
 		return errors.Wrapf(err, "Could not read config file %q", configFile)
 	}
@@ -104,7 +108,7 @@ func getToken(cmd *cobra.Command) error {
 		ApiKey: config.TrustAuthorityApiKey,
 	}
 
-	trustAuthorityConnector, err := connector.NewConnectorFactory().NewConnector(&cfg)
+	trustAuthorityConnector, err := ctrFactory.NewConnector(&cfg)
 	if err != nil {
 		return err
 	}
@@ -158,11 +162,6 @@ func getToken(cmd *cobra.Command) error {
 	}
 	builderOptions = append(builderOptions, connector.WithPoliciesMustMatch(policyMustMatch))
 
-	noEvLog, err := cmd.Flags().GetBool(constants.NoEventLogOptions.Name)
-	if err != nil {
-		return err
-	}
-
 	withTdx, err := cmd.Flags().GetBool(constants.WithTdxOptions.Name)
 	if err != nil {
 		return err
@@ -178,17 +177,12 @@ func getToken(cmd *cobra.Command) error {
 		return err
 	}
 
-	imaLogsPath, err := cmd.Flags().GetString(constants.ImaLogsPathOptions.Name)
+	withCcel, err := cmd.Flags().GetBool(constants.WithCcelOptions.Name)
 	if err != nil {
 		return err
 	}
 
 	withUefiEventLogs, err := cmd.Flags().GetBool(constants.WithEventLogsOptions.Name)
-	if err != nil {
-		return err
-	}
-
-	eventLogsPath, err := cmd.Flags().GetString(constants.EventLogsPathOptions.Name)
 	if err != nil {
 		return err
 	}
@@ -252,14 +246,9 @@ func getToken(cmd *cobra.Command) error {
 	}
 
 	if withTdx {
-		var evLogParser tdx.EventLogParser
-		if !noEvLog {
-			evLogParser = tdx.NewEventLogParser()
-		}
-
-		tdxAdapter, err := NewTdxAdapterFactory(tpm.NewTpmFactory()).New(config.CloudProvider, evLogParser)
+		tdxAdapter, err := tdxAdapterFactory.New(config.CloudProvider, withCcel)
 		if err != nil {
-			return errors.Wrap(err, "Error while creating tdx adapter")
+			return errors.Wrap(err, "Error creating tdx adapter")
 		}
 
 		builderOptions = append(builderOptions, connector.WithEvidenceAdapter(tdxAdapter))
@@ -275,17 +264,11 @@ func getToken(cmd *cobra.Command) error {
 			tpm.WithAkHandle(int(config.Tpm.AkHandle)),
 			tpm.WithPcrSelections(config.Tpm.PcrSelections),
 			tpm.WithAkCertificateUri(config.Tpm.AkCertificateUri),
+			tpm.WithImaLogs(withImaLogs),
+			tpm.WithUefiEventLogs(withUefiEventLogs),
 		}
 
-		if withImaLogs {
-			tpmOptions = append(tpmOptions, tpm.WithImaLogs(imaLogsPath))
-		}
-
-		if withUefiEventLogs {
-			tpmOptions = append(tpmOptions, tpm.WithUefiEventLogs(eventLogsPath))
-		}
-
-		tpmAdapter, err := tpm.NewCompositeEvidenceAdapterWithOptions(tpmOptions...)
+		tpmAdapter, err := tpmAdapterFactory.New(tpmOptions...)
 		if err != nil {
 			return errors.Wrap(err, "Error while creating tpm adapter")
 		}
@@ -315,38 +298,5 @@ func getToken(cmd *cobra.Command) error {
 	}
 
 	fmt.Fprint(os.Stdout, response.Token)
-	return nil
-}
-
-func ValidateFilePath(path string) (string, error) {
-	if info, err := os.Stat(path); err == nil && info.IsDir() {
-		return "", errors.New("path cannot be directory, please provide file path")
-	}
-	cleanedPath := filepath.Clean(path)
-	if err := checkFilePathForInvalidChars(cleanedPath); err != nil {
-		return "", err
-	}
-	r, err := filepath.EvalSymlinks(cleanedPath)
-	if err != nil && !os.IsNotExist(err) {
-		return cleanedPath, errors.New("Unsafe symlink detected in path")
-	}
-	if r == "" {
-		return cleanedPath, nil
-	}
-	if err = checkFilePathForInvalidChars(r); err != nil {
-		return "", err
-	}
-	return r, nil
-}
-
-func checkFilePathForInvalidChars(path string) error {
-	filePath, fileName := filepath.Split(path)
-	//Max file path length allowed in linux is 4096 characters
-	if len(path) > constants.LinuxFilePathSize || !filePathRegex.MatchString(filePath) {
-		return errors.New("Invalid file path provided")
-	}
-	if !fileNameRegex.MatchString(fileName) {
-		return errors.New("Invalid file name provided")
-	}
 	return nil
 }

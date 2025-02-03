@@ -4,6 +4,7 @@
 SHELL := /bin/bash
 MIN_UNIT_TEST_COVERAGE := 80
 
+.PHONY: test
 default: test
 
 test:

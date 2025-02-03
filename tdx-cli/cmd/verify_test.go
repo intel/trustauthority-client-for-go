@@ -10,9 +10,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
-	"github.com/intel/trustauthority-client/tdx-cli/test"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 var token = `
@@ -21,17 +23,11 @@ eyJhbGciOiJQUzM4NCIsImprdSI6Imh0dHBzOi8vd3d3LmludGVsLmNvbS9hbWJlci9jZXJ0cyIsImtp
 
 func TestVerifyCmd(t *testing.T) {
 
-	server := test.MockTrustAuthorityServer(t)
-	defer server.Close()
-
-	configJson := `{"trustauthority_url":"` + server.URL + `"}`
-	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
-	defer os.Remove(confFilePath)
-
 	tt := []struct {
-		args        []string
-		wantErr     bool
-		description string
+		args            []string
+		wantErr         bool
+		description     string
+		dependencyMocks func() (ConfigFactory, connector.ConnectorFactory)
 	}{
 		{
 			args: []string{
@@ -41,8 +37,11 @@ func TestVerifyCmd(t *testing.T) {
 				"--" + constants.TokenOption,
 				token,
 			},
-			wantErr:     true,
+			wantErr:     false,
 			description: "Test with config file and a token",
+			dependencyMocks: func() (ConfigFactory, connector.ConnectorFactory) {
+				return mockConfigFactory(nil), happyMockConnectorFactory()
+			},
 		},
 		{
 			args: []string{
@@ -52,6 +51,9 @@ func TestVerifyCmd(t *testing.T) {
 			},
 			wantErr:     true,
 			description: "Test without config file",
+			dependencyMocks: func() (ConfigFactory, connector.ConnectorFactory) {
+				return mockConfigFactory(nil), happyMockConnectorFactory()
+			},
 		},
 		{
 			args: []string{
@@ -63,6 +65,12 @@ func TestVerifyCmd(t *testing.T) {
 			},
 			wantErr:     true,
 			description: "Test with non-existent config file",
+			dependencyMocks: func() (ConfigFactory, connector.ConnectorFactory) {
+				angryConfigFactor := MockConfigFactory{}
+				angryConfigFactor.On("LoadConfig", mock.Anything).Return(&Config{}, errors.New("Unit test failure"))
+
+				return &angryConfigFactor, happyMockConnectorFactory()
+			},
 		},
 		{
 			args: []string{
@@ -70,6 +78,9 @@ func TestVerifyCmd(t *testing.T) {
 			},
 			wantErr:     true,
 			description: "Test without config file or token",
+			dependencyMocks: func() (ConfigFactory, connector.ConnectorFactory) {
+				return mockConfigFactory(nil), happyMockConnectorFactory()
+			},
 		},
 		{
 			args: []string{
@@ -79,17 +90,24 @@ func TestVerifyCmd(t *testing.T) {
 			},
 			wantErr:     true,
 			description: "Test without a token",
+			dependencyMocks: func() (ConfigFactory, connector.ConnectorFactory) {
+				return mockConfigFactory(nil), happyMockConnectorFactory()
+			},
 		},
 	}
 
 	for _, tc := range tt {
-		_, err := execute(t, rootCmd, tc.args...)
+		t.Run(tc.description, func(t *testing.T) {
+			cmd := newVerifyCommand(tc.dependencyMocks())
+			cmd.SetArgs(tc.args)
 
-		if tc.wantErr == true {
-			assert.Error(t, err)
-		} else {
-			assert.NoError(t, err)
-		}
+			err := cmd.Execute()
+			if tc.wantErr == true {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
 	}
 }
 

@@ -1,5 +1,3 @@
-//go:build !test
-
 /*
  *   Copyright (c) 2022-2024 Intel Corporation
  *   All rights reserved.

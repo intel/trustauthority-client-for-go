@@ -10,9 +10,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/intel/trustauthority-client/go-connector"
+	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
-	"github.com/intel/trustauthority-client/tdx-cli/test"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 var pubKey = `
@@ -33,17 +36,11 @@ func TestTokenCmd(t *testing.T) {
 	_ = os.WriteFile(publicKeyPath, []byte(pubKey), 0600)
 	defer os.Remove(publicKeyPath)
 
-	server := test.MockTrustAuthorityServer(t)
-	defer server.Close()
-
-	configJson := `{"trustauthority_api_url":"` + server.URL + `","trustauthority_api_key":"YXBpa2V5"}`
-	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
-	defer os.Remove(confFilePath)
-
 	tt := []struct {
-		args        []string
-		wantErr     bool
-		description string
+		args            []string
+		wantErr         bool
+		description     string
+		dependencyMocks func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory)
 	}{
 		{
 			args: []string{
@@ -53,6 +50,9 @@ func TestTokenCmd(t *testing.T) {
 			},
 			wantErr:     false,
 			description: "Test with config file",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
 		},
 		{
 			args: []string{
@@ -62,6 +62,12 @@ func TestTokenCmd(t *testing.T) {
 			},
 			wantErr:     true,
 			description: "Test with non-existent config file",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				angryConfigFactory := MockConfigFactory{}
+				angryConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{}, errors.New("Unit test failure"))
+
+				return happyMockTdxAdapterFactory(), happyMockTpmAdapterFactory(), &angryConfigFactory, happyMockConnectorFactory()
+			},
 		},
 		{
 			args: []string{
@@ -73,6 +79,9 @@ func TestTokenCmd(t *testing.T) {
 			},
 			wantErr:     true,
 			description: "Test with malformed request id",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
 		},
 		{
 			args: []string{
@@ -86,6 +95,9 @@ func TestTokenCmd(t *testing.T) {
 			},
 			wantErr:     false,
 			description: "Test with public-key file and request id",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
 		},
 		{
 			args: []string{
@@ -97,6 +109,9 @@ func TestTokenCmd(t *testing.T) {
 			},
 			wantErr:     true,
 			description: "Test with non-existent public-key file",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
 		},
 		{
 			args: []string{
@@ -110,6 +125,9 @@ func TestTokenCmd(t *testing.T) {
 			},
 			wantErr:     false,
 			description: "Test with userdata and policy ids",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
 		},
 		{
 			args: []string{
@@ -121,6 +139,9 @@ func TestTokenCmd(t *testing.T) {
 			},
 			wantErr:     true,
 			description: "Test with invalid policy ids",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
 		},
 		{
 			args: []string{
@@ -132,6 +153,9 @@ func TestTokenCmd(t *testing.T) {
 			},
 			wantErr:     true,
 			description: "Test with malformed userdata",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
 		},
 		{
 			args: []string{
@@ -147,6 +171,9 @@ func TestTokenCmd(t *testing.T) {
 			},
 			wantErr:     false,
 			description: "Test with Valid PS384 alg",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
 		},
 		{
 			args: []string{
@@ -163,6 +190,9 @@ func TestTokenCmd(t *testing.T) {
 			},
 			wantErr:     false,
 			description: "Test with Valid RS256 alg with policy must match flag",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
 		},
 		{
 			args: []string{
@@ -178,58 +208,93 @@ func TestTokenCmd(t *testing.T) {
 			},
 			wantErr:     true,
 			description: "Test with invalid alg",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+			},
+			wantErr:     true,
+			description: "MissingTrustAuthorityUrl",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				angryConfigFactory := MockConfigFactory{}
+				angryConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{
+					TrustAuthorityUrl:    testValidUrl,
+					TrustAuthorityApiUrl: "",
+					TrustAuthorityApiKey: testApiKey,
+				}, nil)
+
+				return happyMockTdxAdapterFactory(), happyMockTpmAdapterFactory(), &angryConfigFactory, happyMockConnectorFactory()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+			},
+			wantErr:     true,
+			description: "MissingTrustAuthorityApiKey",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				angryConfigFactory := MockConfigFactory{}
+				angryConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{
+					TrustAuthorityUrl:    testValidUrl,
+					TrustAuthorityApiUrl: testValidUrl,
+					TrustAuthorityApiKey: "",
+				}, nil)
+
+				return happyMockTdxAdapterFactory(), happyMockTpmAdapterFactory(), &angryConfigFactory, happyMockConnectorFactory()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+			},
+			wantErr:     true,
+			description: "MalformedTrustAuthorityApiKey",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				angryConfigFactory := MockConfigFactory{}
+				angryConfigFactory.On("LoadConfig", mock.Anything).Return(&Config{
+					TrustAuthorityUrl:    testValidUrl,
+					TrustAuthorityApiUrl: testValidUrl,
+					TrustAuthorityApiKey: "@p!key",
+				}, nil)
+
+				return happyMockTdxAdapterFactory(), happyMockTpmAdapterFactory(), &angryConfigFactory, happyMockConnectorFactory()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.WithTpmOptions.Name,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+			},
+			wantErr:     false,
+			description: "TPM Adapter",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
 		},
 	}
 
 	for _, tc := range tt {
-		_, err := execute(t, rootCmd, tc.args...)
+		t.Run(tc.description, func(t *testing.T) {
+			cmd := newTokenCommand(tc.dependencyMocks())
+			cmd.SetArgs(tc.args)
 
-		if tc.wantErr == true {
-			assert.Error(t, err)
-		} else {
-			assert.NoError(t, err)
-		}
+			err := cmd.Execute()
+			if tc.wantErr == true {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
 	}
-}
-
-func TestTokenCmd_MissingTrustAuthorityUrl(t *testing.T) {
-
-	configJson := `{"trustauthority_api_url":"","trustauthority_api_key":"YXBpa2V5"}`
-	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
-	defer os.Remove(confFilePath)
-	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOptions.Name, confFilePath)
-	assert.Error(t, err)
-}
-
-func TestTokenCmd_MissingTrustAuthorityApiKey(t *testing.T) {
-
-	server := test.MockTrustAuthorityServer(t)
-	defer server.Close()
-
-	configJson := `{"trustauthority_api_url":"` + server.URL + `","trustauthority_api_key":""}`
-	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
-	defer os.Remove(confFilePath)
-	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOptions.Name, confFilePath)
-	assert.Error(t, err)
-}
-
-func TestTokenCmd_MalformedTrustAuthorityUrl(t *testing.T) {
-
-	configJson := `{"trustauthority_api_url":":trustauthority.intel.com","trustauthority_api_key":"YXBpa2V5"}`
-	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
-	defer os.Remove(confFilePath)
-	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOptions.Name, confFilePath)
-	assert.Error(t, err)
-}
-
-func TestTokenCmd_MalformedTrustAuthorityApiKey(t *testing.T) {
-
-	server := test.MockTrustAuthorityServer(t)
-	defer server.Close()
-
-	configJson := `{"trustauthority_api_url":"` + server.URL + `","trustauthority_api_key":"@p!key"}`
-	_ = os.WriteFile(confFilePath, []byte(configJson), 0600)
-	defer os.Remove(confFilePath)
-	_, err := execute(t, rootCmd, constants.TokenCmd, "--"+constants.ConfigOptions.Name, confFilePath)
-	assert.Error(t, err)
 }

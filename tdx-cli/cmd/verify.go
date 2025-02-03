@@ -17,38 +17,37 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// verifyCmd represents the verify command
-var verifyCmd = &cobra.Command{
-	Use:   constants.VerifyCmd,
-	Short: "Verify Trust Authority attestation token",
-	Long:  ``,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		err := verifyToken(cmd)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
-			return err
-		}
+func newVerifyCommand(cfgFactory ConfigFactory, ctrFactory connector.ConnectorFactory) *cobra.Command {
+	verifyCmd := &cobra.Command{
+		Use:   constants.VerifyCmd,
+		Short: "Verify Trust Authority attestation token",
+		Long:  ``,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := verifyToken(cmd, cfgFactory, ctrFactory)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+				return err
+			}
 
-		return nil
-	},
-}
-
-func init() {
-	rootCmd.AddCommand(verifyCmd)
+			return nil
+		},
+	}
 	verifyCmd.Flags().StringP(constants.ConfigOptions.Name, constants.ConfigOptions.ShortHand, "", constants.ConfigOptions.Description)
 	verifyCmd.Flags().StringP(constants.TokenOption, "t", "", "Token in JWT format")
 	verifyCmd.MarkFlagRequired(constants.TokenOption)
 	verifyCmd.MarkFlagRequired(constants.ConfigOptions.Name)
+
+	return verifyCmd
 }
 
-func verifyToken(cmd *cobra.Command) error {
+func verifyToken(cmd *cobra.Command, cfgFactory ConfigFactory, ctrFactory connector.ConnectorFactory) error {
 
 	configFile, err := cmd.Flags().GetString(constants.ConfigOptions.Name)
 	if err != nil {
 		return err
 	}
 
-	config, err := loadConfig(configFile)
+	config, err := cfgFactory.LoadConfig(configFile)
 	if err != nil {
 		return errors.Wrapf(err, "Could not read config file %q", configFile)
 	}
@@ -71,7 +70,7 @@ func verifyToken(cmd *cobra.Command) error {
 		BaseUrl: config.TrustAuthorityUrl,
 	}
 
-	trustAuthorityConnector, err := connector.NewConnectorFactory().NewConnector(&cfg)
+	trustAuthorityConnector, err := ctrFactory.NewConnector(&cfg)
 	if err != nil {
 		return err
 	}
