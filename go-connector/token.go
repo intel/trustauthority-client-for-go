@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2023 Intel Corporation
+ *   Copyright (c) 2022-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -44,7 +44,10 @@ type AttestationTokenResponse struct {
 
 // GetToken is used to get attestation token from Intel Trust Authority
 func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenResponse, error) {
-	url := connector.cfg.ApiUrl + args.attestEndpoint
+	url := connector.cfg.ApiUrl + attestEndpoint
+	if args.Evidence.Type == AzTdx {
+		url = connector.cfg.ApiUrl + attestAzureTdEndpoint
+	}
 
 	newRequest := func() (*http.Request, error) {
 		tr := tokenRequest{

@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2023 Intel Corporation
+ *   Copyright (c) 2022-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -40,7 +40,7 @@ func TestGetToken(t *testing.T) {
 
 	nonce := &VerifierNonce{}
 	evidence := &Evidence{}
-	_, err := connector.GetToken(GetTokenArgs{nonce, evidence, nil, "req1", attestEndpoint, string(PS384), false})
+	_, err := connector.GetToken(GetTokenArgs{nonce, evidence, nil, "req1", string(PS384), false})
 	if err != nil {
 		t.Errorf("GetToken returned unexpected error: %v", err)
 	}
@@ -57,7 +57,7 @@ func TestGetToken_invalidToken(t *testing.T) {
 
 	nonce := &VerifierNonce{}
 	evidence := &Evidence{}
-	_, err := connector.GetToken(GetTokenArgs{nonce, evidence, nil, "req1", attestEndpoint, "", false})
+	_, err := connector.GetToken(GetTokenArgs{nonce, evidence, nil, "req1", "", false})
 	if err == nil {
 		t.Errorf("GetToken returned nil, expected error")
 	}
