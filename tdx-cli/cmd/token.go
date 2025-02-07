@@ -201,11 +201,6 @@ func getToken(cmd *cobra.Command,
 		withTdx = true
 	}
 
-	eventLogsPath, err := cmd.Flags().GetString(constants.EventLogsPathOptions.Name)
-	if err != nil {
-		return err
-	}
-
 	var userDataBytes []byte
 	if userData != "" {
 		userDataBytes, err = base64.StdEncoding.DecodeString(userData)
