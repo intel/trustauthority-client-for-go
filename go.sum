@@ -4,8 +4,8 @@ github.com/canonical/go-tpm2 v1.7.6 h1:9k9OAEEp9xKp4h2WJwfTUNivblJi4L5Wjx7Q/LkST
 github.com/canonical/go-tpm2 v1.7.6/go.mod h1:Dz0PQRmoYrmk/4BLILjRA+SFzuqEo1etAvYeAJiMhYU=
 github.com/confidentsecurity/go-nvml v0.0.0-20250102214226-9a52cebf0382 h1:RhxhEDOaR076IHRBlcBHCITU9koTkkc0aDkMDoMKN5E=
 github.com/confidentsecurity/go-nvml v0.0.0-20250102214226-9a52cebf0382/go.mod h1:8Llmj+1Rr+9VGGwZuRer5N/aCjxGuR5nPb/9ebBiIEQ=
-github.com/confidentsecurity/go-nvtrust v0.1.1 h1:+yKGHDJErEf2HqBogVYLPPatZ+9l5EkiKzvypiZS+gU=
-github.com/confidentsecurity/go-nvtrust v0.1.1/go.mod h1:cNYqe6G3G9w/wbQo8++maVfrQEUn3iisbBmYOnD5s7s=
+github.com/confidentsecurity/go-nvtrust v0.1.2 h1:emmbikw2wK7roMRF50WhHGa86XP0A9EpkXKbJXp2VHY=
+github.com/confidentsecurity/go-nvtrust v0.1.2/go.mod h1:f3XrJL9Bfo06tDxM415iKsj1l5cHAH4N4qEdKambhNo=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
