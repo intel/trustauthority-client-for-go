@@ -175,7 +175,6 @@ func getToken(cmd *cobra.Command,
 	}
 
 	withNvGpu, err := cmd.Flags().GetBool(constants.WithNvGpuOptions.Name)
-
 	if err != nil {
 		return err
 	}

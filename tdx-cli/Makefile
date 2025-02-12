@@ -4,7 +4,7 @@
 APPNAME := trustauthority-cli
 GITCOMMIT := $(shell git describe --always)
 GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
-VERSION := v1.9.1
+VERSION := v1.10.0
 
 cli:
 	CGO_ENABLED=1 CGO_CFLAGS="-O2 -D_FORTIFY_SOURCE=2" go build -buildmode=pie -trimpath -ldflags "-s -linkmode=external -extldflags '-Wl,-O1,-z,relro,-z,lazy' \
