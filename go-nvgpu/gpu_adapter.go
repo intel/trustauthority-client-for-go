@@ -9,6 +9,7 @@ import (
 
 	"github.com/confidentsecurity/go-nvtrust/pkg/gonvtrust"
 	"github.com/intel/trustauthority-client/go-connector"
+	"github.com/sirupsen/logrus"
 )
 
 const HopperArch = "hopper"
@@ -68,6 +69,11 @@ func (g *GPUAdapter) collectEvidence(nonce []byte) (GPUEvidence, error) {
 	if len(evidenceList) == 0 {
 		return GPUEvidence{}, fmt.Errorf("no evidence returned")
 	}
+
+	if len(evidenceList) > 1 {
+		logrus.Warn("more than one evidence returned, only using the first one")
+	}
+
 	// only single gpu attestation is supported for now
 	rawEvidence := evidenceList[0]
 
@@ -89,7 +95,7 @@ func (g *GPUAdapter) collectEvidence(nonce []byte) (GPUEvidence, error) {
 
 func (adapter *GPUAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, userData []byte) (any, error) {
 	var nonce []byte
-	if verifierNonce != nil {
+	if verifierNonce != nil && len(verifierNonce.Val) > 0 && len(verifierNonce.Iat) > 0 {
 		nonce = append(verifierNonce.Val, verifierNonce.Iat[:]...)
 	} else {
 		nonce = make([]byte, 32)
