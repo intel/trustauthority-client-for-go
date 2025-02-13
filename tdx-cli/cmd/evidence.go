@@ -12,6 +12,7 @@ import (
 	"fmt"
 
 	"github.com/intel/trustauthority-client/go-connector"
+	"github.com/intel/trustauthority-client/go-nvgpu"
 	"github.com/intel/trustauthority-client/go-tpm"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
 
@@ -26,6 +27,7 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 
 	var withTpm bool
 	var withTdx bool
+	var withNvGpu bool
 	var tokenSigningAlg string
 	var noVerifierNonce bool
 	var configPath string
@@ -105,6 +107,11 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 				builderOptions = append(builderOptions, connector.WithEvidenceAdapter(tdxAdapter))
 			}
 
+			if withNvGpu {
+				gpuAdapter := nvgpu.NewCompositeEvidenceAdapter()
+				builderOptions = append(builderOptions, connector.WithEvidenceAdapter(gpuAdapter))
+			}
+
 			if !noVerifierNonce {
 				// only create the connector if the user has opted to include a verifier
 				// nonce
@@ -165,6 +172,7 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 	cmd.Flags().StringVarP(&configPath, constants.ConfigOptions.Name, constants.ConfigOptions.ShortHand, "", constants.ConfigOptions.Description)
 	cmd.Flags().BoolVar(&withTpm, constants.WithTpmOptions.Name, false, constants.WithTpmOptions.Description)
 	cmd.Flags().BoolVar(&withTdx, constants.WithTdxOptions.Name, false, constants.WithTdxOptions.Description)
+	cmd.Flags().BoolVar(&withNvGpu, constants.WithNvGpuOptions.Name, false, constants.WithNvGpuOptions.Description)
 	cmd.Flags().BoolVar(&noVerifierNonce, constants.NoVerifierNonceOptions.Name, false, constants.NoVerifierNonceOptions.Description)
 	cmd.Flags().StringVarP(&userData, constants.UserDataOptions.Name, constants.UserDataOptions.ShortHand, "", constants.UserDataOptions.Description)
 	cmd.Flags().StringVarP(&policyIds, constants.PolicyIdsOptions.Name, constants.PolicyIdsOptions.ShortHand, "", constants.PolicyIdsOptions.Description)
