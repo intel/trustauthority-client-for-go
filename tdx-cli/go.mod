@@ -4,9 +4,9 @@
 
 module github.com/intel/trustauthority-client/tdx-cli
 
-go 1.22
+go 1.22.0
 
-toolchain go1.22.0
+toolchain go1.22.3
 
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.1
@@ -15,12 +15,14 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
+	github.com/NVIDIA/go-nvml v0.12.4-0 // indirect
 	github.com/canonical/go-sp800.108-kdf v0.0.0-20210314145419-a3359f2d21b9 // indirect
 	github.com/canonical/go-tpm2 v1.7.6 // indirect
+	github.com/confidentsecurity/go-nvtrust v0.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
@@ -48,3 +50,5 @@ require (
 )
 
 replace github.com/intel/trustauthority-client => ../
+
+replace github.com/NVIDIA/go-nvml => github.com/confidentsecurity/go-nvml v0.0.0-20250102214226-9a52cebf0382
