@@ -51,7 +51,7 @@ var (
 	UserDataOptions        = CommandOptions{"user-data", "u", "User data in hex or base64 encoded format"}
 	PolicyIdsOptions       = CommandOptions{"policy-ids", "p", "Trust Authority Policy Ids, comma separated"}
 	TokenAlgOptions        = CommandOptions{"token-signing-alg", "a", "Token signing algorithm to be used, support PS384 and RS256"}
-	PolicyMustMatchOptions = CommandOptions{"policy-must-match", "", "When set, the policy_must_match flag will be true in evidence output"}
+	PolicyMustMatchOptions = CommandOptions{"policy-must-match", "", "When true, all policies must match for a token to be created"}
 	WithImaLogsOptions     = CommandOptions{"ima", "", "When set, TPM evidence will include IMA runtime measurements"}
 	WithEventLogsOptions   = CommandOptions{"evl", "", "When set, TPM evidence will include UEFI event logs"}
 	WithCcelOptions        = CommandOptions{"ccel", "", "When set, TDX evidence will include Confidential Computing Event Logs"}
