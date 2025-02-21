@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2023 Intel Corporation
+ *   Copyright (c) 2023-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/tdx-cli/constants"
 	"github.com/pkg/errors"
@@ -82,10 +83,14 @@ func verifyToken(cmd *cobra.Command, cfgFactory ConfigFactory, ctrFactory connec
 
 	parsedToken, err := trustAuthorityConnector.VerifyToken(string(token))
 	if err != nil {
-		return errors.Wrap(err, "Could not verify the token")
+		return errors.Wrap(err, "Could not verify attestation token")
 	}
 
-	fmt.Fprintln(os.Stdout, parsedToken.Claims)
+	if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
+		fmt.Println("Token is valid and issued by Intel Trust Authority hosted at ", claims["iss"])
+	} else {
+		return errors.New("Invalid JWT Token")
+	}
 	return nil
 
 }

@@ -32,3 +32,7 @@ const (
 	RS256 JwtAlg = "RS256"
 	PS384 JwtAlg = "PS384"
 )
+
+func validJwtTokenSignAlgs() []string {
+	return []string{string(RS256), string(PS384)}
+}

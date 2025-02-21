@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2023 Intel Corporation
+ *   Copyright (c) 2022-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/lestrrat-go/jwx/v2/cert"
@@ -281,7 +281,7 @@ func (connector *trustAuthorityConnector) VerifyToken(token string) (*jwt.Token,
 			return nil, errors.Errorf("Failed to extract Public Key from Certificate: %s", err)
 		}
 		return pubKey, nil
-	})
+	}, jwt.WithValidMethods(validJwtTokenSignAlgs()))
 	if err != nil {
 		return nil, errors.Errorf("Failed to verify jwt token: %s", err)
 	}
