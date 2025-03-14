@@ -311,9 +311,13 @@ func createDefaultMocks() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFacto
 
 func happyMockConnectorFactory() connector.ConnectorFactory {
 	mockConnector := MockConnector{}
+	parsedToken := &jwt.Token{
+		Claims: jwt.MapClaims{},
+		Valid:  true,
+	}
 	mockConnector.On("GetNonce", mock.Anything).Return(connector.GetNonceResponse{}, nil)
 	mockConnector.On("AttestEvidence", mock.Anything, mock.Anything, mock.Anything).Return(connector.AttestResponse{}, nil)
-	mockConnector.On("VerifyToken", mock.Anything).Return(&jwt.Token{}, nil)
+	mockConnector.On("VerifyToken", mock.Anything).Return(parsedToken, nil)
 
 	mockConnectorFactory := MockConnectorFactory{}
 	mockConnectorFactory.On("NewConnector", mock.Anything).Return(&mockConnector, nil)

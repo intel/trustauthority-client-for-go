@@ -57,7 +57,7 @@ jobs:
 
       - name: Unit Test Coverage
         run: |
-          make test-coverage
+          make test
           if [ $? -ne 0 ]; then
             echo "Unit tests failed"
             exit 1
