@@ -24,8 +24,8 @@ const (
 )
 
 var (
-	ErrorCcelTableNotFound            = errors.New("the confidential-computing-event-log (CCEL) acpi table is not present on this computer")
-	ErrorCcelDataNotFound             = errors.New("the confidential-computing-event-log (CCEL) acpi data is not present on this computer")
+	ErrorCcelTableNotFound            = errors.New("the CCEL table was not found")
+	ErrorCcelDataNotFound             = errors.New("the CCEL data was not found")
 	ErrorAcpiReadFailure              = errors.New("failed to read the ACPI table")
 	ErrorInvalidCcelTableSignature    = errors.New("invalid CCEL table signature")
 	ErrorInvalidCcelTableLength       = errors.New("invalid CCEL table length")

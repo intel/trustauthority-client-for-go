@@ -7,6 +7,8 @@
 package cmd
 
 import (
+	"encoding/base64"
+	"encoding/hex"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,6 +32,29 @@ func parsePolicyIds(policyIds string) ([]uuid.UUID, error) {
 	}
 
 	return pIds, nil
+}
+
+// string2bytes converts a string to a byte slice. The string can be either a base64 or hex encoded string.
+// The function returns nil bytes if the input string is empty.
+func string2bytes(s string) ([]byte, error) {
+	if s == "" {
+		return nil, nil
+	} else if strings.HasPrefix(s, "0x") {
+		// Parse as hex
+		hexStr := strings.TrimPrefix(s, "0x")
+		bytes, err := hex.DecodeString(hexStr)
+		if err != nil {
+			return nil, err
+		}
+		return bytes, nil
+	} else {
+		// Parse as base64
+		bytes, err := base64.StdEncoding.DecodeString(s)
+		if err != nil {
+			return nil, err
+		}
+		return bytes, nil
+	}
 }
 
 func ValidateFilePath(path string) (string, error) {
