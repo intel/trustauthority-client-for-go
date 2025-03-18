@@ -8,6 +8,7 @@ package cmd
 
 import (
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
@@ -47,20 +48,22 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
  as the body of a request to the Trust Authority's /appraisal/v2/attest endpoint.
  Multiple attestation types can be combined in the output using the --tpm and --tdx
  options.`,
-		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cfg, err := cfgFactory.LoadConfig(configPath)
 			if err != nil {
 				return errors.Wrapf(err, "Could not read config file %q", configPath)
 			}
 
-			userData, err := string2bytes(userData)
-			if err != nil {
-				return err
+			var userDataBytes []byte
+			if userData != "" {
+				userDataBytes, err = base64.StdEncoding.DecodeString(userData)
+				if err != nil {
+					return errors.Wrap(err, "Error while base64 decoding of userdata")
+				}
 			}
-			if len(userData) != 0 {
-				builderOptions = append(builderOptions, connector.WithUserData(userData))
+			if len(userDataBytes) != 0 {
+				builderOptions = append(builderOptions, connector.WithUserData(userDataBytes))
 			}
 
 			policyIds, err := parsePolicyIds(policyIds)
@@ -74,6 +77,11 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 
 			if policiesMustMatch {
 				builderOptions = append(builderOptions, connector.WithPoliciesMustMatch(policiesMustMatch))
+			}
+
+			// default to tdx if no evidence types are provided
+			if !withTdx && !withTpm && !withNvGpu {
+				withTdx = true
 			}
 
 			if withTpm {
@@ -147,9 +155,6 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 				builderOptions = append(builderOptions, connector.WithTokenSigningAlgorithm(signingAlg))
 			}
 
-			return nil
-		},
-		RunE: func(cmd *cobra.Command, args []string) error {
 			evidenceBuilder, err := connector.NewEvidenceBuilder(builderOptions...)
 			if err != nil {
 				return err
@@ -181,6 +186,8 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 	cmd.Flags().BoolVar(&withImaLogs, constants.WithImaLogsOptions.Name, false, constants.WithImaLogsOptions.Description)
 	cmd.Flags().BoolVar(&withEventLogs, constants.WithEventLogsOptions.Name, false, constants.WithEventLogsOptions.Description)
 	cmd.Flags().BoolVar(&withCcel, constants.WithCcelOptions.Name, false, constants.WithCcelOptions.Description)
+
+	cmd.MarkFlagRequired(constants.ConfigOptions.Name)
 
 	return &cmd
 }
