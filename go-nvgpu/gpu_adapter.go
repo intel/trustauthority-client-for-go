@@ -15,11 +15,11 @@ import (
 const HopperArch = "hopper"
 
 type GPUEvidence struct {
-	Evidence      string                  `json:"evidence"`
-	Certificate   string                  `json:"certificate"`
-	Nonce         string                  `json:"gpu_nonce"`
-	VerifierNonce connector.VerifierNonce `json:"verifier_nonce"`
-	Arch          string                  `json:"arch"`
+	Evidence      string                   `json:"evidence"`
+	Certificate   string                   `json:"certificate"`
+	Nonce         string                   `json:"gpu_nonce"`
+	VerifierNonce *connector.VerifierNonce `json:"verifier_nonce,omitempty"`
+	Arch          string                   `json:"arch"`
 }
 
 type GPUAdapter struct {
@@ -110,7 +110,7 @@ func (adapter *GPUAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, u
 	}
 
 	if verifierNonce != nil {
-		evidence.VerifierNonce = *verifierNonce
+		evidence.VerifierNonce = verifierNonce
 	}
 	return &evidence, nil
 }
