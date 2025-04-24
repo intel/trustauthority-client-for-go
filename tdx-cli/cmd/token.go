@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2024 Intel Corporation
+ *   Copyright (c) 2022-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -47,7 +47,6 @@ func newTokenCommand(tdxAdapterFactory TdxAdapterFactory,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := getToken(cmd, tdxAdapterFactory, tpmAdapterFactory, cfgFactory, ctrFactory)
 			if err != nil {
-				fmt.Fprintln(os.Stderr, err.Error())
 				return err
 			}
 			return nil

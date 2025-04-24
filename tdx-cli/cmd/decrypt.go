@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022 Intel Corporation
+ *   Copyright (c) 2022-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -25,7 +25,6 @@ var decryptCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		err := decrypt(cmd)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
 			return err
 		}
 		return nil

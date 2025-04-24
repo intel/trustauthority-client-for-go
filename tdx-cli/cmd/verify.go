@@ -9,7 +9,6 @@ package cmd
 import (
 	"crypto/tls"
 	"fmt"
-	"os"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/intel/trustauthority-client/go-connector"
@@ -26,7 +25,6 @@ func newVerifyCommand(cfgFactory ConfigFactory, ctrFactory connector.ConnectorFa
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := verifyToken(cmd, cfgFactory, ctrFactory)
 			if err != nil {
-				fmt.Fprintln(os.Stderr, err.Error())
 				return err
 			}
 

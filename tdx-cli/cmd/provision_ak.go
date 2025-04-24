@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2024 Intel Corporation
+ *   Copyright (c) 2022-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -85,7 +85,6 @@ func newProvisionAkCommand(tpmFactory tpm.TpmFactory, cfgFactory ConfigFactory, 
 
 			pemBytes := pem.EncodeToMemory(pemBlock)
 			if pemBytes == nil {
-				fmt.Println("Failed to encode to PEM")
 				return errors.New("Failed to encode AK certificate to PEM")
 			}
 
