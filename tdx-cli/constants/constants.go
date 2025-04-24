@@ -45,7 +45,7 @@ type CommandOptions struct {
 var (
 	ConfigOptions          = CommandOptions{"config", "c", "Trust Authority config in JSON format"}
 	WithTpmOptions         = CommandOptions{"tpm", "", "Include TPM evidence in evidence output"}
-	WithTdxOptions         = CommandOptions{"tdx", "", "Include TDX evidence in evidence output"}
+	WithTdxOptions         = CommandOptions{"tdx", "", "Include TDX evidence in evidence output (root privileges required)"}
 	WithNvGpuOptions       = CommandOptions{"nvgpu", "", "Include NVGPU evidence in evidence output"}
 	NoVerifierNonceOptions = CommandOptions{"no-verifier-nonce", "", "Do not include an ITA verifier-nonce in evidence"}
 	UserDataOptions        = CommandOptions{"user-data", "u", "User data in base64 encoded format"}
