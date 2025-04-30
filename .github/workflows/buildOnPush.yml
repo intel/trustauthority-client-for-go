@@ -10,8 +10,8 @@ permissions: read-all
 
 jobs:
   build:
-    runs-on: [ ubuntu-20.04 ]
-    if: github.repository == 'intel-innersource/applications.security.amber.trustauthority-client-for-go'
+    if: github.repository != 'intel/trustauthority-client-for-go'
+    runs-on: [ self-hosted ]
     steps:
       - name: Checkout Code
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
@@ -35,4 +35,3 @@ jobs:
         with:
           name: client-go-${{ github.run_number }}
           path: client-go/tdx-cli/trustauthority-cli
-          
