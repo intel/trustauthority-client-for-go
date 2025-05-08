@@ -43,7 +43,7 @@ func (connector *trustAuthorityConnector) GetNonce(args GetNonceArgs) (GetNonceR
 		return nil
 	}
 
-	if err := doRequest(*connector.rclient, connector.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
+	if err := doRequest(connector.rclient, newRequest, nil, headers, processResponse); err != nil {
 		return response, err
 	}
 

@@ -27,6 +27,10 @@ func TestDoRequest(t *testing.T) {
 	tlsCfg := &tls.Config{
 		InsecureSkipVerify: true,
 	}
+	retryableClient := retryablehttp.NewClient()
+	retryableClient.HTTPClient.Transport = &http.Transport{
+		TLSClientConfig: tlsCfg,
+	}
 
 	url := fmt.Sprintf("%s/test", serverURL)
 	newRequest := func() (*http.Request, error) {
@@ -45,22 +49,18 @@ func TestDoRequest(t *testing.T) {
 		return nil
 	}
 
-	if err := doRequest(*retryablehttp.NewClient(), tlsCfg, newRequest, queryParams, headers, processResponse); err != nil {
+	if err := doRequest(retryableClient, newRequest, queryParams, headers, processResponse); err != nil {
 		t.Errorf("doRequest returned unexpected error: %v", err)
 	}
 }
 
 func TestDoRequest_badRequest(t *testing.T) {
 
-	tlsCfg := &tls.Config{
-		InsecureSkipVerify: true,
-	}
-
 	newRequest := func() (*http.Request, error) {
 		return nil, errors.New("Bad Request")
 	}
 
-	if err := doRequest(*retryablehttp.NewClient(), tlsCfg, newRequest, nil, nil, nil); err == nil {
+	if err := doRequest(retryablehttp.NewClient(), newRequest, nil, nil, nil); err == nil {
 		t.Error("doRequest returned nil, expected error")
 	}
 }
@@ -76,13 +76,17 @@ func TestDoRequest_emptyResponse(t *testing.T) {
 	tlsCfg := &tls.Config{
 		InsecureSkipVerify: true,
 	}
+	retryableClient := retryablehttp.NewClient()
+	retryableClient.HTTPClient.Transport = &http.Transport{
+		TLSClientConfig: tlsCfg,
+	}
 
 	url := fmt.Sprintf("%s/test/bad", serverURL)
 	newRequest := func() (*http.Request, error) {
 		return http.NewRequest(http.MethodGet, url, nil)
 	}
 
-	if err := doRequest(*retryablehttp.NewClient(), tlsCfg, newRequest, nil, nil, nil); err == nil {
+	if err := doRequest(retryableClient, newRequest, nil, nil, nil); err == nil {
 		t.Error("doRequest returned nil, expected error")
 	}
 }
@@ -98,13 +102,17 @@ func TestDoRequest_InternalServerError(t *testing.T) {
 	tlsCfg := &tls.Config{
 		InsecureSkipVerify: true,
 	}
+	retryableClient := retryablehttp.NewClient()
+	retryableClient.HTTPClient.Transport = &http.Transport{
+		TLSClientConfig: tlsCfg,
+	}
 
 	url := fmt.Sprintf("%s/test", serverURL)
 	newRequest := func() (*http.Request, error) {
 		return http.NewRequest(http.MethodGet, url, nil)
 	}
 
-	if err := doRequest(*retryablehttp.NewClient(), tlsCfg, newRequest, nil, nil, nil); err == nil {
+	if err := doRequest(retryableClient, newRequest, nil, nil, nil); err == nil {
 		t.Error("doRequest returned nil, expected error")
 	}
 }

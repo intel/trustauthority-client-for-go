@@ -134,6 +134,11 @@ func New(cfg *Config) (Connector, error) {
 	retryableClient.RetryWaitMax = DefaultRetryWaitMaxSeconds * time.Second
 	retryableClient.RetryWaitMin = DefaultRetryWaitMinSeconds * time.Second
 	retryableClient.RetryMax = MaxRetries
+	retryableClient.HTTPClient.Transport = &http.Transport{
+		TLSClientConfig: cfg.TlsCfg,
+		Proxy:           http.ProxyFromEnvironment,
+	}
+
 	if cfg.RetryConfig == nil {
 		return &trustAuthorityConnector{
 			cfg:     cfg,
@@ -156,7 +161,6 @@ func New(cfg *Config) (Connector, error) {
 	if cfg.RetryConfig.BackOff != nil {
 		retryableClient.Backoff = cfg.RetryConfig.BackOff
 	}
-
 	return &trustAuthorityConnector{
 		cfg:     cfg,
 		rclient: retryableClient,

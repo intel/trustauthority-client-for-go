@@ -6,7 +6,6 @@
 package connector
 
 import (
-	"crypto/tls"
 	"io"
 	"net/http"
 
@@ -15,7 +14,7 @@ import (
 )
 
 // doRequest creates an API request, sends the API request and returns the API response
-func doRequest(rclient retryablehttp.Client, tlsCfg *tls.Config,
+func doRequest(rclient *retryablehttp.Client,
 	newRequest func() (*http.Request, error),
 	queryParams map[string]string,
 	headers map[string]string,
@@ -39,15 +38,6 @@ func doRequest(rclient retryablehttp.Client, tlsCfg *tls.Config,
 	for name, val := range headers {
 		req.Header.Add(name, val)
 	}
-
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: tlsCfg,
-			Proxy:           http.ProxyFromEnvironment,
-		},
-	}
-
-	rclient.HTTPClient = httpClient
 
 	var resp *http.Response
 	if resp, err = rclient.StandardClient().Do(req); err != nil {

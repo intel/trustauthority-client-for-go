@@ -7,7 +7,6 @@ package connector
 
 import (
 	"bytes"
-	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
@@ -90,7 +89,7 @@ func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenR
 		return nil
 	}
 
-	if err := doRequest(*connector.rclient, connector.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
+	if err := doRequest(connector.rclient, newRequest, nil, headers, processResponse); err != nil {
 		return response, err
 	}
 
@@ -98,7 +97,7 @@ func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenR
 }
 
 // getCRL is used to get CRL Object from CRL distribution points
-func getCRL(rclient retryablehttp.Client, crlArr []string) (*x509.RevocationList, error) {
+func getCRL(rclient *retryablehttp.Client, crlArr []string) (*x509.RevocationList, error) {
 
 	if len(crlArr) < 1 {
 		return nil, errors.New("Invalid CDP count present in the certificate")
@@ -127,15 +126,7 @@ func getCRL(rclient retryablehttp.Client, crlArr []string) (*x509.RevocationList
 		return nil
 	}
 
-	tlsConfig := &tls.Config{
-		CipherSuites: []uint16{
-			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-		},
-		InsecureSkipVerify: false,
-		MinVersion:         tls.VersionTLS12,
-	}
-	if err := doRequest(rclient, tlsConfig, newRequest, nil, nil, processResponse); err != nil {
+	if err := doRequest(rclient, newRequest, nil, nil, processResponse); err != nil {
 		return nil, err
 	}
 	return crlObj, nil
@@ -246,7 +237,7 @@ func (connector *trustAuthorityConnector) VerifyToken(token string) (*jwt.Token,
 			}
 		}
 
-		rootCrl, err := getCRL(*connector.rclient, interCACert.CRLDistributionPoints)
+		rootCrl, err := getCRL(connector.rclient, interCACert.CRLDistributionPoints)
 		if err != nil {
 			return nil, errors.Errorf("Failed to get ROOT CA CRL Object: %v", err.Error())
 		}
@@ -255,7 +246,7 @@ func (connector *trustAuthorityConnector) VerifyToken(token string) (*jwt.Token,
 			return nil, errors.Errorf("Failed to check ATS CA Certificate against Root CA CRL: %v", err.Error())
 		}
 
-		atsCrl, err := getCRL(*connector.rclient, leafCert.CRLDistributionPoints)
+		atsCrl, err := getCRL(connector.rclient, leafCert.CRLDistributionPoints)
 		if err != nil {
 			return nil, errors.Errorf("Failed to get ATS CRL Object: %v", err.Error())
 		}
