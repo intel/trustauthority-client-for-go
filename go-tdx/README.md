@@ -8,7 +8,7 @@ The **go-tdx** adapter can be used with any Intel TDX-enabled platform that supp
 
 ## Requirements
 
-- Use **Go 1.22 or newer**. See [https://go.dev/doc/install](https://go.dev/doc/install) for installation of Go.
+- Use **Go 1.23 or newer**. See [https://go.dev/doc/install](https://go.dev/doc/install) for installation of Go.
 - An Intel TDX-enabled Linux platform with Kernel 6.7 or newer. The platform must have the `configfs` filesystem mounted at `/sys/kernel/config` and the Intel TDX kernel module loaded. This platform uses the `tdx_adapter.go` file.
 - Alternatively, a Microsoft Azure confidential VM with Intel TDX and vTPM. This platform requires `aztdx_adapter.go`.
 

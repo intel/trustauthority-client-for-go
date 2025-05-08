@@ -28,7 +28,7 @@ Platforms with status **GA** are available and supported in the US and EU produc
 
 You can use the clients to collect the reference values needed for attestation policies. For example, you can create a known-good state for your TEE, use the client CLI to collect evidence, and then use the collected evidence values to create an [attestation policy](https://docs.trustauthority.intel.com/main/articles/concept-policy-v2.html) for Intel Trust Authority. 
 
-Client libraries require **Go 1.22 or newer**. See https://go.dev/doc/install for installation of Go.
+Client libraries require **Go 1.23 or newer**. See https://go.dev/doc/install for installation of Go.
 
 ## Repo Structure
 

@@ -6,7 +6,7 @@ The **go-sgx** adapter enables a confidential computing client running in an Int
 
 ## Requirements
 
-- Use **Go 1.22 or newer**. See [https://go.dev/doc/install](https://go.dev/doc/install) for installation of Go.
+- Use **Go 1.23 or newer**. See [https://go.dev/doc/install](https://go.dev/doc/install) for installation of Go.
 - Intel® Software Guard Extensions Data Center Attestation Primitives (Intel® SGX DCAP) is required on the attesting TEE for quote generation.  For Intel SGX DCAP installation, see [https://github.com/intel/SGXDataCenterAttestationPrimitives](https://github.com/intel/SGXDataCenterAttestationPrimitives).
 
 ## Usage
