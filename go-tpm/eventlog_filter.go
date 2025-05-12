@@ -262,6 +262,9 @@ func (t *tcg20EventLogFilterImpl) FilterEventLogs() ([]byte, error) {
 
 				// add digest value
 				_, err = results.Write(t.evlBuffer[digestOffsets[hashAlg] : digestOffsets[hashAlg]+hashAlg.Size()])
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			// add event size

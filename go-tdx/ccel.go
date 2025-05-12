@@ -133,7 +133,7 @@ func parseCcelLength(ccelBytes []byte) (int64, error) {
 		}
 
 		// check for valid RTMR values (there are only 4)
-		if tmpInt32 < 0 || tmpInt32 > 3 {
+		if tmpInt32 > 3 {
 			return 0, fmt.Errorf("%w: invalid rtmr value", ErrorInvalidEventLog)
 		}
 

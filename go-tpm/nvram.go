@@ -85,8 +85,6 @@ func (tpm *trustedPlatformModule) NVWrite(nvHandle int, data []byte) error {
 		return errors.Wrapf(ErrNvWriteFailed, "Index 0x%x: %s", nvHandle, err.Error())
 	}
 
-	tpm.ctx.FlushContext(session)
-
 	logrus.Debugf("Successfully wrote %d bytes at NV index 0x%x", len(data), nvHandle)
 	return nil
 }

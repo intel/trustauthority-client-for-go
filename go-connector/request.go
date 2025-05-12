@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2023 Intel Corporation
+ *   Copyright (c) 2022-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // doRequest creates an API request, sends the API request and returns the API response
@@ -39,19 +40,17 @@ func doRequest(rclient *retryablehttp.Client,
 		req.Header.Add(name, val)
 	}
 
-	var resp *http.Response
-	if resp, err = rclient.StandardClient().Do(req); err != nil {
+	resp, err := rclient.StandardClient().Do(req)
+	if err != nil {
 		return errors.Errorf("Request to %q failed: %s", req.URL, err)
 	}
 
-	if resp != nil {
-		defer func() {
-			err := resp.Body.Close()
-			if err != nil {
-				errors.Errorf("Failed to close response body")
-			}
-		}()
-	}
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			logrus.Error("Failed to close response body")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK || resp.ContentLength == 0 {
 		traceId, requestId := resp.Header.Get(HeaderTraceId), resp.Header.Get(HeaderRequestId)

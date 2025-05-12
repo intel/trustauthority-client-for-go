@@ -215,7 +215,7 @@ func (connector *trustAuthorityConnector) VerifyToken(token string) (*jwt.Token,
 		var interCACert *x509.Certificate
 		var rootCert *x509.Certificate
 
-		for i := 0; i < atsCerts.Len(); i++ {
+		for i := range atsCerts.Len() {
 			atsCert, ok := atsCerts.Get(i)
 			if !ok {
 				return nil, errors.Errorf("Failed to fetch certificate at index %d", i)
@@ -235,6 +235,10 @@ func (connector *trustAuthorityConnector) VerifyToken(token string) (*jwt.Token,
 			} else {
 				leafCert = cer
 			}
+		}
+
+		if leafCert == nil || interCACert == nil || rootCert == nil {
+			return nil, errors.New("Invalid certificate chain")
 		}
 
 		rootCrl, err := getCRL(connector.rclient, interCACert.CRLDistributionPoints)

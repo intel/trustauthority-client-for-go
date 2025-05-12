@@ -9,6 +9,7 @@ package cmd
 import (
 	"crypto/tls"
 	"fmt"
+	"os"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/intel/trustauthority-client/go-connector"
@@ -23,18 +24,17 @@ func newVerifyCommand(cfgFactory ConfigFactory, ctrFactory connector.ConnectorFa
 		Short: "Verify Trust Authority attestation token",
 		Long:  ``,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := verifyToken(cmd, cfgFactory, ctrFactory)
-			if err != nil {
-				return err
-			}
-
-			return nil
+			return verifyToken(cmd, cfgFactory, ctrFactory)
 		},
 	}
 	verifyCmd.Flags().StringP(constants.ConfigOptions.Name, constants.ConfigOptions.ShortHand, "", constants.ConfigOptions.Description)
 	verifyCmd.Flags().StringP(constants.TokenOption, "t", "", "Token in JWT format")
-	verifyCmd.MarkFlagRequired(constants.TokenOption)
-	verifyCmd.MarkFlagRequired(constants.ConfigOptions.Name)
+	if err := verifyCmd.MarkFlagRequired(constants.TokenOption); err != nil {
+		fmt.Fprintln(os.Stderr, "Error marking flag as required:", err)
+	}
+	if err := verifyCmd.MarkFlagRequired(constants.ConfigOptions.Name); err != nil {
+		fmt.Fprintln(os.Stderr, "Error marking flag as required:", err)
+	}
 
 	return verifyCmd
 }

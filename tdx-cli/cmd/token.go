@@ -45,11 +45,7 @@ func newTokenCommand(tdxAdapterFactory TdxAdapterFactory,
 		Short: "Fetches the attestation token from Trust Authority",
 		Long:  ``,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := getToken(cmd, tdxAdapterFactory, tpmAdapterFactory, cfgFactory, ctrFactory)
-			if err != nil {
-				return err
-			}
-			return nil
+			return getToken(cmd, tdxAdapterFactory, tpmAdapterFactory, cfgFactory, ctrFactory)
 		},
 	}
 
@@ -68,7 +64,9 @@ func newTokenCommand(tdxAdapterFactory TdxAdapterFactory,
 	tokenCmd.Flags().Bool(constants.WithEventLogsOptions.Name, false, constants.WithEventLogsOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithCcelOptions.Name, false, constants.WithCcelOptions.Description)
 
-	tokenCmd.MarkFlagRequired(constants.ConfigOptions.Name)
+	if err := tokenCmd.MarkFlagRequired(constants.ConfigOptions.Name); err != nil {
+		fmt.Fprintln(os.Stderr, "Error marking flag as required:", err)
+	}
 	return &tokenCmd
 }
 

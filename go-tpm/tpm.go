@@ -21,6 +21,7 @@ import (
 
 	"github.com/canonical/go-tpm2"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type TrustedPlatformModule interface {
@@ -138,7 +139,10 @@ type PcrSelection struct {
 // Close closes the TPM.
 func (tpm *trustedPlatformModule) Close() {
 	if tpm.ctx != nil {
-		tpm.ctx.Close()
+		err := tpm.ctx.Close()
+		if err != nil {
+			logrus.Errorf("Error closing TPM context: %v", err)
+		}
 	}
 }
 

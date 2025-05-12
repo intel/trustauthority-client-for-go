@@ -23,11 +23,7 @@ var decryptCmd = &cobra.Command{
 	Short: "Decrypts the given base64 encoded encrypted blob",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		err := decrypt(cmd)
-		if err != nil {
-			return err
-		}
-		return nil
+		return decrypt(cmd)
 	},
 }
 
@@ -39,7 +35,9 @@ func init() {
 		"Base64 encoded encrypted blob")
 	decryptCmd.Flags().StringP(constants.PrivateKeyOption, "k", "",
 		"Private key to be used for decryption")
-	decryptCmd.MarkFlagRequired(constants.InputOption)
+	if err := decryptCmd.MarkFlagRequired(constants.InputOption); err != nil {
+		fmt.Fprintln(os.Stderr, "Error marking flag as required:", err)
+	}
 }
 
 func decrypt(cmd *cobra.Command) error {

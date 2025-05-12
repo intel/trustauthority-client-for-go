@@ -187,7 +187,9 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 	cmd.Flags().BoolVar(&withEventLogs, constants.WithEventLogsOptions.Name, false, constants.WithEventLogsOptions.Description)
 	cmd.Flags().BoolVar(&withCcel, constants.WithCcelOptions.Name, false, constants.WithCcelOptions.Description)
 
-	cmd.MarkFlagRequired(constants.ConfigOptions.Name)
+	if err := cmd.MarkFlagRequired(constants.ConfigOptions.Name); err != nil {
+		fmt.Fprintln(cmd.ErrOrStderr(), "Error marking flag as required:", err)
+	}
 
 	return &cmd
 }

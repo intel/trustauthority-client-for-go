@@ -22,18 +22,17 @@ var createKeyPairCmd = &cobra.Command{
 	Short: "Creates RSA3K keypair",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		err := createKeyPair(cmd)
-		if err != nil {
-			return err
-		}
-		return nil
+		return createKeyPair(cmd)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(createKeyPairCmd)
 	createKeyPairCmd.Flags().StringP(constants.PublicKeyPathOption, "f", "", "File path to store public key")
-	createKeyPairCmd.MarkFlagRequired(constants.PublicKeyPathOption)
+
+	if err := createKeyPairCmd.MarkFlagRequired(constants.PublicKeyPathOption); err != nil {
+		fmt.Fprintln(os.Stderr, "Error marking flag as required:", err)
+	}
 }
 
 func createKeyPair(cmd *cobra.Command) error {
@@ -57,7 +56,7 @@ func createKeyPair(cmd *cobra.Command) error {
 	}
 	defer tdx.ZeroizeByteArray(privateKeyPem)
 
-	err = os.WriteFile(keyFilepath, publicKeyPem, 0644)
+	err = os.WriteFile(keyFilepath, publicKeyPem, 0640)
 	if err != nil {
 		return errors.Wrap(err, "I/O error while saving public key")
 	}

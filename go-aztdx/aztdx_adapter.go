@@ -225,7 +225,7 @@ func getTdxQuote(tdReportBytes []byte) ([]byte, error) {
 	defer func() {
 		err := response.Body.Close()
 		if err != nil {
-			errors.Errorf("Failed to close response body")
+			logrus.Error("Failed to close response body")
 		}
 	}()
 

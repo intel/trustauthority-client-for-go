@@ -63,7 +63,6 @@ func (tpm *trustedPlatformModule) CreateAK(akHandle int, ekHandle int) error {
 	if err != nil {
 		return err
 	}
-	tpm.ctx.FlushContext(session)
 
 	// start a new session and load the key created above
 	session, err = tpm.ctx.StartAuthSession(nil, nil, tpm2.SessionTypePolicy, nil, tpm2.HashAlgorithmSHA256)
@@ -80,8 +79,6 @@ func (tpm *trustedPlatformModule) CreateAK(akHandle int, ekHandle int) error {
 	if err != nil {
 		return err
 	}
-
-	tpm.ctx.FlushContext(session)
 
 	// persist the ak to the specified handle
 	_, err = tpm.ctx.EvictControl(tpm.ctx.OwnerHandleContext(), loadContext, ak, nil, nil)
