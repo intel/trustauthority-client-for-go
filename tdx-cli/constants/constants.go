@@ -14,15 +14,16 @@ const (
 
 // Command Names
 const (
-	CreateKeyPairCmd = "create-key-pair"
-	DecryptCmd       = "decrypt"
-	QuoteCmd         = "quote"
-	TokenCmd         = "token"
-	RootCmd          = "trustauthority-cli"
-	VersionCmd       = "version"
-	VerifyCmd        = "verify"
-	EvidenceCmd      = "evidence"
-	ProvisionAkCmd   = "provision-ak"
+	CreateKeyPairCmd       = "create-key-pair"
+	DecryptCmd             = "decrypt"
+	QuoteCmd               = "quote"
+	TokenCmd               = "token"
+	RootCmd                = "trustauthority-cli"
+	VersionCmd             = "version"
+	VerifyCmd              = "verify"
+	EvidenceCmd            = "evidence"
+	ProvisionAkCmd         = "provision-ak"
+	ProvisionAkTemplateCmd = "provision-ak-template"
 )
 
 // Options Names
@@ -56,4 +57,5 @@ var (
 	WithEventLogsOptions   = CommandOptions{"evl", "", "When set, TPM evidence will include UEFI event logs"}
 	WithCcelOptions        = CommandOptions{"ccel", "", "When set, TDX evidence will include Confidential Computing Event Logs"}
 	RequestIdOptions       = CommandOptions{"request-id", "r", "Request ID for the token"}
+	AkTemplateIndexOptions = CommandOptions{"ak-template-index", "", "The nvram index containing a valid AK template"}
 )

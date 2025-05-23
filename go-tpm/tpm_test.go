@@ -7,6 +7,7 @@
 package tpm
 
 import (
+	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -19,6 +20,7 @@ import (
 	"github.com/canonical/go-tpm2"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/mock"
 )
 
 // These variables allow developers to change the settings for unit tests.
@@ -136,6 +138,8 @@ func resetTestTpm(tpm TrustedPlatformModule) error {
 	return nil
 }
 
+var defaultEkHandle = 0x81000000
+
 func setEkCertificate(tpm TrustedPlatformModule) error {
 	t, ok := tpm.(*trustedPlatformModule)
 	if !ok {
@@ -146,12 +150,12 @@ func setEkCertificate(tpm TrustedPlatformModule) error {
 		return errors.New("Setting the EK certificate is not supported on physical TPMs")
 	}
 
-	err := tpm.CreateEK(0x81000800)
+	err := tpm.CreateEK(defaultEkHandle)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create default EK")
 	}
 
-	ekPub, _, _, err := tpm.ReadPublic(0x81000800)
+	ekPub, _, _, err := tpm.ReadPublic(defaultEkHandle)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get default EK public")
 	}
@@ -277,4 +281,97 @@ func TestTpmParseDevice(t *testing.T) {
 			}
 		})
 	}
+}
+
+//------------------------------------------------------------------------------------------
+// T P M   M O C K S
+//------------------------------------------------------------------------------------------
+
+// MockTpm
+type MockTpm struct {
+	mock.Mock
+}
+
+func (m *MockTpm) CreateEK(ekHandle int) error {
+	args := m.Called(ekHandle)
+	return args.Error(0)
+}
+
+func (m *MockTpm) CreateAK(akHandle int, ekHandle int) error {
+	args := m.Called(ekHandle, ekHandle)
+	return args.Error(0)
+}
+
+func (m *MockTpm) CreateAkFromTemplate(akHandle int, template []byte) error {
+	args := m.Called(akHandle, template)
+	return args.Error(0)
+}
+
+func (m *MockTpm) ActivateCredential(ekHandle int, akHandle int, credentialBlob []byte, secret []byte) ([]byte, error) {
+	args := m.Called(ekHandle, akHandle, credentialBlob, secret)
+	return args.Get(0).([]byte), args.Error(1)
+}
+
+func (m *MockTpm) NVRead(nvHandle int) ([]byte, error) {
+	args := m.Called(nvHandle)
+	return args.Get(0).([]byte), args.Error(1)
+}
+
+func (m *MockTpm) NVWrite(nvHandle int, data []byte) error {
+	args := m.Called(nvHandle, data)
+	return args.Error(0)
+}
+
+func (m *MockTpm) NVExists(nvHandle int) bool {
+	args := m.Called(nvHandle)
+	return args.Get(0).(bool)
+}
+
+func (m *MockTpm) NVDefine(nvHandle int, len int) error {
+	args := m.Called(nvHandle, len)
+	return args.Error(0)
+}
+
+func (m *MockTpm) NVDelete(nvHandle int) error {
+	args := m.Called(nvHandle)
+	return args.Error(0)
+}
+
+func (m *MockTpm) ReadPublic(handle int) (crypto.PublicKey, []byte, []byte, error) {
+	args := m.Called(handle)
+	return args.Get(0).(crypto.PublicKey), args.Get(1).([]byte), args.Get(2).([]byte), args.Error(3)
+}
+
+func (m *MockTpm) GetEKCertificate(nvIndex int) (*x509.Certificate, error) {
+	args := m.Called(nvIndex)
+	return args.Get(0).(*x509.Certificate), args.Error(1)
+}
+
+func (m *MockTpm) GetQuote(akHandle int, nonce []byte, selection ...PcrSelection) ([]byte, []byte, error) {
+	args := m.Called(akHandle, nonce, selection)
+	return args.Get(0).([]byte), args.Get(1).([]byte), args.Error(2)
+}
+
+func (m *MockTpm) GetPcrs(selection ...PcrSelection) ([]byte, error) {
+	args := m.Called()
+	return args.Get(0).([]byte), args.Error(1)
+}
+
+func (m *MockTpm) HandleExists(handle int) bool {
+	args := m.Called(handle)
+	return args.Get(0).(bool)
+}
+
+func (m *MockTpm) Close() {
+	return
+}
+
+// MockTpmFactory
+type MockTpmFactory struct {
+	mock.Mock
+}
+
+func (m *MockTpmFactory) New(deviceType TpmDeviceType, ownerAuth string) (TrustedPlatformModule, error) {
+	args := m.Called(deviceType, ownerAuth)
+	return args.Get(0).(TrustedPlatformModule), args.Error(1)
 }

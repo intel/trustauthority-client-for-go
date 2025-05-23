@@ -102,11 +102,11 @@ func provisionAk(ekHandle int, akHandle int, ctr connector.Connector, t tpm.Trus
 
 	// Check if the AK handle, EK handle, and nvram index already exist
 	if t.HandleExists(akHandle) {
-		return nil, errors.Errorf("The AK handle 0x%x already exists.  Please delete it before running 'provision-ak'", akHandle)
+		return nil, errors.Errorf("The AK handle 0x%x already exists.  Please delete it before running %q", akHandle, constants.ProvisionAkCmd)
 	}
 
 	if t.HandleExists(ekHandle) {
-		return nil, errors.Errorf("The EK handle 0x%x already exists.  Please delete it before running 'provision-ak'", ekHandle)
+		return nil, errors.Errorf("The EK handle 0x%x already exists.  Please delete it before running %q", akHandle, constants.ProvisionAkCmd)
 	}
 
 	// Create the EK and get its public key

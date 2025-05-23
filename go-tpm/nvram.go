@@ -14,16 +14,12 @@ import (
 
 func (tpm *trustedPlatformModule) NVRead(nvHandle int) ([]byte, error) {
 
+	// Verify that the provided handle is within the range of nv space
 	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
 		return nil, ErrHandleOutOfRange
 	}
 
-	// Verify that the provided handle is within the range of nv space
 	handle := tpm2.Handle(nvHandle)
-	if handle.Type() != tpm2.HandleTypeNVIndex {
-		return nil, ErrInvalidHandle
-	}
-
 	if !tpm.ctx.DoesHandleExist(handle) {
 		return nil, ErrorNvIndexDoesNotExist
 	}
@@ -50,6 +46,7 @@ func (tpm *trustedPlatformModule) NVRead(nvHandle int) ([]byte, error) {
 
 func (tpm *trustedPlatformModule) NVWrite(nvHandle int, data []byte) error {
 
+	// Verify that the provided handle is within the range of nv space
 	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
 		return ErrHandleOutOfRange
 	}
@@ -58,15 +55,11 @@ func (tpm *trustedPlatformModule) NVWrite(nvHandle int, data []byte) error {
 		return errors.Wrapf(ErrNvInvalidSize, "The length %d provided to NVWrite must be between zero and %d", len(data), maxNvSize)
 	}
 
-	// Verify that the provided handle is within the range of nv space
 	handle := tpm2.Handle(nvHandle)
-	if handle.Type() != tpm2.HandleTypeNVIndex {
-		return ErrInvalidHandle
-	}
 
-	// delete the nv index if it already exists
+	// return an error if the nv index does not exist
 	if !tpm.ctx.DoesHandleExist(handle) {
-		return errors.Errorf("NV index 0x%x does not exist", nvHandle)
+		return ErrorNvIndexDoesNotExist
 	}
 
 	nvContext, err := tpm.ctx.NewResourceContext(handle)
@@ -91,19 +84,16 @@ func (tpm *trustedPlatformModule) NVWrite(nvHandle int, data []byte) error {
 
 func (tpm *trustedPlatformModule) NVDelete(nvHandle int) error {
 
+	// Verify that the provided handle is within the range of nv space
 	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
 		return ErrHandleOutOfRange
 	}
 
-	// Verify that the provided handle is within the range of nv space
 	handle := tpm2.Handle(nvHandle)
-	if handle.Type() != tpm2.HandleTypeNVIndex {
-		return ErrInvalidHandle
-	}
 
-	// delete the nv index if it already exists
+	// return an error if the nv index does not exist
 	if !tpm.ctx.DoesHandleExist(handle) {
-		return errors.Errorf("Cannot delete non-existent nv index at 0x%x", nvHandle)
+		return ErrorNvIndexDoesNotExist
 	}
 
 	nvContext, err := tpm.ctx.NewResourceContext(handle)
@@ -122,6 +112,7 @@ func (tpm *trustedPlatformModule) NVDelete(nvHandle int) error {
 
 func (tpm *trustedPlatformModule) NVDefine(nvHandle int, len int) error {
 
+	// Verify that the provided handle is within the range of nv space
 	if nvHandle < minNvHandle || nvHandle > maxNvHandle {
 		return ErrHandleOutOfRange
 	}
@@ -130,15 +121,11 @@ func (tpm *trustedPlatformModule) NVDefine(nvHandle int, len int) error {
 		return errors.Wrapf(ErrNvInvalidSize, "The length %d provided to NVDefine is not between zero and %d", len, maxNvSize)
 	}
 
-	// Verify that the provided handle is within the range of nv space
 	handle := tpm2.Handle(nvHandle)
-	if handle.Type() != tpm2.HandleTypeNVIndex {
-		return ErrInvalidHandle
-	}
 
-	// delete the nv index if it already exists
+	// return an error if the nv index already exists
 	if tpm.ctx.DoesHandleExist(handle) {
-		return errors.Errorf("Cannot create an existing nv index 0x%x", nvHandle)
+		return ErrExistingHandle
 	}
 
 	auth := tpm.ownerAuth

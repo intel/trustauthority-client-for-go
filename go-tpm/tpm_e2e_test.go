@@ -10,6 +10,7 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
+	"fmt"
 	"testing"
 
 	"github.com/canonical/go-tpm2"
@@ -71,41 +72,41 @@ func TestEndToEnd(t *testing.T) {
 func provisionTestAk(tpm TrustedPlatformModule) error {
 	err := tpm.CreateEK(testEkHandle)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create EK: %w", err)
 	}
 
 	err = tpm.CreateAK(testAkHandle, testEkHandle)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create AK: %w", err)
 	}
 
 	_, akTpmtPublic, _, err := tpm.ReadPublic(testAkHandle)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read AK public: %w", err)
 	}
 
 	// Get the EK certificate
 	ekCert, err := tpm.GetEKCertificate(DefaultEkNvIndex)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get EK certificate: %w", err)
 	}
 
 	// Simulate the ITA making a request to the connector to get an AK certificate
 	ekPub, ok := ekCert.PublicKey.(*rsa.PublicKey)
 	if !ok {
-		return errors.New("Failed to cast the ek public to rsa.PublicKey")
+		return errors.New("failed to cast the ek public to rsa.PublicKey")
 	}
 
 	fakeAesKey := []byte("decafbad")
 	credentialBlob, secret, err := makeCredential(ekPub, akTpmtPublic, fakeAesKey)
 	if err != nil {
-		return err
+		return fmt.Errorf("make credential failed: %w", err)
 	}
 
 	// Decrypt aes key that encrypts payload
 	aesKey, err := tpm.ActivateCredential(testEkHandle, testAkHandle, credentialBlob, secret)
 	if err != nil {
-		return err
+		return fmt.Errorf("activate credential failed: %w", err)
 	}
 
 	// The AK certificate is not critical to this unit-test (it is verified by the cluster).

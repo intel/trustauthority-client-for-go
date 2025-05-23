@@ -9,7 +9,11 @@ package tpm
 import (
 	"crypto/sha256"
 	"crypto/x509"
+	"encoding/asn1"
 	"encoding/pem"
+	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"os"
 	"strconv"
@@ -25,12 +29,13 @@ import (
 type TpmAdapterOptions func(*tpmAdapter) error
 
 type tpmAdapter struct {
+	tpmFactory       TpmFactory
 	akHandle         int
 	pcrSelections    []PcrSelection
 	deviceType       TpmDeviceType
 	ownerAuth        string
-	withImaLogs      bool
-	withUefiLogs     bool
+	withImaLogs      string
+	withUefiLogs     string
 	akCertificateUri *url.URL
 }
 
@@ -39,8 +44,8 @@ var defaultAdapter = tpmAdapter{
 	pcrSelections: defaultPcrSelections,
 	deviceType:    TpmDeviceLinux,
 	ownerAuth:     "",
-	withImaLogs:   false,
-	withUefiLogs:  false,
+	withImaLogs:   "",
+	withUefiLogs:  "",
 }
 
 type TpmAdapterFactory interface {
@@ -54,6 +59,7 @@ type tpmAdapterFactory struct {
 func (t *tpmAdapterFactory) New(opts ...TpmAdapterOptions) (connector.CompositeEvidenceAdapter, error) {
 	// create an adapter with default values
 	tca := defaultAdapter
+	tca.tpmFactory = t.tpmFactory
 
 	// iterate over the options and apply them to the adapter
 	for _, option := range opts {
@@ -117,7 +123,11 @@ func WithPcrSelections(selections string) TpmAdapterOptions {
 // in evidence.
 func WithImaLogs(enabled bool) TpmAdapterOptions {
 	return func(tca *tpmAdapter) error {
-		tca.withImaLogs = enabled
+		if enabled {
+			tca.withImaLogs = DefaultImaPath
+		} else {
+			tca.withImaLogs = ""
+		}
 		return nil
 	}
 }
@@ -127,7 +137,11 @@ func WithImaLogs(enabled bool) TpmAdapterOptions {
 // in evidence.
 func WithUefiEventLogs(enabled bool) TpmAdapterOptions {
 	return func(tca *tpmAdapter) error {
-		tca.withUefiLogs = enabled
+		if enabled {
+			tca.withUefiLogs = DefaultUefiEventLogPath
+		} else {
+			tca.withUefiLogs = ""
+		}
 		return nil
 	}
 }
@@ -164,9 +178,9 @@ func (tca *tpmAdapter) GetEvidenceIdentifier() string {
 
 func (tca *tpmAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, userData []byte) (interface{}, error) {
 
-	tpm, err := NewTpmFactory().New(tca.deviceType, tca.ownerAuth)
+	tpm, err := tca.tpmFactory.New(tca.deviceType, tca.ownerAuth)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to open TPM")
+		return nil, fmt.Errorf("%w: %s", ErrTpmOpenFailure, err)
 	}
 	defer tpm.Close()
 
@@ -178,27 +192,27 @@ func (tca *tpmAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, userD
 
 	quote, signature, err := tpm.GetQuote(tca.akHandle, nonceHash, tca.pcrSelections...)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to get quote using AK handle 0x%x", tca.akHandle)
+		return nil, fmt.Errorf("%w: AK handle 0x%x: %w", ErrQuoteFailure, tca.akHandle, err)
 	}
 
 	pcrs, err := tpm.GetPcrs(tca.pcrSelections...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrPCRsFailure, err)
 	}
 
 	var imaLogs []byte
-	if tca.withImaLogs {
-		imaLogs, err = readFile(DefaultImaPath)
+	if tca.withImaLogs != "" {
+		imaLogs, err = readFile(tca.withImaLogs)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to read ima log file %q", DefaultImaPath)
+			return nil, fmt.Errorf("%w: path %q", ErrFailedToReadIMALogs, tca.withImaLogs)
 		}
 	}
 
 	var uefiEventLogs []byte
-	if tca.withUefiLogs {
-		uefiBytes, err := readFile(DefaultUefiEventLogPath)
+	if tca.withUefiLogs != "" {
+		uefiBytes, err := readFile(tca.withUefiLogs)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to open uefi log file %q", DefaultUefiEventLogPath)
+			return nil, fmt.Errorf("%w: path %q", ErrFailedToReadUEFILogs, tca.withUefiLogs)
 		}
 
 		eventLogFilter, err := newEventLogFilter(uefiBytes, tca.pcrSelections...)
@@ -308,40 +322,138 @@ func validateFilePath(filePath string) error {
 }
 
 func readAkCertificate(akUri *url.URL, tpm TrustedPlatformModule) ([]byte, error) {
-	var akPemBytes []byte
+	var akBytes []byte
+	var results []byte
 	var err error
 
 	if akUri.Scheme == "file" {
-		akPemBytes, err = readFile(akUri.Path)
+		akBytes, err = readFile(akUri.Path)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to read AK certificate PEM from file %s", akUri.Path)
+			return nil, fmt.Errorf("%w: Failed to read AK certificate PEM from file %s", ErrReadAkFileFailure, akUri.Path)
 		}
 	} else if akUri.Scheme == "nvram" {
 		hexString := strings.TrimPrefix(akUri.Host, "0x")
 		nvIdx, err := strconv.ParseInt(hexString, 16, 64)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to parse NV index %s", akUri.Host)
+			return nil, fmt.Errorf("%w: Failed to parse %s: %w", ErrReadAkNvramInvalidHex, hexString, err)
 		}
 
-		akPemBytes, err = tpm.NVRead(int(nvIdx))
+		akBytes, err = tpm.NVRead(int(nvIdx))
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to read AK certificate from NV index 0x%x", nvIdx)
+			return nil, fmt.Errorf("%w: Failed to read AK certificate from NV index 0x%x: %w", ErrReadAkNvramFailure, nvIdx, err)
 		}
 	}
 
-	block, _ := pem.Decode(akPemBytes)
-	if block == nil {
-		return nil, errors.New("Failed to decode the AK certificate's PEM block")
-	}
-
-	if block.Type != "CERTIFICATE" {
-		return nil, errors.Errorf("Expected PEM type 'CERTIFICATE' but got %s", block.Type)
-	}
-
-	akCert, err := x509.ParseCertificate(block.Bytes)
+	akCert, err := parseCertificateBytes(akBytes)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to parse AK certificate")
+		return nil, fmt.Errorf("failed to parse AK certificate from %s: %w", akUri, err)
+	}
+	results = append(results, akCert.Raw...)
+
+	caCert, err := getCAIssuerCertificate(akCert)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get CA issuer from %s: %w", akUri, err)
 	}
 
-	return akCert.Raw, nil
+	// it's possible that the AK certificate does not contain an issuer
+	if caCert != nil {
+		results = append(results, caCert.Raw...)
+	}
+
+	return results, nil
+}
+
+var (
+	// OID for Authority Information Access
+	oidAuthorityInfoAccess = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 1, 1}
+
+	// OID for id-ad-caIssuers
+	oidCAIssuers = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 48, 2}
+)
+
+// GeneralName type 6 = URI
+const generalNameURI = 6
+
+type accessDescription struct {
+	AccessMethod   asn1.ObjectIdentifier
+	AccessLocation asn1.RawValue
+}
+
+func getCAIssuerCertificate(akCert *x509.Certificate) (*x509.Certificate, error) {
+	issuerUrl := ""
+	for _, ext := range akCert.Extensions {
+		if ext.Id.Equal(oidAuthorityInfoAccess) {
+			var aia []accessDescription
+			_, err := asn1.Unmarshal(ext.Value, &aia)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, ad := range aia {
+				if ad.AccessMethod.Equal(oidCAIssuers) && ad.AccessLocation.Tag == generalNameURI {
+					issuerUrl = string(ad.AccessLocation.Bytes)
+					break
+				}
+			}
+		}
+	}
+
+	// cert did not contain an issuer
+	if issuerUrl == "" {
+		logrus.Debug("AK certificate did not contain an issuer URL")
+		return nil, nil
+	}
+
+	return getIssuerCertificate(issuerUrl, http.Get)
+}
+
+type GetFunc func(url string) (*http.Response, error)
+
+func getIssuerCertificate(issuerUrl string, getFx GetFunc) (*x509.Certificate, error) {
+	resp, err := getFx(issuerUrl)
+	if err != nil {
+		return nil, fmt.Errorf("%w: failed to fetch certificate from %s: %w", ErrIssuerCAHttpError, issuerUrl, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: downloading cert %s return error status: %s", ErrIssuerCAStatusError, issuerUrl, resp.Status)
+	}
+
+	// Read response body (expected to be DER)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read certificate data: %w", err)
+	}
+
+	ca, err := parseCertificateBytes(body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse CA certificate: %w", err)
+	}
+
+	logrus.Debugf("Successfully downloaded intermediate CA certificate from %s\n", issuerUrl)
+	return ca, nil
+}
+
+// parseCertificateBytes parses the certificate bytes in either PEM or DER format.
+func parseCertificateBytes(certBytes []byte) (*x509.Certificate, error) {
+	var cb []byte
+
+	block, _ := pem.Decode(certBytes)
+	if block != nil {
+		if block.Type != "CERTIFICATE" {
+			return nil, ErrInvalidPemType
+		}
+
+		cb = block.Bytes
+	} else {
+		cb = certBytes
+	}
+
+	cert, err := x509.ParseCertificate(cb)
+	if err != nil {
+		return nil, fmt.Errorf("%w: failed to parse certificate: %w", ErrInvalidCertificate, err)
+	}
+
+	return cert, nil
 }

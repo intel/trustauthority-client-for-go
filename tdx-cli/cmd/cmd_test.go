@@ -186,8 +186,14 @@ func (m *MockTpm) CreateEK(ekHandle int) error {
 	args := m.Called(ekHandle)
 	return args.Error(0)
 }
+
 func (m *MockTpm) CreateAK(akHandle int, ekHandle int) error {
 	args := m.Called(ekHandle, ekHandle)
+	return args.Error(0)
+}
+
+func (m *MockTpm) CreateAkFromTemplate(akHandle int, template []byte) error {
+	args := m.Called(akHandle, template)
 	return args.Error(0)
 }
 

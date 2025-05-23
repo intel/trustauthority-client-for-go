@@ -41,6 +41,12 @@ type TrustedPlatformModule interface {
 	// EK to the endorsement hierachy (root of trust).
 	CreateAK(akHandle int, ekHandle int) error
 
+	// CreateAkFromTemplate creates and persists an AK handle at 'akHandle'.  It uses the
+	// template bytes (TPMT_PUBLIC) to create the AK.  It fails if akHandle is not within
+	// the range of a persistent handle, if 'akHandle' already exists, or if the template
+	// bytes cannot be unmarshalled.
+	CreateAkFromTemplate(akHandle int, akTemplate []byte) error
+
 	// ActivateCredential decrypts a credential blob using the secret and the AK at 'akHandle'.
 	ActivateCredential(ekHandle int, akHandle int, credentialBlob []byte, secret []byte) ([]byte, error)
 
