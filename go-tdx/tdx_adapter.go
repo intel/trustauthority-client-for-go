@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2024 Intel Corporation
+ *   Copyright (c) 2022-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -25,6 +25,15 @@ type compositeTdxEvidence struct {
 	Quote         []byte                   `json:"quote"`
 	EventLog      []byte                   `json:"event_log,omitempty"`
 	VerifierNonce *connector.VerifierNonce `json:"verifier_nonce,omitempty"`
+}
+
+// NewTdxAdapter returns a new TDX Adapter instance
+func NewTdxAdapter(udata []byte, withCcel bool) (connector.EvidenceAdapter, error) {
+	return &tdxAdapter{
+		uData:            udata,
+		withCcel:         withCcel,
+		cfsQuoteProvider: &cfsQuoteProviderImpl{},
+	}, nil
 }
 
 // CollectEvidence is used to get TDX quote using TDX Quote Generation service

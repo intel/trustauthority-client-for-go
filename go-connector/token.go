@@ -43,7 +43,10 @@ type AttestationTokenResponse struct {
 
 // GetToken is used to get attestation token from Intel Trust Authority
 func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenResponse, error) {
-	url := connector.cfg.ApiUrl + args.attestEndpoint
+	url := connector.cfg.ApiUrl + attestEndpoint
+	if args.Evidence.Type == AzTdx {
+		url = connector.cfg.ApiUrl + attestAzureTdEndpoint
+	}
 
 	newRequest := func() (*http.Request, error) {
 		tr := tokenRequest{
