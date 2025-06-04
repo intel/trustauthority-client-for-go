@@ -11,7 +11,6 @@ toolchain go1.23.6
 require (
 	github.com/canonical/go-tpm2 v1.7.6
 	github.com/confidentsecurity/go-nvtrust v0.1.2
-	github.com/goccy/go-json v0.10.2
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/go-configfs-tsm v0.2.2
 	github.com/google/uuid v1.6.0
@@ -27,6 +26,7 @@ require (
 	github.com/canonical/go-sp800.108-kdf v0.0.0-20210314145419-a3359f2d21b9 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
+	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.2 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect

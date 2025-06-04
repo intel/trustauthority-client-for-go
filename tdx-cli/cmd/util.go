@@ -22,7 +22,7 @@ func parsePolicyIds(policyIds string) ([]uuid.UUID, error) {
 		Ids := strings.Split(policyIds, ",")
 		for _, id := range Ids {
 			if uid, err := uuid.Parse(id); err != nil {
-				return nil, errors.Errorf("Policy Id:%s is not a valid UUID", id)
+				return nil, errors.Errorf("Policy Id:%q is not a valid UUID", id)
 			} else {
 				pIds = append(pIds, uid)
 			}

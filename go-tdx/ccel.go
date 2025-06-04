@@ -103,7 +103,7 @@ func validateCcelData(tableBytes, dataBytes []byte) error {
 
 	// verify the CCEL data is not shorter than the table's minimum length
 	if uint64(len(dataBytes)) < table.LogAreaMinimumLength {
-		return fmt.Errorf("The length of the CCEL data (0x%x) was less than the minimum length (0x%x) : %w", len(dataBytes), table.LogAreaMinimumLength, ErrorInvalidCcelDataMinimumLength)
+		return fmt.Errorf("length of the CCEL data (0x%x) was less than the minimum length (0x%x) : %w", len(dataBytes), table.LogAreaMinimumLength, ErrorInvalidCcelDataMinimumLength)
 	}
 
 	return nil
@@ -153,7 +153,7 @@ func parseCcelLength(ccelBytes []byte) (int64, error) {
 			return 0, fmt.Errorf("%w: invalid digest count %d", ErrorInvalidEventLog, tmpInt32)
 		}
 
-		for i := 0; i < int(tmpInt32); i++ {
+		for range int(tmpInt32) {
 			// digest algorithm
 			alg := uint16(0)
 			err = binary.Read(reader, binary.LittleEndian, &alg)
@@ -188,7 +188,7 @@ func parseCcelLength(ccelBytes []byte) (int64, error) {
 			return 0, fmt.Errorf("%w: failed to read event size %v", ErrorInvalidEventLog, err)
 		}
 
-		if tmpInt32 < 0 || tmpInt32 > maxEventLength {
+		if tmpInt32 > maxEventLength {
 			return 0, fmt.Errorf("%w: event entry with size %d exceeded maximum size %d", ErrorInvalidEventLog, tmpInt32, maxEventLength)
 		}
 

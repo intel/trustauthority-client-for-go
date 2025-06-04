@@ -6,11 +6,11 @@
 package connector
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"testing"
 
-	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
