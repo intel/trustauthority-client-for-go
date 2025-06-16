@@ -9,8 +9,8 @@ go 1.23.0
 toolchain go1.23.6
 
 require (
+	github.com/NVIDIA/go-nvml v0.12.4-0
 	github.com/canonical/go-tpm2 v1.7.6
-	github.com/confidentsecurity/go-nvtrust v0.1.2
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/go-configfs-tsm v0.2.2
 	github.com/google/uuid v1.6.0
@@ -22,7 +22,6 @@ require (
 )
 
 require (
-	github.com/NVIDIA/go-nvml v0.12.4-0 // indirect
 	github.com/canonical/go-sp800.108-kdf v0.0.0-20210314145419-a3359f2d21b9 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
@@ -44,4 +43,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/NVIDIA/go-nvml => github.com/confidentsecurity/go-nvml v0.0.0-20250102214226-9a52cebf0382
+replace github.com/NVIDIA/go-nvml => github.com/AI-Memory/go-nvml v0.0.0-20250605010924-5123e86fd859
