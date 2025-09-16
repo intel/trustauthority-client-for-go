@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2024 Intel Corporation
+ *   Copyright (c) 2022-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -34,6 +34,22 @@ func TestCollectEvidenceConfigFsError(t *testing.T) {
 
 	mockCfsQuoteProvider := &MockCfsQuoteProvider{}
 	mockCfsQuoteProvider.On("getQuoteFromConfigFS", mock.Anything).Return([]byte{}, errors.New("unit test failure"))
+
+	adapter := tdxAdapter{
+		withCcel:         false,
+		cfsQuoteProvider: mockCfsQuoteProvider,
+	}
+
+	_, err := adapter.CollectEvidence([]byte("nonce"))
+	if err == nil {
+		t.Errorf("expected error")
+	}
+}
+
+func TestCollectEvidenceEmptyQuote(t *testing.T) {
+
+	mockCfsQuoteProvider := &MockCfsQuoteProvider{}
+	mockCfsQuoteProvider.On("getQuoteFromConfigFS", mock.Anything).Return([]byte{}, nil)
 
 	adapter := tdxAdapter{
 		withCcel:         false,

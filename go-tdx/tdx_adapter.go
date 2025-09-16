@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2024 Intel Corporation
+ *   Copyright (c) 2022-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -7,6 +7,7 @@ package tdx
 
 import (
 	"crypto/sha512"
+	"errors"
 
 	"github.com/google/go-configfs-tsm/configfs/linuxtsm"
 	"github.com/google/go-configfs-tsm/report"
@@ -44,6 +45,10 @@ func (adapter *tdxAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, e
 	quote, err := adapter.cfsQuoteProvider.getQuoteFromConfigFS(reportData)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(quote) == 0 {
+		return nil, errors.New("empty quote received from TDX Quote Generation Service")
 	}
 
 	var ccelBytes []byte
