@@ -6,7 +6,7 @@ module github.com/intel/trustauthority-client
 
 go 1.23.0
 
-toolchain go1.23.6
+toolchain go1.23.12
 
 require (
 	github.com/NVIDIA/go-nvml v0.12.4-0
