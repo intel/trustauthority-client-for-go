@@ -27,11 +27,13 @@ type GPUEvidence struct {
 	Nonce         string                   `json:"gpu_nonce"`                // The nonce used for attestation, hex-encoded.
 	VerifierNonce *connector.VerifierNonce `json:"verifier_nonce,omitempty"` // Optional verifier nonce.
 	Arch          string                   `json:"arch"`                     // The GPU architecture.
+	NrasApiKey    string                   `json:"nras_apikey,omitempty"`    // Optional API key for nras authentication.
 }
 
 // GPUAdapter provides methods to collect and format GPU attestation evidence.
 type GPUAdapter struct {
 	gpuAttester GPUAttester
+	nrasApiKey  string
 }
 
 // GPUAttester defines the interface for obtaining remote GPU attestation evidence.
@@ -42,6 +44,7 @@ type GPUAttester interface {
 // GPUAdapterOptions holds configuration options for GPUAdapter.
 type GPUAdapterOptions struct {
 	GpuAttester GPUAttester
+	NrasApiKey  string
 }
 
 // Option is a function that configures GPUAdapterOptions.
@@ -54,17 +57,26 @@ func WithGpuAttester(gpuAttester GPUAttester) Option {
 	}
 }
 
+// WithNrasApiKey sets a custom GPUAttester in the adapter options.
+func WithNrasApiKey(nrasApiKey string) Option {
+	return func(options *GPUAdapterOptions) {
+		options.NrasApiKey = nrasApiKey
+	}
+}
+
 // NewCompositeEvidenceAdapter creates a new GPUAdapter as a CompositeEvidenceAdapter.
 // It accepts optional configuration options.
 func NewCompositeEvidenceAdapter(opts ...Option) connector.CompositeEvidenceAdapter {
 	options := &GPUAdapterOptions{
 		GpuAttester: NewGpuAttester(nil),
+		NrasApiKey:  "",
 	}
 	for _, opt := range opts {
 		opt(options)
 	}
 	return &GPUAdapter{
 		gpuAttester: options.GpuAttester,
+		nrasApiKey:  options.NrasApiKey,
 	}
 }
 
@@ -106,6 +118,7 @@ func (g *GPUAdapter) collectEvidence(nonce []byte) (GPUEvidence, error) {
 		Nonce:       hexNonce,
 		Evidence:    rawEvidence.Evidence,
 		Certificate: rawEvidence.Certificate,
+		NrasApiKey:  g.nrasApiKey,
 	}, nil
 }
 
@@ -135,6 +148,10 @@ func (adapter *GPUAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, u
 
 	if verifierNonce != nil {
 		evidence.VerifierNonce = verifierNonce
+	}
+
+	if adapter.nrasApiKey != "" {
+		evidence.NrasApiKey = adapter.nrasApiKey
 	}
 
 	return &evidence, nil

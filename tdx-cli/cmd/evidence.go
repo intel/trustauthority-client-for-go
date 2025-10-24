@@ -116,7 +116,15 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 			}
 
 			if withNvGpu {
-				gpuAdapter := nvgpu.NewCompositeEvidenceAdapter()
+				var gpuAdapter connector.CompositeEvidenceAdapter
+				if cfg.NvGpu != nil {
+					nvgpuOptions := []nvgpu.Option{
+						nvgpu.WithNrasApiKey(cfg.NvGpu.NrasApiKey),
+					}
+					gpuAdapter = nvgpu.NewCompositeEvidenceAdapter(nvgpuOptions...)
+				} else {
+					gpuAdapter = nvgpu.NewCompositeEvidenceAdapter()
+				}
 				builderOptions = append(builderOptions, connector.WithEvidenceAdapter(gpuAdapter))
 			}
 

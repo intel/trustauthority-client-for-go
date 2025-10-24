@@ -15,11 +15,12 @@ import (
 )
 
 type Config struct {
-	CloudProvider        string     `json:"cloud_provider"`
-	TrustAuthorityUrl    string     `json:"trustauthority_url"`
-	TrustAuthorityApiUrl string     `json:"trustauthority_api_url"`
-	TrustAuthorityApiKey string     `json:"trustauthority_api_key"`
-	Tpm                  *TpmConfig `json:"tpm,omitempty"`
+	CloudProvider        string       `json:"cloud_provider"`
+	TrustAuthorityUrl    string       `json:"trustauthority_url"`
+	TrustAuthorityApiUrl string       `json:"trustauthority_api_url"`
+	TrustAuthorityApiKey string       `json:"trustauthority_api_key"`
+	Tpm                  *TpmConfig   `json:"tpm,omitempty"`
+	NvGpu                *NvGpuConfig `json:"nvgpu,omitempty"`
 }
 
 type TpmConfig struct {
@@ -34,6 +35,10 @@ type TpmConfig struct {
 	// AkCertificateUri is the URI of the AK certificate.  Currently, "file://{full path}" and
 	// "nvram://{index in hex}" are supported.
 	AkCertificateUri string `json:"ak_certificate"`
+}
+
+type NvGpuConfig struct {
+	NrasApiKey string `json:"nras_apikey"`
 }
 
 type ConfigFactory interface {

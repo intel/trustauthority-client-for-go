@@ -281,7 +281,15 @@ func getToken(cmd *cobra.Command,
 	}
 
 	if withNvGpu {
-		gpuAdapter := nvgpu.NewCompositeEvidenceAdapter()
+		var gpuAdapter connector.CompositeEvidenceAdapter
+		if config.NvGpu != nil {
+			nvgpuOptions := []nvgpu.Option{
+				nvgpu.WithNrasApiKey(config.NvGpu.NrasApiKey),
+			}
+			gpuAdapter = nvgpu.NewCompositeEvidenceAdapter(nvgpuOptions...)
+		} else {
+			gpuAdapter = nvgpu.NewCompositeEvidenceAdapter()
+		}
 		builderOptions = append(builderOptions, connector.WithEvidenceAdapter(gpuAdapter))
 	}
 
