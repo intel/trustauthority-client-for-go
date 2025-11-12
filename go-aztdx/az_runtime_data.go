@@ -76,12 +76,13 @@ type azKey struct {
 }
 
 type azVmConfiguration struct {
-	ConsoleEnabled     bool   `json:"console-enabled"`
-	RootCertThumbprint string `json:"root-cert-thumbprint"`
-	SecureBoot         bool   `json:"secure-boot"`
-	TpmEnabled         bool   `json:"tpm-enabled"`
-	TpmPersisted       bool   `json:"tpm-persisted"`
-	VmUniqueId         string `json:"vmUniqueId"`
+	ConsoleEnabled             bool   `json:"console-enabled"`
+	RootCertThumbprint         string `json:"root-cert-thumbprint"`
+	SecureBoot                 bool   `json:"secure-boot"`
+	TpmEnabled                 bool   `json:"tpm-enabled"`
+	TpmPersisted               bool   `json:"tpm-persisted"`
+	VmUniqueId                 string `json:"vmUniqueId"`
+	FilteredVpciDevicesAllowed bool   `json:"filtered-vpci-devices-allowed"`
 }
 
 func newAzRuntimeData(data []byte) (*azRuntimeData, error) {
@@ -106,7 +107,7 @@ func (azrtd *azRuntimeData) runtimeData() (*azRuntimeJson, error) {
 	decoder.DisallowUnknownFields()
 	err := decoder.Decode(&azRuntimeJson)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to unmarshall runtime data from azure")
 	}
 
 	return &azRuntimeJson, nil
