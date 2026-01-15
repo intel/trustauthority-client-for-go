@@ -1,12 +1,10 @@
-// Copyright (c) 2022-2023 Intel Corporation
+// Copyright (c) 2022-2026 Intel Corporation
 // All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 module github.com/intel/trustauthority-client/tdx-cli
 
-go 1.23.0
-
-toolchain go1.23.12
+go 1.25.0
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.2
@@ -41,9 +39,9 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/net v0.38.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

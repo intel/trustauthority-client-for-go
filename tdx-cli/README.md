@@ -32,7 +32,7 @@ openssl pkeyutl -verify -pubin -inkey /tmp/public_key.pem -sigfile /usr/bin/trus
 
 ## Build the client CLI from source
 
-- Use **Go 1.23 or newer**. Follow https://go.dev/doc/install for installation of Go.
+- Use **Go 1.25 or newer**. Follow https://go.dev/doc/install for installation of Go.
 - Ensure that you have the **build-essential** package and its dependencies installed. Follow the instructions below.
 
 
