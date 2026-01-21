@@ -31,7 +31,7 @@ func (ctr *trustAuthorityConnector) AttestEvidence(evidence interface{}, cloudPr
 	if err != nil {
 		return response, errors.Wrap(err, "Failed to parse API URL")
 	}
-	url.Path = path.Join(url.Path, attestEndpoint)
+	url.Path = path.Join(url.Path, attestV2Endpoint)
 	url.Path = path.Join(url.Path, cloudProvider)
 
 	newRequest := func() (*http.Request, error) {
