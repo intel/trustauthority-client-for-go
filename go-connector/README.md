@@ -25,7 +25,7 @@ go get github.com/intel/trustauthority-client/go-connector
 
 ## Go Requirement
 
-Use **Go 1.23 or newer**. See https://go.dev/doc/install for installation of Go.
+Use **Go 1.25 or newer**. See https://go.dev/doc/install for installation of Go.
 
 ## Unit Tests
 

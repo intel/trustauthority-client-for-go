@@ -1,10 +1,10 @@
-// Copyright (c) 2022-2023 Intel Corporation
+// Copyright (c) 2022-2026 Intel Corporation
 // All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 module github.com/intel/trustauthority-client/tdx-cli
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.2

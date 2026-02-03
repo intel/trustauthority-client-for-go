@@ -10,7 +10,7 @@ For detailed documentation of the TPM adapter, see the [TPM API Reference](https
 
 ## Prerequisites
 
-- Go 1.23 or newer
+- Go 1.25 or newer
 
 ## Usage
 
