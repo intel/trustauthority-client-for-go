@@ -15,7 +15,7 @@ func TestAttestEvidence(t *testing.T) {
 	connector, mux, _, teardown := setup()
 	defer teardown()
 
-	mux.HandleFunc(attestEndpoint, func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(attestV2Endpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"token":"` + token + `"}`))
 	})
