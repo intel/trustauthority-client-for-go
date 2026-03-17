@@ -18,9 +18,9 @@ You'll need to import the following packages into your project to attest an Azur
 
 ```go
 import(
-	"github.com/intel/trustauthority-client/aztdx"
+	"github.com/intel/trustauthority-client/go-aztdx"
 	"github.com/intel/trustauthority-client/go-connector"
-	"github.com/intel/trustauthority-client/tpm"
+	"github.com/intel/trustauthority-client/go-tpm"
 )
 ```
 

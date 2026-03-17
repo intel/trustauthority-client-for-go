@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2025 Intel Corporation
+ *   Copyright (c) 2022-2026 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -24,6 +24,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+const maxTokenResponseBodySize int64 = 64 * 1024    // 64 KiB limit for token response body
+const maxTokenDrainBodySize int64 = 1 * 1024 * 1024 // 1 MiB limit for draining oversized token response bodies
+
 // tokenRequest holds all the data required for attestation
 type tokenRequest struct {
 	Quote           []byte         `json:"quote"`
@@ -36,7 +39,7 @@ type tokenRequest struct {
 	PolicyMustMatch bool           `json:"policy_must_match,omitempty"`
 }
 
-// AttestationTokenResponse holds the token recieved from Intel Trust Authority
+// AttestationTokenResponse holds the token received from Intel Trust Authority
 type AttestationTokenResponse struct {
 	Token string `json:"token"`
 }
@@ -75,15 +78,25 @@ func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenR
 	var response GetTokenResponse
 	processResponse := func(resp *http.Response) error {
 		response.Headers = resp.Header
-		body, err := io.ReadAll(resp.Body)
+		// Read up to maxTokenResponseBodySize+1 bytes so we can detect
+		// when the server sends a response larger than the allowed limit.
+		limitReader := io.LimitReader(resp.Body, maxTokenResponseBodySize+1)
+		body, err := io.ReadAll(limitReader)
 		if err != nil {
-			return errors.Errorf("Failed to read body from %s: %s", url, err)
+			return errors.Errorf("Failed to read body from %s: %v", url, err)
+		}
+		if int64(len(body)) > maxTokenResponseBodySize {
+			// Best-effort drain of the remaining response body to allow HTTP connection reuse.
+			// Limit the amount we are willing to drain to avoid excessive resource usage.
+			_, _ = io.CopyN(io.Discard, resp.Body, maxTokenDrainBodySize)
+			return errors.Errorf("Response body from %s is too large (over %d bytes)", url, maxTokenResponseBodySize)
 		}
 
 		var tokenResponse AttestationTokenResponse
-		err = json.Unmarshal(body, &tokenResponse)
-		if err != nil {
-			return errors.Errorf("Error unmarshalling Token response from appraise: %s", err)
+		decoder := json.NewDecoder(bytes.NewReader(body))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&tokenResponse); err != nil {
+			return errors.Errorf("Failed to decode json from %s: %v", url, err)
 		}
 		response.Token = tokenResponse.Token
 		return nil
