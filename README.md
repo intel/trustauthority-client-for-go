@@ -23,6 +23,7 @@ The Intel Trust Authority Client for Go works with the following TEEs and platfo
 | Google Cloud Platform\* (GCP) confidential VMs on Intel CPUs with Intel TDX | GA | [**main**](https://github.com/intel/trustauthority-client-for-go/tree/main/go-tdx) | Moved from Preview to GA status. See notes. |
 | AMD Secure Encrypted Virtualization - Secure Nested Paging\* (AMD SEV-SNP\*) | Preview | [**sevsnp-preview**](https://github.com/intel/trustauthority-client-for-go/tree/sevsnp-preview) | Pilot environment only |
 | Physical TPM | GA | [**main**](https://github.com/intel/trustauthority-client-for-go/tree/main) | GA |
+| NVIDIA® Confidential Computing GPU (Hopper/Blackwell) | Preview | [**main**](https://github.com/intel/trustauthority-client-for-go/tree/main/go-nvgpu) | Requires NVIDIA GPU with CC mode enabled. |
 
 Platforms with status **GA** are available and supported in the US and EU production environments. **Preview** TEEs and platforms are in limited-access preview status in the pilot environments only. Details of implementation and usage may change before general availability. The corresponding Intel Trust Authority attestation services for preview features are not available in the production environment. Contact your Intel representative for more information about the pilot program.
 
@@ -40,6 +41,7 @@ The repository **main** branch contains the following principal directories:
 - **tdx-cli**: Attestation client command line interface (CLI). 
 - **go-tpm**: Go modules for attesting a TPM.
 - **go-aztdx**: Go modules for attesting an Azure confidential VM with Intel TDX and vTPM.
+- **go-nvgpu**: Go modules for attesting an NVIDIA confidential computing GPU (Hopper/Blackwell).
 - **release**: Scripts for installing the client CLI for different platforms. Usage is described in the README files for the platform.
 
 Preview branches are added as needed for preview versions of new TEE or platform adapters and features. The preview branches are named for the TEE or platform they support. Preview branches are based on **main**, with modifications as required. The README files in each branch describe the prerequisites and installation for the platform. 

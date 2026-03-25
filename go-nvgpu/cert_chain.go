@@ -52,6 +52,8 @@ func NewCertChainFromPemData(chainData []byte) *CertChain {
 //
 // The function expects the certificates to be in order from leaf to root,
 // forming a chain where each certificate is signed by the next one in the chain.
+// All certificates except the root (last) are added to the intermediates pool,
+// including the leaf certificate, which is then verified separately via Verify().
 func (c *CertChain) verify() error {
 	var parsedCerts []*x509.Certificate
 
@@ -82,8 +84,8 @@ func (c *CertChain) verify() error {
 			// Add the last certificate as a trusted root
 			roots.AddCert(cert)
 		} else {
-			// Add all other certificates (including the leaf) as intermediates
-			// Note: The leaf is added to intermediates but will be verified separately
+			// Add all non-root certificates (including the leaf) to the intermediates pool.
+			// The leaf at index 0 is verified separately via parsedCerts[0].Verify() below.
 			intermediates.AddCert(cert)
 		}
 	}

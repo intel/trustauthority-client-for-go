@@ -105,8 +105,16 @@ func (n *defaultNVMLDevice) GetVbiosVersion() (string, nvml.Return) {
 }
 
 // GetConfComputeGpuAttestationReport retrieves the confidential compute GPU attestation report.
+// The nonce must be exactly len(report.Nonce) bytes (NVML_CC_GPU_CEC_NONCE_SIZE = 32); any other
+// length would result in a silently truncated or zero-padded nonce, producing an invalid report.
 func (n *defaultNVMLDevice) GetConfComputeGpuAttestationReport(nonce []byte) (nvml.ConfComputeGpuAttestationReport, nvml.Return) {
-	return nvml.DeviceGetConfComputeGpuAttestationReportWithNonce(n.device, nonce)
+	report := nvml.ConfComputeGpuAttestationReport{}
+	if len(nonce) != len(report.Nonce) {
+		return report, nvml.ERROR_INVALID_ARGUMENT
+	}
+	copy(report.Nonce[:], nonce)
+	ret := nvml.DeviceGetConfComputeGpuAttestationReport(n.device, &report)
+	return report, ret
 }
 
 // GetConfComputeGpuCertificate retrieves the confidential compute GPU certificate.

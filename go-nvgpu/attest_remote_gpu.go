@@ -14,8 +14,36 @@ import (
 )
 
 type RemoteEvidence struct {
-	Certificate string
-	Evidence    string
+	Certificate     string
+	Evidence        string
+	FirmwareVersion string
+	Arch            string
+}
+
+// archToString maps an nvml.DeviceArchitecture value to its lowercase string name.
+func archToString(arch nvml.DeviceArchitecture) string {
+	switch arch {
+	case nvml.DEVICE_ARCH_KEPLER:
+		return "kepler"
+	case nvml.DEVICE_ARCH_MAXWELL:
+		return "maxwell"
+	case nvml.DEVICE_ARCH_PASCAL:
+		return "pascal"
+	case nvml.DEVICE_ARCH_VOLTA:
+		return "volta"
+	case nvml.DEVICE_ARCH_TURING:
+		return "turing"
+	case nvml.DEVICE_ARCH_AMPERE:
+		return "ampere"
+	case nvml.DEVICE_ARCH_ADA:
+		return "ada"
+	case nvml.DEVICE_ARCH_HOPPER:
+		return "hopper"
+	case nvml.DEVICE_ARCH_BLACKWELL:
+		return "blackwell"
+	default:
+		return "unknown"
+	}
 }
 
 type GpuAttester struct {
@@ -38,11 +66,13 @@ var (
 	ErrDeviceNotSupported = fmt.Errorf("device is not supported")
 )
 
-// GetRemoteEvidence collects attestation evidence and certificate chain from supported GPUs.
+// GetRemoteEvidence collects attestation evidence and certificate chain from all supported GPUs.
 // It initializes NVML, checks for confidential computing support, and retrieves attestation
-// reports and certificates for each supported device. The evidence and certificate are
-// base64-encoded and returned as a slice of RemoteEvidence. Only one device is currently supported.
-// Returns an error if any NVML operation fails or if the device is not supported.
+// reports and certificates for each supported device. Only Hopper and Blackwell architectures
+// are supported; unsupported devices cause an immediate error. The attestation report and
+// certificate chain are base64-encoded and returned as a slice of RemoteEvidence.
+// Returns an error if any NVML operation fails, if the device is not supported, or if
+// certificate chain verification fails.
 func (g *GpuAttester) GetRemoteEvidence(nonce []byte) ([]RemoteEvidence, error) {
 	ret := g.nvmlHandler.Init()
 	defer g.nvmlHandler.Shutdown() // Always clean up NVML resources
@@ -64,12 +94,8 @@ func (g *GpuAttester) GetRemoteEvidence(nonce []byte) ([]RemoteEvidence, error) 
 		return nil, fmt.Errorf("unable to get device count: %v", nvml.ErrorString(ret))
 	}
 
-	if count > 1 {
-		count = 1 // Currently only support one device
-	}
-
 	// Pre-allocate slice with expected capacity
-	remoteEvidence := make([]RemoteEvidence, 0, 1)
+	remoteEvidence := make([]RemoteEvidence, 0, count)
 
 	for i := 0; i < count; i++ {
 
@@ -84,8 +110,8 @@ func (g *GpuAttester) GetRemoteEvidence(nonce []byte) ([]RemoteEvidence, error) 
 			return nil, fmt.Errorf("unable to get architecture of device at index %d: %v", i, nvml.ErrorString(ret))
 		}
 
-		if deviceArchitecture != nvml.DEVICE_ARCH_HOPPER {
-			return nil, fmt.Errorf("device at index %d is not supported", i)
+		if deviceArchitecture != nvml.DEVICE_ARCH_HOPPER && deviceArchitecture != nvml.DEVICE_ARCH_BLACKWELL {
+			return nil, fmt.Errorf("%w: device at index %d (arch %s) is not supported", ErrDeviceNotSupported, i, archToString(deviceArchitecture))
 		}
 
 		report, ret := device.GetConfComputeGpuAttestationReport(nonce)
@@ -115,7 +141,7 @@ func (g *GpuAttester) GetRemoteEvidence(nonce []byte) ([]RemoteEvidence, error) 
 			return nil, fmt.Errorf("failed to encode certificate chain: %v", err)
 		}
 
-		remoteEvidence = append(remoteEvidence, RemoteEvidence{Evidence: encodedAttestationReport, Certificate: encodedCertChain})
+		remoteEvidence = append(remoteEvidence, RemoteEvidence{Evidence: encodedAttestationReport, Certificate: encodedCertChain, Arch: archToString(deviceArchitecture)})
 	}
 
 	return remoteEvidence, nil

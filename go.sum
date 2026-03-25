@@ -1,5 +1,5 @@
-github.com/AI-Memory/go-nvml v0.0.0-20250605010924-5123e86fd859 h1:njLTnDsIm34K8/8/mBfOvhUh/8LEA+BGpbGc2H4/yDs=
-github.com/AI-Memory/go-nvml v0.0.0-20250605010924-5123e86fd859/go.mod h1:+KNA7c7gIBH7SKSJ1ntlwkfN80zdx8ovl4hrK3LmPt4=
+github.com/NVIDIA/go-nvml v0.13.0-1 h1:OLX8Jq3dONuPOQPC7rndB6+iDmDakw0XTYgzMxObkEw=
+github.com/NVIDIA/go-nvml v0.13.0-1/go.mod h1:+KNA7c7gIBH7SKSJ1ntlwkfN80zdx8ovl4hrK3LmPt4=
 github.com/canonical/go-sp800.108-kdf v0.0.0-20210314145419-a3359f2d21b9 h1:USzKjrfWo/ESzozv2i3OMM7XDgxrZRvaHFrKkIKRtwU=
 github.com/canonical/go-sp800.108-kdf v0.0.0-20210314145419-a3359f2d21b9/go.mod h1:Zrs3YjJr+w51u0R/dyLh/oWt/EcBVdLPCVFYC4daW5s=
 github.com/canonical/go-tpm2 v1.7.6 h1:9k9OAEEp9xKp4h2WJwfTUNivblJi4L5Wjx7Q/LkSTSQ=

@@ -9,12 +9,9 @@ package nvgpu
 import (
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 
 	"github.com/intel/trustauthority-client/go-connector"
-	"github.com/sirupsen/logrus"
 )
 
 // HopperArch is the architecture identifier for Hopper GPUs.
@@ -22,12 +19,17 @@ const HopperArch = "hopper"
 
 // GPUEvidence represents the evidence collected from a GPU attestation operation.
 type GPUEvidence struct {
-	Evidence      string                   `json:"evidence"`                 // The attestation evidence, base64-encoded.
-	Certificate   string                   `json:"certificate"`              // The certificate associated with the evidence.
 	Nonce         string                   `json:"gpu_nonce"`                // The nonce used for attestation, hex-encoded.
 	VerifierNonce *connector.VerifierNonce `json:"verifier_nonce,omitempty"` // Optional verifier nonce.
 	Arch          string                   `json:"arch"`                     // The GPU architecture.
+	EvidenceList  []Evidence               `json:"evidence_list"`            // List of evidence from multiple GPUs (if applicable).
 	NrasApiKey    string                   `json:"nras_apikey,omitempty"`    // Optional API key for nras authentication.
+}
+
+type Evidence struct {
+	Evidence        string `json:"evidence"`
+	Certificate     string `json:"certificate"`
+	FirmwareVersion string `json:"firmware_version,omitempty"`
 }
 
 // GPUAdapter provides methods to collect and format GPU attestation evidence.
@@ -57,7 +59,7 @@ func WithGpuAttester(gpuAttester GPUAttester) Option {
 	}
 }
 
-// WithNrasApiKey sets a custom GPUAttester in the adapter options.
+// WithNrasApiKey sets the NRAS API key in the adapter options.
 func WithNrasApiKey(nrasApiKey string) Option {
 	return func(options *GPUAdapterOptions) {
 		options.NrasApiKey = nrasApiKey
@@ -88,7 +90,6 @@ func (*GPUAdapter) GetEvidenceIdentifier() string {
 // collectEvidence collects and formats GPU attestation evidence using the provided nonce.
 func (g *GPUAdapter) collectEvidence(nonce []byte) (GPUEvidence, error) {
 	hash := sha256.Sum256(nonce)
-	// pass in false to signify we are not in test mode
 	evidenceList, err := g.gpuAttester.GetRemoteEvidence(hash[:])
 	if err != nil {
 		return GPUEvidence{}, fmt.Errorf("failed to get remote evidence: %v", err)
@@ -98,27 +99,22 @@ func (g *GPUAdapter) collectEvidence(nonce []byte) (GPUEvidence, error) {
 		return GPUEvidence{}, fmt.Errorf("no evidence returned")
 	}
 
-	if len(evidenceList) > 1 {
-		logrus.Warn("more than one evidence returned, only using the first one")
+	// map evidence list to evidence struct list
+	evidenceStructList := make([]Evidence, len(evidenceList))
+	for i, e := range evidenceList {
+		evidenceStructList[i] = Evidence{
+			Evidence:        e.Evidence,
+			Certificate:     e.Certificate,
+			FirmwareVersion: e.FirmwareVersion,
+		}
 	}
-
-	// only single gpu attestation is supported for now
-	rawEvidence := evidenceList[0]
-
-	evidenceBytes, err := base64.StdEncoding.DecodeString(rawEvidence.Evidence)
-	if err != nil {
-		return GPUEvidence{}, fmt.Errorf("failed to decode evidence: %v", err)
-	}
-	hexEvidence := hex.EncodeToString(evidenceBytes)
-	rawEvidence.Evidence = base64.StdEncoding.EncodeToString([]byte(hexEvidence))
 
 	hexNonce := fmt.Sprintf("%x", hash)
 	return GPUEvidence{
-		Arch:        HopperArch,
-		Nonce:       hexNonce,
-		Evidence:    rawEvidence.Evidence,
-		Certificate: rawEvidence.Certificate,
-		NrasApiKey:  g.nrasApiKey,
+		Arch:         evidenceList[0].Arch,
+		Nonce:        hexNonce,
+		EvidenceList: evidenceStructList,
+		NrasApiKey:   g.nrasApiKey,
 	}, nil
 }
 
@@ -140,7 +136,6 @@ func (adapter *GPUAdapter) GetEvidence(verifierNonce *connector.VerifierNonce, u
 		}
 	}
 
-	// Optimize evidence collection
 	evidence, err := adapter.collectEvidence(nonce)
 	if err != nil {
 		return nil, err

@@ -7,7 +7,7 @@ module github.com/intel/trustauthority-client
 go 1.25.7
 
 require (
-	github.com/NVIDIA/go-nvml v0.12.4-0
+	github.com/NVIDIA/go-nvml v0.13.0-1
 	github.com/canonical/go-tpm2 v1.7.6
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/go-configfs-tsm v0.2.2
@@ -40,5 +40,3 @@ require (
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/NVIDIA/go-nvml => github.com/AI-Memory/go-nvml v0.0.0-20250605010924-5123e86fd859

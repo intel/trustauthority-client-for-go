@@ -9,7 +9,6 @@ package nvgpu
 import (
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -70,10 +69,10 @@ func TestGetEvidence(t *testing.T) {
 
 	gpuEvidence, ok := evidence.(*GPUEvidence)
 	assert.True(t, ok)
-	assert.Equal(t, expectedEvidence.Certificate, gpuEvidence.Certificate)
-	assert.Equal(t, base64.StdEncoding.EncodeToString([]byte(hex.EncodeToString([]byte("test_evidence")))), gpuEvidence.Evidence)
+	assert.Equal(t, expectedEvidence.Certificate, gpuEvidence.EvidenceList[0].Certificate)
+	assert.Equal(t, expectedEvidence.Evidence, gpuEvidence.EvidenceList[0].Evidence)
 	assert.Equal(t, fmt.Sprintf("%x", hash), gpuEvidence.Nonce)
-	assert.Equal(t, *verifierNonce, gpuEvidence.VerifierNonce)
+	assert.Equal(t, verifierNonce, gpuEvidence.VerifierNonce)
 }
 
 // TestGetEvidence_AttesterReturnsError tests the GetEvidence method when the attester returns an error.
@@ -112,7 +111,8 @@ func TestGetEvidence_AttesterReturnsNoEvidence(t *testing.T) {
 	assert.Empty(t, evidence)
 }
 
-// TestGetEvidence_AttesterReturnsInvalidBase64 tests the GetEvidence method when the attester returns invalid base64 evidence.
+// TestGetEvidence_AttesterReturnsInvalidBase64 tests the GetEvidence method when the attester returns evidence
+// that is not valid base64. The implementation stores evidence as-is without decoding, so no error is expected.
 func TestGetEvidence_AttesterReturnsInvalidBase64(t *testing.T) {
 	mockAttester := new(MockGPUAttester)
 	adapter := NewCompositeEvidenceAdapter(WithGpuAttester(mockAttester))
@@ -130,8 +130,13 @@ func TestGetEvidence_AttesterReturnsInvalidBase64(t *testing.T) {
 	mockAttester.On("GetRemoteEvidence", hash[:]).Return([]RemoteEvidence{expectedEvidence}, nil)
 
 	evidence, err := adapter.GetEvidence(verifierNonce, nil)
-	assert.Error(t, err)
-	assert.Empty(t, evidence)
+	assert.NoError(t, err)
+	assert.NotNil(t, evidence)
+
+	gpuEvidence, ok := evidence.(*GPUEvidence)
+	assert.True(t, ok)
+	assert.Equal(t, expectedEvidence.Evidence, gpuEvidence.EvidenceList[0].Evidence)
+	assert.Equal(t, expectedEvidence.Certificate, gpuEvidence.EvidenceList[0].Certificate)
 }
 
 // TestGetEvidence_VerifierNonceIsMissing tests the GetEvidence method when the verifier nonce is missing.
@@ -151,6 +156,6 @@ func TestGetEvidence_VerifierNonceIsMissing(t *testing.T) {
 
 	gpuEvidence, ok := evidence.(*GPUEvidence)
 	assert.True(t, ok)
-	assert.Equal(t, expectedEvidence.Certificate, gpuEvidence.Certificate)
-	assert.Equal(t, base64.StdEncoding.EncodeToString([]byte(hex.EncodeToString([]byte("test_evidence")))), gpuEvidence.Evidence)
+	assert.Equal(t, expectedEvidence.Certificate, gpuEvidence.EvidenceList[0].Certificate)
+	assert.Equal(t, expectedEvidence.Evidence, gpuEvidence.EvidenceList[0].Evidence)
 }
