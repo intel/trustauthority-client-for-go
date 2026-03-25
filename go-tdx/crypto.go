@@ -48,7 +48,7 @@ func GenerateKeyPair(km *KeyMetadata) ([]byte, []byte, error) {
 	defer ZeroizeRSAPrivateKey(keyPair)
 
 	privateKey := &pem.Block{
-		Type:  "PRIVATE KEY",
+		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(keyPair),
 	}
 	defer ZeroizeByteArray(privateKey.Bytes)
