@@ -12,7 +12,7 @@ The adapter uses the [NVIDIA Management Library (NVML)](https://github.com/NVIDI
 
 ## Requirements
 
-- Use **Go 1.25 or newer**. See [https://go.dev/doc/install](https://go.dev/doc/install) for installation of Go.
+- Use **Go 1.26 or newer**. See [https://go.dev/doc/install](https://go.dev/doc/install) for installation of Go.
 - An NVIDIA Hopper or Blackwell GPU with Confidential Computing (CC) mode enabled.
 - The NVIDIA driver and NVML library must be installed and accessible on the host.
 - The `github.com/NVIDIA/go-nvml` package (included in the module's `go.mod`).
