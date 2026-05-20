@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2024 Intel Corporation
+ *   Copyright (c) 2022-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -85,7 +85,6 @@ func newProvisionAkCommand(tpmFactory tpm.TpmFactory, cfgFactory ConfigFactory, 
 
 			pemBytes := pem.EncodeToMemory(pemBlock)
 			if pemBytes == nil {
-				fmt.Println("Failed to encode to PEM")
 				return errors.New("Failed to encode AK certificate to PEM")
 			}
 
@@ -103,11 +102,11 @@ func provisionAk(ekHandle int, akHandle int, ctr connector.Connector, t tpm.Trus
 
 	// Check if the AK handle, EK handle, and nvram index already exist
 	if t.HandleExists(akHandle) {
-		return nil, errors.Errorf("The AK handle 0x%x already exists.  Please delete it before running 'provision-ak'", akHandle)
+		return nil, errors.Errorf("The AK handle 0x%x already exists.  Please delete it before running %q", akHandle, constants.ProvisionAkCmd)
 	}
 
 	if t.HandleExists(ekHandle) {
-		return nil, errors.Errorf("The EK handle 0x%x already exists.  Please delete it before running 'provision-ak'", ekHandle)
+		return nil, errors.Errorf("The EK handle 0x%x already exists.  Please delete it before running %q", akHandle, constants.ProvisionAkCmd)
 	}
 
 	// Create the EK and get its public key

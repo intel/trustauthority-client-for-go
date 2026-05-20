@@ -35,7 +35,7 @@ func (connector *trustAuthorityConnector) GetTokenSigningCertificates() ([]byte,
 		return nil
 	}
 
-	if err := doRequest(*connector.rclient, connector.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
+	if err := doRequest(connector.rclient, newRequest, nil, headers, processResponse); err != nil {
 		return nil, err
 	}
 

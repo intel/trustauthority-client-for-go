@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2025 Intel Corporation
+ *   Copyright (c) 2022-2026 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -7,7 +7,6 @@ package connector
 
 import (
 	"bytes"
-	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
@@ -17,13 +16,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/lestrrat-go/jwx/v2/cert"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/pkg/errors"
 )
+
+const maxTokenResponseBodySize int64 = 64 * 1024    // 64 KiB limit for token response body
+const maxTokenDrainBodySize int64 = 1 * 1024 * 1024 // 1 MiB limit for draining oversized token response bodies
 
 // tokenRequest holds all the data required for attestation
 type tokenRequest struct {
@@ -37,7 +39,7 @@ type tokenRequest struct {
 	PolicyMustMatch bool           `json:"policy_must_match,omitempty"`
 }
 
-// AttestationTokenResponse holds the token recieved from Intel Trust Authority
+// AttestationTokenResponse holds the token received from Intel Trust Authority
 type AttestationTokenResponse struct {
 	Token string `json:"token"`
 }
@@ -79,21 +81,31 @@ func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenR
 	var response GetTokenResponse
 	processResponse := func(resp *http.Response) error {
 		response.Headers = resp.Header
-		body, err := io.ReadAll(resp.Body)
+		// Read up to maxTokenResponseBodySize+1 bytes so we can detect
+		// when the server sends a response larger than the allowed limit.
+		limitReader := io.LimitReader(resp.Body, maxTokenResponseBodySize+1)
+		body, err := io.ReadAll(limitReader)
 		if err != nil {
-			return errors.Errorf("Failed to read body from %s: %s", url, err)
+			return errors.Errorf("Failed to read body from %s: %v", url, err)
+		}
+		if int64(len(body)) > maxTokenResponseBodySize {
+			// Best-effort drain of the remaining response body to allow HTTP connection reuse.
+			// Limit the amount we are willing to drain to avoid excessive resource usage.
+			_, _ = io.CopyN(io.Discard, resp.Body, maxTokenDrainBodySize)
+			return errors.Errorf("Response body from %s is too large (over %d bytes)", url, maxTokenResponseBodySize)
 		}
 
 		var tokenResponse AttestationTokenResponse
-		err = json.Unmarshal(body, &tokenResponse)
-		if err != nil {
-			return errors.Errorf("Error unmarshalling Token response from appraise: %s", err)
+		decoder := json.NewDecoder(bytes.NewReader(body))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&tokenResponse); err != nil {
+			return errors.Errorf("Failed to decode json from %s: %v", url, err)
 		}
 		response.Token = tokenResponse.Token
 		return nil
 	}
 
-	if err := doRequest(*connector.rclient, connector.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
+	if err := doRequest(connector.rclient, newRequest, nil, headers, processResponse); err != nil {
 		return response, err
 	}
 
@@ -101,7 +113,7 @@ func (connector *trustAuthorityConnector) GetToken(args GetTokenArgs) (GetTokenR
 }
 
 // getCRL is used to get CRL Object from CRL distribution points
-func getCRL(rclient retryablehttp.Client, crlArr []string) (*x509.RevocationList, error) {
+func getCRL(rclient *retryablehttp.Client, crlArr []string) (*x509.RevocationList, error) {
 
 	if len(crlArr) < 1 {
 		return nil, errors.New("Invalid CDP count present in the certificate")
@@ -130,15 +142,7 @@ func getCRL(rclient retryablehttp.Client, crlArr []string) (*x509.RevocationList
 		return nil
 	}
 
-	tlsConfig := &tls.Config{
-		CipherSuites: []uint16{
-			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-		},
-		InsecureSkipVerify: false,
-		MinVersion:         tls.VersionTLS12,
-	}
-	if err := doRequest(rclient, tlsConfig, newRequest, nil, nil, processResponse); err != nil {
+	if err := doRequest(rclient, newRequest, nil, nil, processResponse); err != nil {
 		return nil, err
 	}
 	return crlObj, nil
@@ -227,7 +231,7 @@ func (connector *trustAuthorityConnector) VerifyToken(token string) (*jwt.Token,
 		var interCACert *x509.Certificate
 		var rootCert *x509.Certificate
 
-		for i := 0; i < atsCerts.Len(); i++ {
+		for i := range atsCerts.Len() {
 			atsCert, ok := atsCerts.Get(i)
 			if !ok {
 				return nil, errors.Errorf("Failed to fetch certificate at index %d", i)
@@ -249,7 +253,11 @@ func (connector *trustAuthorityConnector) VerifyToken(token string) (*jwt.Token,
 			}
 		}
 
-		rootCrl, err := getCRL(*connector.rclient, interCACert.CRLDistributionPoints)
+		if leafCert == nil || interCACert == nil || rootCert == nil {
+			return nil, errors.New("Invalid certificate chain")
+		}
+
+		rootCrl, err := getCRL(connector.rclient, interCACert.CRLDistributionPoints)
 		if err != nil {
 			return nil, errors.Errorf("Failed to get ROOT CA CRL Object: %v", err.Error())
 		}
@@ -258,7 +266,7 @@ func (connector *trustAuthorityConnector) VerifyToken(token string) (*jwt.Token,
 			return nil, errors.Errorf("Failed to check ATS CA Certificate against Root CA CRL: %v", err.Error())
 		}
 
-		atsCrl, err := getCRL(*connector.rclient, leafCert.CRLDistributionPoints)
+		atsCrl, err := getCRL(connector.rclient, leafCert.CRLDistributionPoints)
 		if err != nil {
 			return nil, errors.Errorf("Failed to get ATS CRL Object: %v", err.Error())
 		}
@@ -284,7 +292,7 @@ func (connector *trustAuthorityConnector) VerifyToken(token string) (*jwt.Token,
 			return nil, errors.Errorf("Failed to extract Public Key from Certificate: %s", err)
 		}
 		return pubKey, nil
-	})
+	}, jwt.WithValidMethods(validJwtTokenSignAlgs()))
 	if err != nil {
 		return nil, errors.Errorf("Failed to verify jwt token: %s", err)
 	}

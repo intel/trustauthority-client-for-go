@@ -32,7 +32,7 @@ openssl pkeyutl -verify -pubin -inkey /tmp/public_key.pem -sigfile /usr/bin/trus
 
 ## Build the client CLI from source
 
-- Use **Go 1.22 or newer**. Follow https://go.dev/doc/install for installation of Go.
+- Use **Go 1.26 or newer**. Follow https://go.dev/doc/install for installation of Go.
 - Ensure that you have the **build-essential** package and its dependencies installed. Follow the instructions below.
 
 
@@ -101,6 +101,11 @@ sudo trustauthority-cli token --config config.json --user-data <base64 encoded u
     "trustauthority_api_key": "<trustauthority attestation api key>"
 }
 ```
+> [!NOTE]
+> If you are in the European Union (EU) region, use the following Intel Trust Authority API URL
+```json
+"trustauthority_api_url": "https://api.eu.trustauthority.intel.com"
+```
 
 ### To verify an Intel Trust Authority attestation token
 
@@ -115,6 +120,11 @@ Save this data in config.json file and then invoke the `verify` command.
 
 ```sh
 trustauthority-cli verify --config config.json --token <attestation token in JWT format>
+```
+> [!NOTE]
+> If you are in the European Union (EU) region, use the following Intel Trust Authority URL
+```json
+"trustauthority_url": "https://portal.eu.trustauthority.intel.com"
 ```
 
 ## License

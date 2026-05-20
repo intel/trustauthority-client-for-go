@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2024 Intel Corporation
+ *   Copyright (c) 2022-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -14,7 +14,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/go-nvgpu"
@@ -45,12 +45,7 @@ func newTokenCommand(tdxAdapterFactory TdxAdapterFactory,
 		Short: "Fetches the attestation token from Trust Authority",
 		Long:  ``,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := getToken(cmd, tdxAdapterFactory, tpmAdapterFactory, cfgFactory, ctrFactory)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err.Error())
-				return err
-			}
-			return nil
+			return getToken(cmd, tdxAdapterFactory, tpmAdapterFactory, cfgFactory, ctrFactory)
 		},
 	}
 
@@ -69,7 +64,9 @@ func newTokenCommand(tdxAdapterFactory TdxAdapterFactory,
 	tokenCmd.Flags().Bool(constants.WithEventLogsOptions.Name, false, constants.WithEventLogsOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithCcelOptions.Name, false, constants.WithCcelOptions.Description)
 
-	tokenCmd.MarkFlagRequired(constants.ConfigOptions.Name)
+	if err := tokenCmd.MarkFlagRequired(constants.ConfigOptions.Name); err != nil {
+		fmt.Fprintln(os.Stderr, "Error marking flag as required:", err)
+	}
 	return &tokenCmd
 }
 
@@ -284,7 +281,15 @@ func getToken(cmd *cobra.Command,
 	}
 
 	if withNvGpu {
-		gpuAdapter := nvgpu.NewCompositeEvidenceAdapter()
+		var gpuAdapter connector.CompositeEvidenceAdapter
+		if config.NvGpu != nil {
+			nvgpuOptions := []nvgpu.Option{
+				nvgpu.WithNrasApiKey(config.NvGpu.NrasApiKey),
+			}
+			gpuAdapter = nvgpu.NewCompositeEvidenceAdapter(nvgpuOptions...)
+		} else {
+			gpuAdapter = nvgpu.NewCompositeEvidenceAdapter()
+		}
 		builderOptions = append(builderOptions, connector.WithEvidenceAdapter(gpuAdapter))
 	}
 

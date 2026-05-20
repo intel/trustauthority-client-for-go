@@ -43,6 +43,11 @@ func (m *MockTpm) CreateAK(akHandle int, ekHandle int) error {
 	return args.Error(0)
 }
 
+func (m *MockTpm) CreateAkFromTemplate(akHandle int, template []byte) error {
+	args := m.Called(akHandle, template)
+	return args.Error(0)
+}
+
 func (m *MockTpm) ActivateCredential(ekHandle int, akHandle int, credentialBlob []byte, secret []byte) ([]byte, error) {
 	args := m.Called(ekHandle, akHandle, credentialBlob, secret)
 	return args.Get(0).([]byte), args.Error(1)

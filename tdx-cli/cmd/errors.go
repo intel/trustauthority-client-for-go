@@ -9,6 +9,6 @@ package cmd
 import "github.com/pkg/errors"
 
 var (
-	ErrInvalidFilePath = errors.New("Invalid invalid file path provided")
+	ErrInvalidFilePath = errors.New("Invalid file path provided")
 	ErrMalformedJson   = errors.New("Malformed JSON provided")
 )

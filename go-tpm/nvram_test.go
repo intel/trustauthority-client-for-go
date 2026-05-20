@@ -13,13 +13,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-func TestNvValidEkHandle(t *testing.T) {
+func TestNvReadPositive(t *testing.T) {
 	tpm, err := newTestTpm()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer tpm.Close()
 
+	// read the preinstalled EK NV index
 	ekNv, err := tpm.NVRead(DefaultEkNvIndex)
 	if err != nil {
 		t.Fatal(err)
@@ -30,20 +31,20 @@ func TestNvValidEkHandle(t *testing.T) {
 	}
 }
 
-func TestNvHandleOutOfRange(t *testing.T) {
+func TestNvReadHandleOutOfRange(t *testing.T) {
 	tpm, err := newTestTpm()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer tpm.Close()
 
-	_, err = tpm.NVRead(0x80000801) // this is not nv handle
+	_, err = tpm.NVRead(0x80000801) // this is not a valid nv handle
 	if err != ErrHandleOutOfRange {
 		t.Fail()
 	}
 }
 
-func TestNvEmptyEkHandle(t *testing.T) {
+func TestNvReadMissingHandle(t *testing.T) {
 	tpm, err := newTestTpm()
 	if err != nil {
 		t.Fatal(err)
@@ -56,7 +57,7 @@ func TestNvEmptyEkHandle(t *testing.T) {
 	}
 }
 
-func TestNvWrite(t *testing.T) {
+func TestNvWritePositive(t *testing.T) {
 	len := 256
 	testNvHandle := 0x01001899
 
@@ -92,7 +93,33 @@ func TestNvWrite(t *testing.T) {
 	}
 }
 
-func TestNvSizeCheck(t *testing.T) {
+func TestNvWriteHandleOutOfRange(t *testing.T) {
+	tpm, err := newTestTpm()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tpm.Close()
+
+	err = tpm.NVWrite(maxNvHandle+1, []byte{})
+	if !errors.Is(err, ErrHandleOutOfRange) {
+		t.Fail()
+	}
+}
+
+func TestNvWriteMissingHandle(t *testing.T) {
+	tpm, err := newTestTpm()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tpm.Close()
+
+	err = tpm.NVWrite(minNvHandle, make([]byte, 256))
+	if !errors.Is(err, ErrorNvIndexDoesNotExist) {
+		t.Fail()
+	}
+}
+
+func TestNvWriteSizeCheck(t *testing.T) {
 	tpm, err := newTestTpm()
 	if err != nil {
 		t.Fatal(err)
@@ -107,5 +134,105 @@ func TestNvSizeCheck(t *testing.T) {
 	err = tpm.NVWrite(DefaultEkNvIndex, make([]byte, maxNvSize+1))
 	if !errors.Is(err, ErrNvInvalidSize) {
 		t.Fail()
+	}
+}
+
+func TestNvDeleteHandleOutOfRange(t *testing.T) {
+	tpm, err := newTestTpm()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tpm.Close()
+
+	err = tpm.NVDelete(maxNvHandle + 1)
+	if !errors.Is(err, ErrHandleOutOfRange) {
+		t.Fail()
+	}
+}
+
+func TestNvDeleteMissingHandle(t *testing.T) {
+	tpm, err := newTestTpm()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tpm.Close()
+
+	err = tpm.NVDelete(minNvHandle)
+	if !errors.Is(err, ErrorNvIndexDoesNotExist) {
+		t.Fail()
+	}
+}
+
+func TestNvDefineHandleOutOfRange(t *testing.T) {
+	tpm, err := newTestTpm()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tpm.Close()
+
+	err = tpm.NVDefine(maxNvHandle+1, 256)
+	if !errors.Is(err, ErrHandleOutOfRange) {
+		t.Fail()
+	}
+}
+
+func TestNvDefineSizeCheck(t *testing.T) {
+	tpm, err := newTestTpm()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tpm.Close()
+
+	err = tpm.NVDefine(minNvHandle, 0)
+	if !errors.Is(err, ErrNvInvalidSize) {
+		t.Fail()
+	}
+
+	err = tpm.NVDefine(minNvHandle, maxNvSize+1)
+	if !errors.Is(err, ErrNvInvalidSize) {
+		t.Fail()
+	}
+}
+
+func TestNvDefineHandlePresent(t *testing.T) {
+	tpm, err := newTestTpm()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tpm.Close()
+
+	err = tpm.NVDefine(minNvHandle, 256)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// try to define the same handle again
+	err = tpm.NVDefine(minNvHandle, 256)
+	if !errors.Is(err, ErrExistingHandle) {
+		t.Fail()
+	}
+}
+
+func TestNvExistsHandleOutOfRange(t *testing.T) {
+	tpm, err := newTestTpm()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tpm.Close()
+
+	if tpm.NVExists(0x80000801) {
+		t.Fatal("Handle 0x80000801 should return false")
+	}
+}
+
+func TestNvExistsNotNVHandle(t *testing.T) {
+	tpm, err := newTestTpm()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tpm.Close()
+
+	if tpm.NVExists(DefaultAkHandle) {
+		t.Fatal("should return false")
 	}
 }

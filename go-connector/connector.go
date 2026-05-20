@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022-2024 Intel Corporation
+ *   Copyright (c) 2022-2025 Intel Corporation
  *   All rights reserved.
  *   SPDX-License-Identifier: BSD-3-Clause
  */
@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
@@ -133,6 +133,11 @@ func New(cfg *Config) (Connector, error) {
 	retryableClient.RetryWaitMax = DefaultRetryWaitMaxSeconds * time.Second
 	retryableClient.RetryWaitMin = DefaultRetryWaitMinSeconds * time.Second
 	retryableClient.RetryMax = MaxRetries
+	retryableClient.HTTPClient.Transport = &http.Transport{
+		TLSClientConfig: cfg.TlsCfg,
+		Proxy:           http.ProxyFromEnvironment,
+	}
+
 	if cfg.RetryConfig == nil {
 		return &trustAuthorityConnector{
 			cfg:     cfg,
@@ -155,7 +160,6 @@ func New(cfg *Config) (Connector, error) {
 	if cfg.RetryConfig.BackOff != nil {
 		retryableClient.Backoff = cfg.RetryConfig.BackOff
 	}
-
 	return &trustAuthorityConnector{
 		cfg:     cfg,
 		rclient: retryableClient,
@@ -215,9 +219,8 @@ func validateURLScheme(inputUrl string) error {
 }
 
 func ValidateTokenSigningAlg(input string) bool {
-	validJwtTokenSignAlgs := []JwtAlg{RS256, PS384}
-	for _, alg := range validJwtTokenSignAlgs {
-		if strings.Compare(input, string(alg)) == 0 {
+	for _, alg := range validJwtTokenSignAlgs() {
+		if strings.Compare(input, alg) == 0 {
 			return true
 		}
 	}

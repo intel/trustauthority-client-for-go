@@ -58,6 +58,11 @@ func Execute() {
 		ctrFactory,
 	))
 
+	rootCmd.AddCommand(newProvisionAkTemplateCommand(
+		tpmFactory,
+		cfgFactory,
+	))
+
 	rootCmd.AddCommand(newTokenCommand(
 		tdxAdapterFactory,
 		tpmAdapterFactory,

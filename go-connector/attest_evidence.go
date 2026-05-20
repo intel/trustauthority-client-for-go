@@ -66,7 +66,7 @@ func (ctr *trustAuthorityConnector) AttestEvidence(evidence interface{}, cloudPr
 		return nil
 	}
 
-	if err := doRequest(*ctr.rclient, ctr.cfg.TlsCfg, newRequest, nil, headers, processResponse); err != nil {
+	if err := doRequest(ctr.rclient, newRequest, nil, headers, processResponse); err != nil {
 		return response, err
 	}
 

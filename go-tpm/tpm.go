@@ -21,6 +21,7 @@ import (
 
 	"github.com/canonical/go-tpm2"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type TrustedPlatformModule interface {
@@ -39,6 +40,12 @@ type TrustedPlatformModule interface {
 	// The AK is used to sign quotes during remote attestation and is rooted through the
 	// EK to the endorsement hierachy (root of trust).
 	CreateAK(akHandle int, ekHandle int) error
+
+	// CreateAkFromTemplate creates and persists an AK handle at 'akHandle'.  It uses the
+	// template bytes (TPMT_PUBLIC) to create the AK.  It fails if akHandle is not within
+	// the range of a persistent handle, if 'akHandle' already exists, or if the template
+	// bytes cannot be unmarshalled.
+	CreateAkFromTemplate(akHandle int, akTemplate []byte) error
 
 	// ActivateCredential decrypts a credential blob using the secret and the AK at 'akHandle'.
 	ActivateCredential(ekHandle int, akHandle int, credentialBlob []byte, secret []byte) ([]byte, error)
@@ -138,7 +145,10 @@ type PcrSelection struct {
 // Close closes the TPM.
 func (tpm *trustedPlatformModule) Close() {
 	if tpm.ctx != nil {
-		tpm.ctx.Close()
+		err := tpm.ctx.Close()
+		if err != nil {
+			logrus.Errorf("Error closing TPM context: %v", err)
+		}
 	}
 }
 

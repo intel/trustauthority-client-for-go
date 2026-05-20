@@ -14,11 +14,6 @@ const (
 	DefaultEkHandle  = 0x81000800
 	DefaultAkHandle  = 0x81000801
 
-	// min/max "persistent" handles
-	// see "Registry of Reserved TPM 2.0 Handles and Localities" section 2.3.1
-	minPersistentHandle = 0x81000000
-	maxPersistentHandle = 0x817FFFFF
-
 	// min/max "owner" nv handles
 	// see "Registry of Reserved TPM 2.0 Handles and Localities" section 2.2.2
 	minNvHandle = 0x01000000

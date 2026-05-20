@@ -36,12 +36,12 @@ func TestCreateEkHandleType(t *testing.T) {
 	defer tpm.Close()
 
 	// try to create the same EK handle twice...
-	err = tpm.CreateEK(minPersistentHandle)
+	err = tpm.CreateEK(DefaultEkHandle)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = tpm.CreateEK(minPersistentHandle)
+	err = tpm.CreateEK(DefaultEkHandle)
 	if err == nil || err != ErrExistingHandle {
 		t.Fatal(err)
 	}
