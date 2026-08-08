@@ -28,6 +28,15 @@ type compositeTdxEvidence struct {
 	VerifierNonce *connector.VerifierNonce `json:"verifier_nonce,omitempty"`
 }
 
+// NewTdxAdapter returns a new TDX Adapter instance
+func NewTdxAdapter(udata []byte, withCcel bool) (connector.EvidenceAdapter, error) {
+	return &tdxAdapter{
+		uData:            udata,
+		withCcel:         withCcel,
+		cfsQuoteProvider: &cfsQuoteProviderImpl{},
+	}, nil
+}
+
 // CollectEvidence is used to get TDX quote using TDX Quote Generation service
 func (adapter *tdxAdapter) CollectEvidence(nonce []byte) (*connector.Evidence, error) {
 

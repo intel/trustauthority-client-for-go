@@ -58,7 +58,6 @@ type GetTokenArgs struct {
 	Evidence        *Evidence
 	PolicyIds       []uuid.UUID
 	RequestId       string
-	attestEndpoint  string
 	TokenSigningAlg string
 	PolicyMustMatch bool
 }
