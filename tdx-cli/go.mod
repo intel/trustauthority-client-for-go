@@ -4,7 +4,7 @@
 
 module github.com/intel/trustauthority-client/tdx-cli
 
-go 1.26.5
+go 1.26.6
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.2
