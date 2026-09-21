@@ -1,0 +1,16 @@
+.git
+.github
+**/config.json
+**/.env
+**/*.pem
+**/*.key
+**/*.jwt
+**/*.p12
+**/*.pfx
+**/*.token
+**/evidence.json
+**/quote.bin
+*.patch
+cover.out
+cover.html
+3rd_party_component_licenses.zip

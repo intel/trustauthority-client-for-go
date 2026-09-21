@@ -8,6 +8,7 @@ package tdx
 import (
 	"crypto/sha512"
 	"errors"
+	"os"
 
 	"github.com/google/go-configfs-tsm/configfs/linuxtsm"
 	"github.com/google/go-configfs-tsm/report"
@@ -92,9 +93,18 @@ func (cp *cfsQuoteProviderImpl) getQuoteFromConfigFS(reportData []byte) ([]byte,
 }
 
 func NewCompositeEvidenceAdapter(withCcel bool) (connector.CompositeEvidenceAdapter, error) {
+	var quoteProvider cfsQuoteProvider = &cfsQuoteProviderImpl{}
+	if socketPath := os.Getenv(QuoteBrokerSocketEnv); socketPath != "" {
+		brokerProvider, err := newBrokerQuoteProvider(socketPath)
+		if err != nil {
+			return nil, err
+		}
+		quoteProvider = brokerProvider
+	}
+
 	return &tdxAdapter{
 		withCcel:         withCcel,
-		cfsQuoteProvider: &cfsQuoteProviderImpl{},
+		cfsQuoteProvider: quoteProvider,
 	}, nil
 }
 

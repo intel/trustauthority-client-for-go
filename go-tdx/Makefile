@@ -9,7 +9,7 @@ default: test
 
 test:
 	@echo "Running unit tests..."
-	go test -v -coverprofile=cover.out
+	go test -v -coverprofile=cover.out ./...
 	go tool cover -func=cover.out && go tool cover -html=cover.out -o cover.html || exit 1
 
 test-coverage: test

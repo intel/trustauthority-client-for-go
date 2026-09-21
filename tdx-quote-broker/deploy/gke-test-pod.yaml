@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-tdx-attestation
+spec:
+  restartPolicy: Never
+  activeDeadlineSeconds: 900
+  automountServiceAccountToken: false
+  securityContext:
+    fsGroup: 101
+    runAsGroup: 101
+    runAsNonRoot: true
+    runAsUser: 101
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: nginx
+      image: example.invalid/tdx-nginx-test@sha256:0000000000000000000000000000000000000000000000000000000000000000
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          set -eu
+          printf 'Workload UID/GID: %s/%s\n' "$(id -u)" "$(id -g)"
+          test "$(id -u)" = "101"
+          until test -S /run/tdx-quote-broker/quote.sock; do
+            sleep 1
+          done
+          test ! -e /sys/kernel/config/tsm/report
+          test ! -e /dev/tdx_guest
+          trustauthority-cli evidence \
+            --config /etc/ita/config.json \
+            --tdx \
+            --no-verifier-nonce > /work/evidence.json
+          quote="$(sed -n 's/.*"quote": "\([^"]*\)".*/\1/p' /work/evidence.json | head -n 1)"
+          test -n "${quote}"
+          printf '%s' "${quote}" | base64 -d > /work/quote.bin
+          test -s /work/quote.bin
+          printf 'TDX quote generated: %s bytes\n' "$(wc -c < /work/quote.bin)"
+          printf 'TDX quote SHA-256: '
+          sha256sum /work/quote.bin | cut -d' ' -f1
+          trustauthority-cli token \
+            --config /etc/ita/config.json \
+            --tdx > /work/token.jwt
+          trustauthority-cli verify \
+            --config /etc/ita/config.json \
+            --token "$(cat /work/token.jwt)"
+          printf 'E2E_SANITY_PASS\n'
+          printf 'TDX quote generated and token verified\n' > /usr/share/nginx/html/index.html
+          exec nginx -g 'daemon off;'
+      env:
+        - name: TRUSTAUTHORITY_TDX_QUOTE_SOCKET
+          value: /run/tdx-quote-broker/quote.sock
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          cpu: 500m
+          memory: 64Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+        privileged: false
+        readOnlyRootFilesystem: true
+      ports:
+        - name: http
+          containerPort: 8080
+      readinessProbe:
+        httpGet:
+          path: /
+          port: http
+        periodSeconds: 2
+        failureThreshold: 30
+      volumeMounts:
+        - name: ita-config
+          mountPath: /etc/ita
+          readOnly: true
+        - name: output
+          mountPath: /work
+        - name: broker-socket
+          mountPath: /run/tdx-quote-broker
+          readOnly: true
+        - name: nginx-html
+          mountPath: /usr/share/nginx/html
+        - name: tmp
+          mountPath: /tmp
+  nodeSelector:
+    cloud.google.com/gke-confidential-nodes-instance-type: TDX
+    cloud.google.com/machine-family: c3
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: tdx-quote-broker
+          namespaces: ["kube-system"]
+          topologyKey: kubernetes.io/hostname
+  volumes:
+    - name: ita-config
+      secret:
+        secretName: ita-tdx-config
+    - name: output
+      emptyDir: {}
+    - name: broker-socket
+      hostPath:
+        path: /var/run/tdx-quote-broker
+        type: Directory
+    - name: nginx-html
+      emptyDir: {}
+    - name: tmp
+      emptyDir: {}

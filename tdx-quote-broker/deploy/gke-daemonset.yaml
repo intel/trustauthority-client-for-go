@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tdx-quote-broker
+  namespace: kube-system
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: tdx-quote-broker
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tdx-quote-broker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tdx-quote-broker
+    spec:
+      automountServiceAccountToken: false
+      serviceAccountName: tdx-quote-broker
+      securityContext:
+        runAsGroup: 0
+        runAsNonRoot: false
+        runAsUser: 0
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: broker
+          # Replace this non-existent placeholder with an immutable image digest.
+          image: example.invalid/tdx-quote-broker@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          imagePullPolicy: IfNotPresent
+          args:
+            - --socket=/run/tdx-quote-broker/quote.sock
+          startupProbe:
+            exec:
+              command: ["/usr/local/bin/tdx-quote-broker", "--healthcheck"]
+            failureThreshold: 30
+            periodSeconds: 2
+          livenessProbe:
+            exec:
+              command: ["/usr/local/bin/tdx-quote-broker", "--healthcheck"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command: ["/usr/local/bin/tdx-quote-broker", "--healthcheck"]
+            initialDelaySeconds: 1
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 500m
+              memory: 64Mi
+          securityContext:
+            appArmorProfile:
+              type: Unconfined
+            capabilities:
+              add: ["SYS_ADMIN"]
+              drop: ["ALL"]
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 0
+            runAsNonRoot: false
+            runAsUser: 0
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: configfs
+              mountPath: /sys/kernel/config
+            - name: broker-socket
+              mountPath: /run/tdx-quote-broker
+      nodeSelector:
+        cloud.google.com/gke-confidential-nodes-instance-type: TDX
+        cloud.google.com/machine-family: c3
+      tolerations:
+        - operator: Exists
+      volumes:
+        - name: configfs
+          hostPath:
+            path: /sys/kernel/config
+            type: Directory
+        - name: broker-socket
+          hostPath:
+            path: /var/run/tdx-quote-broker
+            type: DirectoryOrCreate

@@ -9,7 +9,8 @@ TEST_PACKAGES =  go-aztdx \
 			go-connector \
 			go-tdx \
 			go-tpm \
-			tdx-cli
+			tdx-cli \
+			tdx-quote-broker
 
 test-coverage: $(patsubst %, %-test-coverage, $(TEST_PACKAGES))
 test: $(patsubst %, %-test, $(TEST_PACKAGES))
