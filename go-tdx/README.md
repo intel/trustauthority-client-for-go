@@ -38,6 +38,20 @@ if err != nil {
 }
 ```
 
+### To use a node-local quote broker
+
+Set `TRUSTAUTHORITY_TDX_QUOTE_SOCKET` to an absolute Unix socket path before
+creating the adapter. The adapter sends its 64-byte REPORTDATA to the broker
+and uses the returned Intel TDX quote as evidence:
+
+```bash
+export TRUSTAUTHORITY_TDX_QUOTE_SOCKET=/run/tdx-quote-broker/quote.sock
+```
+
+When the variable is unset, the adapter continues to use Linux TSM configfs
+directly. See the [TDX quote broker](../tdx-quote-broker/) for the GKE
+DaemonSet, non-root workload example, and security boundary.
+
 ### To generate an RSA key pair
 
 **GenerateKeyPair()** takes a required **KeyMetadata** argument that specifies the length in bits for the key. If successful, it returns a public and private key.

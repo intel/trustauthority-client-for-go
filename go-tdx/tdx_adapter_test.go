@@ -140,6 +140,7 @@ func TestCompositeAdapterCcelBadTablePath(t *testing.T) {
 }
 
 func TestCompositeAdapterNew(t *testing.T) {
+	t.Setenv(QuoteBrokerSocketEnv, "")
 	adapter, err := NewCompositeEvidenceAdapter(false)
 	if err != nil {
 		t.Errorf("Error: %v", err)
@@ -159,6 +160,29 @@ func TestCompositeAdapterNew(t *testing.T) {
 
 	if adapter.GetEvidenceIdentifier() != "tdx" {
 		t.Errorf("expected tdx")
+	}
+}
+
+func TestCompositeAdapterNewWithBroker(t *testing.T) {
+	t.Setenv(QuoteBrokerSocketEnv, "/run/tdx-quote-broker/quote.sock")
+	adapter, err := NewCompositeEvidenceAdapter(false)
+	if err != nil {
+		t.Fatalf("failed to create adapter: %v", err)
+	}
+
+	if _, ok := adapter.(*tdxAdapter).cfsQuoteProvider.(*brokerQuoteProvider); !ok {
+		t.Errorf("got provider %T, want *brokerQuoteProvider", adapter.(*tdxAdapter).cfsQuoteProvider)
+	}
+}
+
+func TestCompositeAdapterNewRejectsRelativeBrokerPath(t *testing.T) {
+	t.Setenv(QuoteBrokerSocketEnv, "quote.sock")
+	adapter, err := NewCompositeEvidenceAdapter(false)
+	if err == nil {
+		t.Fatal("expected relative broker socket path to fail")
+	}
+	if adapter != nil {
+		t.Error("expected nil adapter")
 	}
 }
 
