@@ -213,7 +213,7 @@ Available commands:
 
 ### `token`
 
-Requests an attestation token. At least one evidence adapter is selected; if none of `--tdx`, `--tpm`, or `--nvgpu` is supplied, TDX evidence is selected by default.
+Requests an attestation token. At least one evidence adapter is selected; if none of `--tdx`, `--tpm`, or `--nvgpu` is supplied, TDX evidence is selected by default. Alternatively, `--evidence-file` attests evidence collected earlier instead of collecting any.
 
 ```sh
 trustauthority-cli token --config <config-file> \
@@ -221,7 +221,7 @@ trustauthority-cli token --config <config-file> \
   [--pub-path <public-key-path>] [--request-id <request-id>] \
   [--tdx] [--tpm] [--nvgpu] [--no-verifier-nonce] \
   [--token-signing-alg RS256|PS384] [--policy-must-match] \
-  [--ima] [--evl] [--ccel]
+  [--ima] [--evl] [--ccel] [--evidence-file <evidence-file>]
 ```
 
 Required option: `--config` (`-c`), the JSON configuration path.
@@ -237,12 +237,49 @@ Optional options:
 - `--tdx`, `--tpm`, `--nvgpu`: select evidence adapters.
 - `--no-verifier-nonce`: omit the verifier nonce.
 - `--ima`, `--evl`, `--ccel`: include IMA, UEFI, or CCEL measurements as described above.
+- `--evidence-file`: path to evidence collected earlier, in the JSON format the `evidence` command prints.
 
 Example:
 
 ```sh
 sudo trustauthority-cli token --config config.json --user-data <base64-data> --tdx
 ```
+
+#### Attesting evidence collected elsewhere
+
+`--evidence-file` sends evidence that was collected earlier instead of collecting
+any from the local platform, so the command can run on a host with no TEE of its
+own. This supports the background check pattern, where a relying party obtains a
+token for evidence it received from an attester.
+
+The file holds exactly what the `evidence` command prints, so this works for any
+evidence type the Trust Authority accepts, including composite evidence combining
+several of them:
+
+```sh
+# on the attester
+sudo trustauthority-cli evidence --config config.json --tdx --tpm > evidence.json
+
+# on the relying party, which needs no TEE
+trustauthority-cli token --config config.json --evidence-file evidence.json
+```
+
+The per-TEE payloads are sent as they were collected. `--policy-ids`,
+`--policy-must-match` and `--token-signing-alg` are applied to the request,
+overriding any the `evidence` command wrote into the file, and `--request-id`
+works as usual.
+
+The options that only apply while collecting are rejected: `--tdx`, `--tpm`,
+`--nvgpu`, `--ccel`, `--ima`, `--evl`, `--no-verifier-nonce`, `--user-data` and
+`--pub-path`. The evidence already names the TEEs it came from, and anything else
+those options would control, including a verifier nonce and user data, was fixed
+when the evidence was collected.
+
+> [!NOTE]
+> A verifier nonce and user data are bound into the evidence at collection time.
+> Keep the fields the `evidence` command wrote, including `verifier_nonce` and
+> `runtime_data`; the Trust Authority recomputes the report data from them and
+> rejects a mismatch.
 
 ### `evidence`
 
@@ -253,7 +290,7 @@ trustauthority-cli evidence --config <config-file> \
   [--tpm] [--tdx] [--nvgpu] [--no-verifier-nonce] \
   [--user-data <base64-data>] [--policy-ids <policy-ids>] \
   [--token-signing-alg RS256|PS384] [--policy-must-match] \
-  [--ima] [--evl] [--ccel]
+  [--ima] [--evl] [--ccel] [--evidence-file <evidence-file>]
 ```
 
 `--config` (`-c`) is required. `--tpm`, `--tdx`, and `--nvgpu` select evidence types; TDX is selected by default when none is specified. `--user-data`, `--policy-ids`, `--token-signing-alg`, `--policy-must-match`, `--no-verifier-nonce`, `--ima`, `--evl`, and `--ccel` have the same meanings as for `token`.
