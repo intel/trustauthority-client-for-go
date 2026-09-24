@@ -21,6 +21,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// parseVerifierNonce decodes a JSON-encoded VerifierNonce provided by the user.
+func parseVerifierNonce(raw string) (*connector.VerifierNonce, error) {
+	var nonce connector.VerifierNonce
+	if err := json.Unmarshal([]byte(raw), &nonce); err != nil {
+		return nil, errors.Wrap(err, "Failed to parse verifier-nonce JSON")
+	}
+	return &nonce, nil
+}
+
 func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 	tpmAdapterFactory tpm.TpmAdapterFactory,
 	cfgFactory ConfigFactory,
@@ -31,6 +40,7 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 	var withNvGpu bool
 	var tokenSigningAlg string
 	var noVerifierNonce bool
+	var verifierNonceJSON string
 	var configPath string
 	var policiesMustMatch bool
 	var userData string
@@ -128,9 +138,18 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 				builderOptions = append(builderOptions, connector.WithEvidenceAdapter(gpuAdapter))
 			}
 
-			if !noVerifierNonce {
-				// only create the connector if the user has opted to include a verifier
-				// nonce
+			if noVerifierNonce && verifierNonceJSON != "" {
+				return errors.New("--no-verifier-nonce and --verifier-nonce are mutually exclusive")
+			}
+
+			if verifierNonceJSON != "" {
+				parsedNonce, err := parseVerifierNonce(verifierNonceJSON)
+				if err != nil {
+					return err
+				}
+				builderOptions = append(builderOptions, connector.WithVerifierNonce(&staticNonceConnector{nonce: parsedNonce}))
+			} else if !noVerifierNonce {
+				// default: fetch a fresh verifier nonce from ITA
 				if cfg.TrustAuthorityApiUrl == "" {
 					return errors.New("The Trust Authority API URL must be present in config")
 				}
@@ -187,6 +206,7 @@ func newEvidenceCommand(tdxAdapterFactory TdxAdapterFactory,
 	cmd.Flags().BoolVar(&withTdx, constants.WithTdxOptions.Name, false, constants.WithTdxOptions.Description)
 	cmd.Flags().BoolVar(&withNvGpu, constants.WithNvGpuOptions.Name, false, constants.WithNvGpuOptions.Description)
 	cmd.Flags().BoolVar(&noVerifierNonce, constants.NoVerifierNonceOptions.Name, false, constants.NoVerifierNonceOptions.Description)
+	cmd.Flags().StringVar(&verifierNonceJSON, constants.VerifierNonceOptions.Name, "", constants.VerifierNonceOptions.Description)
 	cmd.Flags().StringVarP(&userData, constants.UserDataOptions.Name, constants.UserDataOptions.ShortHand, "", constants.UserDataOptions.Description)
 	cmd.Flags().StringVarP(&policyIds, constants.PolicyIdsOptions.Name, constants.PolicyIdsOptions.ShortHand, "", constants.PolicyIdsOptions.Description)
 	cmd.Flags().StringVarP(&tokenSigningAlg, constants.TokenAlgOptions.Name, constants.TokenAlgOptions.ShortHand, "", constants.TokenAlgOptions.Description)
