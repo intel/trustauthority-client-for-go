@@ -1,0 +1,7 @@
+**/app.manifest.sgx
+**/app.sig
+**/lib-app/app
+**/app.manifest
+**/config.json
+**/*.patch
+.history/
