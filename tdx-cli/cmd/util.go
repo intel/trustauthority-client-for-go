@@ -7,8 +7,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/google/uuid"
@@ -30,6 +32,59 @@ func parsePolicyIds(policyIds string) ([]uuid.UUID, error) {
 	}
 
 	return pIds, nil
+}
+
+// evidenceRequestOptions are the top level keys of an attestation request that
+// describe the request rather than the evidence itself. They come from command
+// line options, not from what a TEE collected.
+var evidenceRequestOptions = []string{"policy_ids", "policy_must_match", "token_signing_alg"}
+
+// maxEvidenceFileSize caps what readEvidenceFile will read. The Trust Authority
+// rejects request bodies over 500,000 bytes, so anything approaching that cannot
+// be attested anyway.
+const maxEvidenceFileSize = 512 * 1024
+
+// readEvidenceFile reads attestation evidence from a JSON file, in the format
+// the evidence command produces.
+//
+// The evidence is kept as an unstructured map so that it reaches the Trust
+// Authority as it was collected. The CLI deliberately does not interpret the
+// per-TEE payloads, which keeps this independent of the evidence types the
+// client supports, including composite evidence combining several of them.
+func readEvidenceFile(path string) (map[string]interface{}, error) {
+	evidencePath, err := ValidateFilePath(path)
+	if err != nil {
+		return nil, errors.Wrap(err, "Invalid evidence file path provided")
+	}
+
+	info, err := os.Stat(evidencePath)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error reading evidence file")
+	}
+	if info.Size() > maxEvidenceFileSize {
+		return nil, errors.Errorf("Evidence file is larger than %d bytes", maxEvidenceFileSize)
+	}
+
+	contents, err := os.ReadFile(evidencePath)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error reading evidence file")
+	}
+
+	var evidence map[string]interface{}
+	if err := json.Unmarshal(contents, &evidence); err != nil {
+		return nil, errors.Wrapf(err, "Error while parsing evidence file %q", path)
+	}
+
+	// Require at least one key that is not a request option, so a file holding no
+	// evidence fails here rather than at the Trust Authority. The remaining keys
+	// are the evidence identifiers ("tdx", "tpm", ...) and are not inspected.
+	for key := range evidence {
+		if !slices.Contains(evidenceRequestOptions, key) {
+			return evidence, nil
+		}
+	}
+
+	return nil, errors.Errorf("Evidence file %q does not contain any evidence", path)
 }
 
 func ValidateFilePath(path string) (string, error) {

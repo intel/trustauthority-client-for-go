@@ -63,6 +63,7 @@ func newTokenCommand(tdxAdapterFactory TdxAdapterFactory,
 	tokenCmd.Flags().Bool(constants.WithImaLogsOptions.Name, false, constants.WithImaLogsOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithEventLogsOptions.Name, false, constants.WithEventLogsOptions.Description)
 	tokenCmd.Flags().Bool(constants.WithCcelOptions.Name, false, constants.WithCcelOptions.Description)
+	tokenCmd.Flags().String(constants.EvidenceFileOptions.Name, "", constants.EvidenceFileOptions.Description)
 
 	if err := tokenCmd.MarkFlagRequired(constants.ConfigOptions.Name); err != nil {
 		fmt.Fprintln(os.Stderr, "Error marking flag as required:", err)
@@ -151,7 +152,15 @@ func getToken(cmd *cobra.Command,
 		return err
 	}
 
-	if !noVerifierNonce {
+	evidenceFile, err := cmd.Flags().GetString(constants.EvidenceFileOptions.Name)
+	if err != nil {
+		return err
+	}
+
+	// Evidence supplied by --evidence-file was collected earlier and elsewhere, so
+	// nothing is collected here and a fresh verifier nonce could not be bound to it.
+	// Any nonce it was collected against is already inside the file.
+	if evidenceFile == "" && !noVerifierNonce {
 		builderOptions = append(builderOptions, connector.WithVerifierNonce(trustAuthorityConnector))
 	}
 
@@ -189,6 +198,31 @@ func getToken(cmd *cobra.Command,
 	withUefiEventLogs, err := cmd.Flags().GetBool(constants.WithEventLogsOptions.Name)
 	if err != nil {
 		return err
+	}
+
+	// --evidence-file supplies the evidence directly, so nothing is collected from
+	// the local platform. Reject the options that only apply while collecting: the
+	// evidence names the TEEs it came from, and whatever else they would control is
+	// already fixed inside the file.
+	if evidenceFile != "" {
+		for _, opt := range []struct {
+			name string
+			set  bool
+		}{
+			{constants.WithTdxOptions.Name, withTdx},
+			{constants.WithTpmOptions.Name, withTpm},
+			{constants.WithNvGpuOptions.Name, withNvGpu},
+			{constants.WithCcelOptions.Name, withCcel},
+			{constants.WithImaLogsOptions.Name, withImaLogs},
+			{constants.WithEventLogsOptions.Name, withUefiEventLogs},
+			{constants.NoVerifierNonceOptions.Name, noVerifierNonce},
+			{constants.UserDataOptions.Name, userData != ""},
+			{constants.PublicKeyPathOption, publicKeyPath != ""},
+		} {
+			if opt.set {
+				return errors.Errorf("%q cannot be used with %q", "--"+opt.name, "--"+constants.EvidenceFileOptions.Name)
+			}
+		}
 	}
 
 	// backward compatibility cli options: if the user did not specify "--tdx, "--tpm" or "--nvgpu" options,
@@ -249,6 +283,30 @@ func getToken(cmd *cobra.Command,
 		builderOptions = append(builderOptions, connector.WithTokenSigningAlgorithm(signingAlg))
 	}
 
+	// Evidence read from a file is sent as it was collected: the per-TEE payloads
+	// are passed through untouched, so this works for any evidence the Trust
+	// Authority accepts, including composite evidence from several TEEs. Only the
+	// request options are applied, overriding any the evidence command wrote into
+	// the file.
+	if evidenceFile != "" {
+		evidence, err := readEvidenceFile(evidenceFile)
+		if err != nil {
+			return err
+		}
+
+		if len(pIds) != 0 {
+			evidence["policy_ids"] = pIds
+		}
+		if policyMustMatch {
+			evidence["policy_must_match"] = policyMustMatch
+		}
+		if tokenSigningAlg != "" {
+			evidence["token_signing_alg"] = tokenSigningAlg
+		}
+
+		return attestEvidence(trustAuthorityConnector, evidence, config.CloudProvider, reqId)
+	}
+
 	if withTdx {
 		tdxAdapter, err := tdxAdapterFactory.New(config.CloudProvider, withCcel)
 		if err != nil {
@@ -303,7 +361,13 @@ func getToken(cmd *cobra.Command,
 		return err
 	}
 
-	response, err := trustAuthorityConnector.AttestEvidence(evidence, config.CloudProvider, reqId)
+	return attestEvidence(trustAuthorityConnector, evidence, config.CloudProvider, reqId)
+}
+
+// attestEvidence sends evidence to the Trust Authority and prints the token it
+// returns, whether the evidence was collected locally or read from a file.
+func attestEvidence(ctr connector.Connector, evidence interface{}, cloudProvider string, reqId string) error {
+	response, err := ctr.AttestEvidence(evidence, cloudProvider, reqId)
 	if response.Headers != nil {
 		fmt.Fprintln(os.Stderr, "Trace Id:", response.Headers.Get(connector.HeaderTraceId))
 		if reqId != "" {
