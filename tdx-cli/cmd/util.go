@@ -51,6 +51,11 @@ const maxEvidenceFileSize = 512 * 1024
 // Authority as it was collected. The CLI deliberately does not interpret the
 // per-TEE payloads, which keeps this independent of the evidence types the
 // client supports, including composite evidence combining several of them.
+//
+// Beyond checking that the file is a JSON object with at least one evidence
+// key, this does not verify its contents. A file such as {"foo": "bar"} is
+// accepted here and only rejected by the Trust Authority at
+// /appraisal/v2/attest, not by the CLI.
 func readEvidenceFile(path string) (map[string]interface{}, error) {
 	evidencePath, err := ValidateFilePath(path)
 	if err != nil {

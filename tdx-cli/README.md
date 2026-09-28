@@ -213,7 +213,7 @@ Available commands:
 
 ### `token`
 
-Requests an attestation token. At least one evidence adapter is selected; if none of `--tdx`, `--tpm`, or `--nvgpu` is supplied, TDX evidence is selected by default. Alternatively, `--evidence-file` attests evidence collected earlier instead of collecting any.
+Requests an attestation token. At least one evidence adapter is selected; if none of `--tdx`, `--tpm`, or `--nvgpu` is supplied, TDX evidence is selected by default. Alternatively, --evidence-file bypasses evidence collection from the host and uses file data containing JSON produced by the evidence command.
 
 ```sh
 trustauthority-cli token --config <config-file> \
@@ -290,7 +290,7 @@ trustauthority-cli evidence --config <config-file> \
   [--tpm] [--tdx] [--nvgpu] [--no-verifier-nonce] \
   [--user-data <base64-data>] [--policy-ids <policy-ids>] \
   [--token-signing-alg RS256|PS384] [--policy-must-match] \
-  [--ima] [--evl] [--ccel] [--evidence-file <evidence-file>]
+  [--ima] [--evl] [--ccel]
 ```
 
 `--config` (`-c`) is required. `--tpm`, `--tdx`, and `--nvgpu` select evidence types; TDX is selected by default when none is specified. `--user-data`, `--policy-ids`, `--token-signing-alg`, `--policy-must-match`, `--no-verifier-nonce`, `--ima`, `--evl`, and `--ccel` have the same meanings as for `token`.
