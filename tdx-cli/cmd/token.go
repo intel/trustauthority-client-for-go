@@ -294,13 +294,17 @@ func getToken(cmd *cobra.Command,
 			return err
 		}
 
-		if len(pIds) != 0 {
+		// Only options the caller actually supplied override the file. Checking
+		// whether the flag was set rather than its value matters for booleans: a
+		// false value is otherwise indistinguishable from an absent flag, so
+		// --policy-must-match=false could not override a true in the file.
+		if cmd.Flags().Changed(constants.PolicyIdsOptions.Name) {
 			evidence["policy_ids"] = pIds
 		}
-		if policyMustMatch {
+		if cmd.Flags().Changed(constants.PolicyMustMatchOptions.Name) {
 			evidence["policy_must_match"] = policyMustMatch
 		}
-		if tokenSigningAlg != "" {
+		if cmd.Flags().Changed(constants.TokenAlgOptions.Name) {
 			evidence["token_signing_alg"] = tokenSigningAlg
 		}
 

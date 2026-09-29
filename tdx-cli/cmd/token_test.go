@@ -556,3 +556,66 @@ func TestTokenCmd(t *testing.T) {
 		})
 	}
 }
+
+// The evidence file may carry request options, and options the caller supplies
+// override them. For booleans that requires checking whether the flag was set:
+// a false value is otherwise indistinguishable from an absent flag, so
+// --policy-must-match=false could not override a true in the file.
+func TestTokenCmdEvidenceFileRequestOptionPrecedence(t *testing.T) {
+	const evidenceWithOptions = `{"tdx":{"quote":"3q2+7w=="},"policy_must_match":true,"token_signing_alg":"PS384"}`
+	const path = "test-evidence-options.json"
+
+	_ = os.WriteFile(path, []byte(evidenceWithOptions), 0600)
+	defer os.Remove(path)
+
+	tt := []struct {
+		args        []string
+		want        interface{}
+		description string
+	}{
+		{
+			args:        []string{},
+			want:        true,
+			description: "flag absent, the value in the file is kept",
+		},
+		{
+			args:        []string{"--" + constants.PolicyMustMatchOptions.Name},
+			want:        true,
+			description: "flag set to true, overrides with true",
+		},
+		{
+			args:        []string{"--" + constants.PolicyMustMatchOptions.Name + "=false"},
+			want:        false,
+			description: "flag set to false, overrides the true in the file",
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.description, func(t *testing.T) {
+			var sent map[string]interface{}
+
+			mockConnector := MockConnector{}
+			mockConnector.On("AttestEvidence", mock.Anything, mock.Anything, mock.Anything).
+				Run(func(args mock.Arguments) {
+					sent = args.Get(0).(map[string]interface{})
+				}).
+				Return(connector.AttestResponse{}, nil)
+
+			mockConnectorFactory := MockConnectorFactory{}
+			mockConnectorFactory.On("NewConnector", mock.Anything).Return(&mockConnector, nil)
+
+			cmd := newTokenCommand(angryMockTdxAdapterFactory(), happyMockTpmAdapterFactory(),
+				mockConfigFactory(nil), &mockConnectorFactory)
+			cmd.SetArgs(append([]string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name, confFilePath,
+				"--" + constants.EvidenceFileOptions.Name, path,
+			}, tc.args...))
+
+			assert.NoError(t, cmd.Execute())
+			assert.Equal(t, tc.want, sent["policy_must_match"])
+			// options the caller did not supply are left as the file had them
+			assert.Equal(t, "PS384", sent["token_signing_alg"])
+		})
+	}
+}
