@@ -21,6 +21,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/intel/trustauthority-client/go-connector"
 	"github.com/intel/trustauthority-client/go-tpm"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
 )
@@ -87,6 +88,18 @@ const (
 	testApiKey              = "YXBpa2V5"
 	testValidUrl            = "https://notused.com:8080"
 	testNonExistentFileName = "doesnotexist.json"
+	// files backing the --evidence-file tests
+	testEvidenceFilePath      = "test-evidence.json"
+	testTpmEvidenceFilePath   = "test-evidence-tpm.json"
+	testBadEvidenceFilePath   = "test-evidence-bad.json"
+	testEmptyEvidenceFilePath = "test-evidence-empty.json"
+	// TDX evidence, as the evidence command prints it
+	testEvidenceFileContents = `{"tdx":{"quote":"3q2+7w==","runtime_data":"dXNlciBkYXRh"}}`
+	// TPM evidence, to show the option is not TDX specific
+	testTpmEvidenceFileContents = `{"tpm":{"quote":"3q2+7w==","signature":"3q2+7w==","pcrs":{}}}`
+	testBadEvidenceFileContents = `not json`
+	// valid JSON carrying a request option but no evidence
+	testEmptyEvidenceFileContents = `{"policy_must_match":true}`
 )
 
 var (
@@ -338,6 +351,16 @@ func happyMockTdxAdapterFactory() TdxAdapterFactory {
 
 	mockTdxAdapterFactory := MockTdxAdapterFactory{}
 	mockTdxAdapterFactory.On("New", mock.Anything, mock.Anything).Return(&mockCompositeAdapter, nil)
+
+	return &mockTdxAdapterFactory
+}
+
+// angryMockTdxAdapterFactory fails if it is asked for an adapter. Use it to
+// assert that a code path never collects evidence from the local platform.
+func angryMockTdxAdapterFactory() TdxAdapterFactory {
+	mockTdxAdapterFactory := MockTdxAdapterFactory{}
+	mockTdxAdapterFactory.On("New", mock.Anything, mock.Anything).
+		Return(nil, errors.New("the TDX adapter factory should not have been called"))
 
 	return &mockTdxAdapterFactory
 }

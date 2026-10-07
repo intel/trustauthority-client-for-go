@@ -36,6 +36,18 @@ func TestTokenCmd(t *testing.T) {
 	_ = os.WriteFile(publicKeyPath, []byte(pubKey), 0600)
 	defer os.Remove(publicKeyPath)
 
+	_ = os.WriteFile(testEvidenceFilePath, []byte(testEvidenceFileContents), 0600)
+	defer os.Remove(testEvidenceFilePath)
+
+	_ = os.WriteFile(testTpmEvidenceFilePath, []byte(testTpmEvidenceFileContents), 0600)
+	defer os.Remove(testTpmEvidenceFilePath)
+
+	_ = os.WriteFile(testBadEvidenceFilePath, []byte(testBadEvidenceFileContents), 0600)
+	defer os.Remove(testBadEvidenceFilePath)
+
+	_ = os.WriteFile(testEmptyEvidenceFilePath, []byte(testEmptyEvidenceFileContents), 0600)
+	defer os.Remove(testEmptyEvidenceFilePath)
+
 	tt := []struct {
 		args            []string
 		wantErr         bool
@@ -282,6 +294,252 @@ func TestTokenCmd(t *testing.T) {
 				return createDefaultMocks()
 			},
 		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testEvidenceFilePath,
+			},
+			wantErr:     false,
+			description: "TDX evidence from a file",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return angryMockTdxAdapterFactory(), happyMockTpmAdapterFactory(), mockConfigFactory(nil), happyMockConnectorFactory()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testTpmEvidenceFilePath,
+			},
+			wantErr:     false,
+			description: "TPM evidence from a file",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return angryMockTdxAdapterFactory(), happyMockTpmAdapterFactory(), mockConfigFactory(nil), happyMockConnectorFactory()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testEvidenceFilePath,
+				"--" + constants.PolicyIdsOptions.Name,
+				"4312c813-ecb2-4e6e-83d3-515d88ac06f2",
+				"--" + constants.PolicyMustMatchOptions.Name,
+				"--" + constants.TokenAlgOptions.Name,
+				"RS256",
+				"--" + constants.RequestIdOptions.Name,
+				"req1",
+			},
+			wantErr:     false,
+			description: "Evidence file with request options",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return angryMockTdxAdapterFactory(), happyMockTpmAdapterFactory(), mockConfigFactory(nil), happyMockConnectorFactory()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testEvidenceFilePath,
+				"--" + constants.TokenAlgOptions.Name,
+				"invalid",
+			},
+			wantErr:     true,
+			description: "Evidence file with an invalid signing algorithm",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testEvidenceFilePath,
+				"--" + constants.PolicyIdsOptions.Name,
+				"not-a-uuid",
+			},
+			wantErr:     true,
+			description: "Evidence file with an invalid policy id",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testEvidenceFilePath,
+				"--" + constants.RequestIdOptions.Name,
+				"r@q1",
+			},
+			wantErr:     true,
+			description: "Evidence file with a malformed request id",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testBadEvidenceFilePath,
+			},
+			wantErr:     true,
+			description: "Evidence file that is not JSON",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testEmptyEvidenceFilePath,
+			},
+			wantErr:     true,
+			description: "Evidence file with no evidence",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testNonExistentFileName,
+			},
+			wantErr:     true,
+			description: "Evidence file that does not exist",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testEvidenceFilePath,
+				"--" + constants.WithTdxOptions.Name,
+			},
+			wantErr:     true,
+			description: "Evidence file conflicts with --tdx",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testEvidenceFilePath,
+				"--" + constants.WithTpmOptions.Name,
+			},
+			wantErr:     true,
+			description: "Evidence file conflicts with --tpm",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testEvidenceFilePath,
+				"--" + constants.WithNvGpuOptions.Name,
+			},
+			wantErr:     true,
+			description: "Evidence file conflicts with --nvgpu",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testEvidenceFilePath,
+				"--" + constants.WithCcelOptions.Name,
+			},
+			wantErr:     true,
+			description: "Evidence file conflicts with --ccel",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testEvidenceFilePath,
+				"--" + constants.NoVerifierNonceOptions.Name,
+			},
+			wantErr:     true,
+			description: "Evidence file conflicts with --no-verifier-nonce",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testEvidenceFilePath,
+				"--" + constants.UserDataOptions.Name,
+				"dGVzdA==",
+			},
+			wantErr:     true,
+			description: "Evidence file conflicts with --user-data",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
+		{
+			args: []string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name,
+				confFilePath,
+				"--" + constants.EvidenceFileOptions.Name,
+				testEvidenceFilePath,
+				"--" + constants.PublicKeyPathOption,
+				publicKeyPath,
+			},
+			wantErr:     true,
+			description: "Evidence file conflicts with --pub-path",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+		},
 	}
 
 	for _, tc := range tt {
@@ -295,6 +553,69 @@ func TestTokenCmd(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
+		})
+	}
+}
+
+// The evidence file may carry request options, and options the caller supplies
+// override them. For booleans that requires checking whether the flag was set:
+// a false value is otherwise indistinguishable from an absent flag, so
+// --policy-must-match=false could not override a true in the file.
+func TestTokenCmdEvidenceFileRequestOptionPrecedence(t *testing.T) {
+	const evidenceWithOptions = `{"tdx":{"quote":"3q2+7w=="},"policy_must_match":true,"token_signing_alg":"PS384"}`
+	const path = "test-evidence-options.json"
+
+	_ = os.WriteFile(path, []byte(evidenceWithOptions), 0600)
+	defer os.Remove(path)
+
+	tt := []struct {
+		args        []string
+		want        interface{}
+		description string
+	}{
+		{
+			args:        []string{},
+			want:        true,
+			description: "flag absent, the value in the file is kept",
+		},
+		{
+			args:        []string{"--" + constants.PolicyMustMatchOptions.Name},
+			want:        true,
+			description: "flag set to true, overrides with true",
+		},
+		{
+			args:        []string{"--" + constants.PolicyMustMatchOptions.Name + "=false"},
+			want:        false,
+			description: "flag set to false, overrides the true in the file",
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.description, func(t *testing.T) {
+			var sent map[string]interface{}
+
+			mockConnector := MockConnector{}
+			mockConnector.On("AttestEvidence", mock.Anything, mock.Anything, mock.Anything).
+				Run(func(args mock.Arguments) {
+					sent = args.Get(0).(map[string]interface{})
+				}).
+				Return(connector.AttestResponse{}, nil)
+
+			mockConnectorFactory := MockConnectorFactory{}
+			mockConnectorFactory.On("NewConnector", mock.Anything).Return(&mockConnector, nil)
+
+			cmd := newTokenCommand(angryMockTdxAdapterFactory(), happyMockTpmAdapterFactory(),
+				mockConfigFactory(nil), &mockConnectorFactory)
+			cmd.SetArgs(append([]string{
+				constants.TokenCmd,
+				"--" + constants.ConfigOptions.Name, confFilePath,
+				"--" + constants.EvidenceFileOptions.Name, path,
+			}, tc.args...))
+
+			assert.NoError(t, cmd.Execute())
+			assert.Equal(t, tc.want, sent["policy_must_match"])
+			// options the caller did not supply are left as the file had them
+			assert.Equal(t, "PS384", sent["token_signing_alg"])
 		})
 	}
 }
