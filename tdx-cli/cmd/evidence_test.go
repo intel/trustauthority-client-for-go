@@ -16,6 +16,9 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+// testVerifierNonceJSON is a valid JSON-encoded connector.VerifierNonce used in tests.
+const testVerifierNonceJSON = `{"val":"bm9uY2UtdmFs","iat":"bm9uY2UtaWF0","signature":"bm9uY2Utc2ln"}`
+
 func TestEvidence(t *testing.T) {
 	tests := []struct {
 		name            string
@@ -173,6 +176,88 @@ func TestEvidence(t *testing.T) {
 				"--" + constants.WithCcelOptions.Name,
 			},
 			errorExpected: true,
+		},
+		{
+			name: "Test Evidence User-Provided Verifier Nonce Positive",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				angryConnectorFactory := MockConnectorFactory{}
+				angryConnectorFactory.On("NewConnector", mock.Anything).Return(&MockConnector{}, errors.New("connector factory must not be called when --verifier-nonce is provided"))
+
+				return happyMockTdxAdapterFactory(), happyMockTpmAdapterFactory(), mockConfigFactory(nil), &angryConnectorFactory
+			},
+			cmdArgs: []string{
+				constants.EvidenceCmd,
+				"--" + constants.ConfigOptions.Name,
+				testNonExistentFileName,
+				"--" + constants.WithTdxOptions.Name,
+				"--" + constants.VerifierNonceOptions.Name,
+				testVerifierNonceJSON,
+			},
+			errorExpected: false,
+		},
+		{
+			name: "Test Evidence User-Provided Verifier Nonce With User Data",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				angryConnectorFactory := MockConnectorFactory{}
+				angryConnectorFactory.On("NewConnector", mock.Anything).Return(&MockConnector{}, errors.New("connector factory must not be called when --verifier-nonce is provided"))
+
+				return happyMockTdxAdapterFactory(), happyMockTpmAdapterFactory(), mockConfigFactory(nil), &angryConnectorFactory
+			},
+			cmdArgs: []string{
+				constants.EvidenceCmd,
+				"--" + constants.ConfigOptions.Name,
+				testNonExistentFileName,
+				"--" + constants.WithTdxOptions.Name,
+				"--" + constants.VerifierNonceOptions.Name,
+				testVerifierNonceJSON,
+				"--" + constants.UserDataOptions.Name,
+				"AA==",
+			},
+			errorExpected: false,
+		},
+		{
+			name: "Test Evidence Invalid Verifier Nonce JSON",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+			cmdArgs: []string{
+				constants.EvidenceCmd,
+				"--" + constants.ConfigOptions.Name,
+				testNonExistentFileName,
+				"--" + constants.WithTdxOptions.Name,
+				"--" + constants.VerifierNonceOptions.Name,
+				"not-valid-json",
+			},
+			errorExpected: true,
+		},
+		{
+			name: "Test Evidence Verifier Nonce and No-Verifier-Nonce Are Mutually Exclusive",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+			cmdArgs: []string{
+				constants.EvidenceCmd,
+				"--" + constants.ConfigOptions.Name,
+				testNonExistentFileName,
+				"--" + constants.WithTdxOptions.Name,
+				"--" + constants.NoVerifierNonceOptions.Name,
+				"--" + constants.VerifierNonceOptions.Name,
+				testVerifierNonceJSON,
+			},
+			errorExpected: true,
+		},
+		{
+			name: "Test Evidence Auto-Fetch Nonce Calls Connector Factory",
+			dependencyMocks: func() (TdxAdapterFactory, tpm.TpmAdapterFactory, ConfigFactory, connector.ConnectorFactory) {
+				return createDefaultMocks()
+			},
+			cmdArgs: []string{
+				constants.EvidenceCmd,
+				"--" + constants.ConfigOptions.Name,
+				testNonExistentFileName,
+				"--" + constants.WithTdxOptions.Name,
+			},
+			errorExpected: false,
 		},
 	}
 
